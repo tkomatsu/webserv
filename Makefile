@@ -1,21 +1,85 @@
+# Colors
+# ****************************************************************************
+
+_GREY	= \033[30m
+_RED	= \033[31m
+_GREEN	= \033[32m
+_YELLOW	= \033[33m
+_BLUE	= \033[34m
+_PURPLE	= \033[35m
+_CYAN	= \033[36m
+_WHITE	= \033[37m
+_END	= \033[0m
+
+# ****************************************************************************
+
 NAME = webserv
+
+# Config
+# ****************************************************************************
+
+.SHELL = /bin/bash
+CC = gcc
 CXX = clang++
-CXXFLAGS = -Wall -Werror -Wextra -std=c++98
-SRCS = $(shell find . -name '*.cpp')
-OBJS = $(SRCS:.cpp=.o)
+INCLUDE = includes
+CFLAGS = -Wall -Werror -Wextra -I $(INCLUDE)
+CXXFLAGS = -Wall -Werror -Wextra -std=c++98 -I $(INCLUDE)
+DEBUG_CXXFLAGS = -g3
+
+# Source files
+# ****************************************************************************
+
+SRC_DIR = srcs/
+OBJ_DIR = objs/
+
+# prefix
+
+SRC_FILES = $(shell find srcs -name '*.cpp' | sed 's!^.*/!!')
+
+OBJS = $(SRC_FILES:%.cpp=$(OBJ_DIR)%.o)
+
+# Recipe
+# ****************************************************************************
 
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJS)
+	@echo "$(_END)\nCompiled source files"
+	@$(CXX) $(CXXFLAGS) $(OBJS) -o $@
+	@echo "$(_GREEN)Finish compiling $@!"
+	@echo "Try \"./$@\" to use$(_END)"
+
+$(OBJS): $(OBJ_DIR)
+
+$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
+	@printf "$(_GREEN)█"
+
+$(OBJ_DIR):
+	@mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -f $(OBJS)
+	@echo "$(_YELLOW)Removing object files ...$(_END)"
+	@rm -rf $(OBJ_DIR)
+	@rm -fr *.dSYM
 
 fclean:
-	rm -f $(OBJS)
-	rm -f $(NAME)
+	@echo "$(_RED)Removing object files and program ...$(_END)"
+	@rm -rf $(NAME) $(OBJ_DIR)
+	@rm -fr *.dSYM expected actual
 
 re: fclean all
 
-.PHONY: all clean fclean re
+debug: CXXFLAGS += -fsanitize=address $(DEBUG_CXXFLAGS)
+debug: re
+	@echo "$(_BLUE)Debug build done$(_END)"
+
+leak: CXXFLAGS += $(DEBUG_CXXFLAGS)
+leak: re
+	@echo "$(_BLUE)Leak check build done$(_END)"
+
+test: re
+	./$(NAME) all
+
+PHONY: all clean fclean re debug leak test
+
