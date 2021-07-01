@@ -19,11 +19,8 @@ NAME = webserv
 # ****************************************************************************
 
 .SHELL = /bin/bash
-CC = gcc
 CXX = clang++
-INCLUDE = includes
-CFLAGS = -Wall -Werror -Wextra -I $(INCLUDE)
-CXXFLAGS = -Wall -Werror -Wextra -std=c++98 -I $(INCLUDE)
+CXXFLAGS = -Wall -Werror -Wextra -std=c++98 -I $(SRC_DIR)
 DEBUG_CXXFLAGS = -g3
 
 # Source files
@@ -34,9 +31,8 @@ OBJ_DIR = objs/
 
 # prefix
 
-SRC_FILES = $(shell find srcs -name '*.cpp' | sed 's!^.*/!!')
-
-OBJS = $(SRC_FILES:%.cpp=$(OBJ_DIR)%.o)
+SRCS = $(shell find srcs -name '*.cpp' | sed 's!^.*/!!')
+OBJS = $(SRCS:%.cpp=$(OBJ_DIR)%.o)
 
 # Recipe
 # ****************************************************************************
@@ -79,7 +75,6 @@ leak: re
 	@echo "$(_BLUE)Leak check build done$(_END)"
 
 test: re
-	./$(NAME) all
+	./$(NAME)
 
 PHONY: all clean fclean re debug leak test
-
