@@ -1,6 +1,6 @@
 #include "WebServ.hpp"
 
-const std::string WebServ::default_path = "./default.conf";
+const std::string WebServ::default_path = "./conf/default.conf";
 const int WebServ::buf_max = 8192;
 
 void WebServ::parse(const std::string &path)
@@ -77,7 +77,7 @@ void WebServ::start(void)
 							std::string header;
 							std::string body;
 							std::string response;
-							std::ifstream ifs("index.html");
+							std::ifstream ifs("./docs/html/index.html");
 							std::string line;
 							// とりま直打ち
 							header = "HTTP/1.1 200 OK\r\n"
