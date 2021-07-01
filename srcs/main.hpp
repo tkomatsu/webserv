@@ -1,19 +1,20 @@
 #ifndef MAIN_HPP
 #define MAIN_HPP
 
+#include <arpa/inet.h>
 #include <libc.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/select.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
-#include <string.h>
+
+#include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include <fstream>
 
 #include "Server.hpp"
 #include "WebServ.hpp"
