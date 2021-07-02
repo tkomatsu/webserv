@@ -1,7 +1,7 @@
 #include "WebServ.hpp"
 
 const std::string WebServ::default_path = "./conf/default.conf";
-const int WebServ::buf_max = 8192;
+const int WebServ::buf_max = 8192;  // nodejsは8KBらしいから
 
 void WebServ::parse(const std::string &path) {
   // TODO: configをパースして各サーバーの設定をServerインスタンスにもたせる
@@ -38,6 +38,8 @@ void WebServ::start(void) {
     fd_set wfd_set;
     struct timeval timeout = (struct timeval){1, 0};
     int n = 0;
+    int i = 0;
+    std::string message = "😺😺😺😺    ";
 
     // readable/writableが見つかるまで待つ
     while (n == 0) {
@@ -50,61 +52,35 @@ void WebServ::start(void) {
              it_ != (*it).writable_client_fds.end(); ++it_)
           FD_SET(*it_, &wfd_set);
 
-      std::cout << "😺😺 selecting 😺😺\n";
+      std::cout << "\r" + message.substr(i, message.length() - i) +
+                       message.substr(0, i)
+                << std::flush;
+      if ((i += 4) >= (int)message.length()) i = 0;
+
       n = select(max_fd + 1, &rfd_set, &wfd_set, NULL, &timeout);
     }
 
     if (n > 0) {
-      // 各サーバーの"クライアント"のソケットを見る
-      // writableのやつが来たら
+      // 各サーバーのソケットを見る
+      // 新たなクライアント様はこちらでaccept致します
       for (std::vector<Server>::iterator it = servers.begin();
            it != servers.end(); ++it) {
         Server &serv = *it;
+        long serv_fd = serv.getFd();
 
-        for (std::vector<long>::iterator it = serv.writable_client_fds.begin();
-             it != serv.writable_client_fds.end(); ++it) {
-          long client_fd = *it;
+        if (FD_ISSET(serv_fd, &rfd_set)) {
+          long client_fd = accept(serv_fd, NULL, NULL);
 
-          if (FD_ISSET(client_fd, &wfd_set)) {
-            // TODO:　送る内容しっかり作ろう
-            long ret;
-            std::string header;
-            std::string body;
-            std::string response;
-            std::ifstream ifs("./docs/html/index.html");
-            std::string line;
-            // とりま直打ち
-            header =
-                "HTTP/1.1 200 OK\r\n"
-                "Content-Type: text/html; charset=UTF-8\r\n"
-                "Date: Wed, 30 Jun 2021 08:25:23 GMT\r\n"
-                "Server: Webserv\r\n"
-                "\r\n";
+          if (client_fd == -1) throw std::runtime_error("accept error\n");
+          if (fcntl(client_fd, F_SETFL, O_NONBLOCK) != 0)
+            throw std::runtime_error("fcntl error\n");
 
-            if (ifs.fail()) throw std::runtime_error("file open error\n");
-            while (getline(ifs, line)) body += line + "\n";
-            ifs.close();
-            response = header + body;
-            ret = send(client_fd, response.c_str(), response.size(), 0);
-
-            std::cout
-                << "\n\x1b[36m██████████ ここから　レスポンス ██████████\n";
-            std::cout << response;
-            std::cout
-                << "██████████ ここまで　レスポンス ██████████\x1b[39m\n\n";
-            // TODO:
-            // 一回のsendで送りきれないときどっかにためとく?　そんなことある？
-
-            close(client_fd);
-            FD_CLR(client_fd, &rfd_set);
-            FD_CLR(client_fd, &master_set);
-            serv.writable_client_fds.erase(it);
-
-            n = 0;
-            break;
-          }
+          FD_SET(client_fd, &master_set);
+          if (client_fd > max_fd) max_fd = client_fd;
+          serv.client_fds.push_back(client_fd);
+          n = 0;
+          break;
         }
-        if (n == 0) break;
       }
 
       // 各サーバーの"クライアント"のソケットを見る
@@ -145,8 +121,10 @@ void WebServ::start(void) {
                   std::cout << "██████████ ここまで　リクエスト "
                                "██████████\x1b[39m\n\n";
                   serv.writable_client_fds.push_back(client_fd);
+                } else {
+                  // TODO:
+                  // 一回のrecvで取りきれないときどっかにためとく?　足りないと国庫に来る
                 }
-                // TODO: 一回のrecvで取りきれないときどっかにためとく?
               }
               n = 0;
               break;
@@ -155,27 +133,58 @@ void WebServ::start(void) {
           if (n == 0) break;
         }
 
-      // 各サーバーのソケットを見る
-      // 新たなクライアント様はこちらでaccept致します
+      // 各サーバーの"クライアント"のソケットを見る
+      // writableのやつが来たら
       if (n > 0)
         for (std::vector<Server>::iterator it = servers.begin();
              it != servers.end(); ++it) {
           Server &serv = *it;
-          long serv_fd = serv.getFd();
 
-          if (FD_ISSET(serv_fd, &rfd_set)) {
-            long client_fd = accept(serv_fd, NULL, NULL);
+          for (std::vector<long>::iterator it =
+                   serv.writable_client_fds.begin();
+               it != serv.writable_client_fds.end(); ++it) {
+            long client_fd = *it;
 
-            if (client_fd == -1) throw std::runtime_error("accept error\n");
-            if (fcntl(client_fd, F_SETFL, O_NONBLOCK) != 0)
-              throw std::runtime_error("fcntl error\n");
+            if (FD_ISSET(client_fd, &wfd_set)) {
+              // TODO:　送る内容しっかり作ろう
+              long ret;
+              std::string header;
+              std::string body;
+              std::string response;
+              std::ifstream ifs("./docs/html/index.html");
+              std::string line;
+              // とりま直打ち
+              header =
+                  "HTTP/1.1 200 OK\r\n"
+                  "Content-Type: text/html; charset=UTF-8\r\n"
+                  "Date: Wed, 30 Jun 2021 08:25:23 GMT\r\n"
+                  "Server: Webserv\r\n"
+                  "\r\n";
 
-            FD_SET(client_fd, &master_set);
-            if (client_fd > max_fd) max_fd = client_fd;
-            serv.client_fds.push_back(client_fd);
-            n = 0;
-            break;
+              if (ifs.fail()) throw std::runtime_error("file open error\n");
+              while (getline(ifs, line)) body += line + "\n";
+              ifs.close();
+              response = header + body;
+              ret = send(client_fd, response.c_str(), response.size(), 0);
+
+              std::cout
+                  << "\n\x1b[36m██████████ ここから　レスポンス ██████████\n";
+              std::cout << response;
+              std::cout
+                  << "██████████ ここまで　レスポンス ██████████\x1b[39m\n\n";
+              // TODO:
+              // 一回のsendで送りきれないときどっかにためとく?　そんなことある？
+
+              close(client_fd);
+              FD_CLR(client_fd, &rfd_set);
+              FD_CLR(client_fd, &master_set);
+              serv.writable_client_fds.erase(it);
+
+              n = 0;
+              break;
+            }
           }
+          if (n == 0) break;
         }
     } else {
       throw std::runtime_error("select error\n");
