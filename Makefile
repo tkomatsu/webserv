@@ -18,10 +18,10 @@ NAME = webserv
 # Config
 # ****************************************************************************
 
-.SHELL = /bin/bash
+SHELL = /bin/bash
 CXX = clang++
 CXXFLAGS = -Wall -Werror -Wextra -std=c++98 -I $(SRC_DIR)
-DEBUG_CXXFLAGS = -g3
+DEBUG_FLAGS = -g3
 
 # Source files
 # ****************************************************************************
@@ -29,10 +29,8 @@ DEBUG_CXXFLAGS = -g3
 SRC_DIR = srcs/
 OBJ_DIR = objs/
 
-# prefix
-
 SRCS = $(shell find srcs -name '*.cpp' | sed 's!^.*/!!')
-OBJS = $(SRCS:%.cpp=$(OBJ_DIR)%.o)
+OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))
 
 # Recipe
 # ****************************************************************************
@@ -40,41 +38,35 @@ OBJS = $(SRCS:%.cpp=$(OBJ_DIR)%.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	@echo "$(_END)\nCompiled source files"
+	@printf "$(_END)\nCompiled source files\n"
 	@$(CXX) $(CXXFLAGS) $(OBJS) -o $@
-	@echo "$(_GREEN)Finish compiling $@!"
-	@echo "Try \"./$@\" to use$(_END)"
-
-$(OBJS): $(OBJ_DIR)
+	@printf "$(_GREEN)Finish compiling $@!\n"
+	@printf "Try \"./$@\" to use$(_END)\n"
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
+	@if [ ! -d $(OBJ_DIR) ];then mkdir $(OBJ_DIR); fi
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 	@printf "$(_GREEN)█"
 
-$(OBJ_DIR):
-	@mkdir -p $(OBJ_DIR)
-
 clean:
-	@echo "$(_YELLOW)Removing object files ...$(_END)"
-	@rm -rf $(OBJ_DIR)
-	@rm -fr *.dSYM
+	@printf "$(_YELLOW)Removing object files ...$(_END)\n"
+	@rm -rf $(OBJ_DIR) *.dSYM
 
 fclean:
-	@echo "$(_RED)Removing object files and program ...$(_END)"
-	@rm -rf $(NAME) $(OBJ_DIR)
-	@rm -fr *.dSYM expected actual
+	@printf "$(_RED)Removing object files and program ...$(_END)\n"
+	@rm -rf $(NAME) $(OBJ_DIR) *.dSYM
 
 re: fclean all
 
-debug: CXXFLAGS += -fsanitize=address $(DEBUG_CXXFLAGS)
+debug: CXXFLAGS += -fsanitize=address $(DEBUG_FLAGS)
 debug: re
-	@echo "$(_BLUE)Debug build done$(_END)"
+	@printf "$(_BLUE)Debug build done$(_END)\n"
 
-leak: CXXFLAGS += $(DEBUG_CXXFLAGS)
+leak: CXXFLAGS += $(DEBUG_FLAGS)
 leak: re
-	@echo "$(_BLUE)Leak check build done$(_END)"
+	@printf "$(_BLUE)Leak check build done$(_END)\n"
 
-test: re
+check: re
 	./$(NAME)
 
-PHONY: all clean fclean re debug leak test
+PHONY: all clean fclean re debug leak check
