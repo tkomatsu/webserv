@@ -4,18 +4,15 @@
 class Server;
 #include "main.hpp"
 
-class Server {
+class Server : public ISocket {
  public:
   Server(int port_, const char* host_) : port(port_), host(host_){};
 
-  void init(void);
-  long getFd(void) { return fd; };
+  long makeSocket(long _fd);
 
   std::vector<long> client_fds;
-  std::vector<long> writable_client_fds;
 
  private:
-  long fd;
   struct sockaddr_in addr;
   int port;
   const char* host;

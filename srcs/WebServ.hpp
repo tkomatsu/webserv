@@ -6,16 +6,22 @@ class WebServ;
 
 class WebServ {
  public:
+  WebServ(const std::string& path);
+  ~WebServ();
+
+  void start(void);
+
   static const std::string default_path;
   static const int buf_max;
 
-  void parse(const std::string& path);
-  void start(void);
-
  private:
-  std::vector<Server> servers;
-  int max_fd;
+  void parse(const std::string& path);
+
+  long max_fd;
   fd_set master_set;
+
+  std::map<long, ISocket*> sockets;  // デストラクタでdeleteしときーや
+  std::vector<long> writable_client_fds;
 };
 
 #endif

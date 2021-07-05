@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include "ISocket.hpp"
+#include "Client.hpp"
 #include "Server.hpp"
 #include "WebServ.hpp"
 
