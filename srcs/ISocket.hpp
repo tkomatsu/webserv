@@ -4,7 +4,7 @@
 class ISocket {
  public:
   virtual ~ISocket(){};
-  virtual long makeSocket(long) = 0;
+  virtual long makeSocket(long) = 0;  // make socket return fd
 };
 
 #endif

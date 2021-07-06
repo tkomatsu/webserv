@@ -6,16 +6,14 @@ class Server;
 
 class Server : public ISocket {
  public:
-  Server(int port_, const char* host_) : port(port_), host(host_){};
+  Server(int port_, std::string hostIp_) : port(port_), hostIp(hostIp_){};
 
   long makeSocket(long _fd);
-
-  std::vector<long> client_fds;
 
  private:
   struct sockaddr_in addr;
   int port;
-  const char* host;
+  std::string hostIp;  // like "127.0.0.1"
 };
 
 #endif

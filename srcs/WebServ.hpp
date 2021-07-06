@@ -12,10 +12,9 @@ class WebServ {
   void start(void);
 
   static const std::string default_path;
-  static const int buf_max;
 
  private:
-  void parse(const std::string& path);
+  void parseConfig(const std::string& path);
 
   long max_fd;
   fd_set master_set;
