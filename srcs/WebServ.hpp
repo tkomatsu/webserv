@@ -20,7 +20,7 @@ class WebServ {
   fd_set master_set;
 
   std::map<long, ISocket*> sockets;  // デストラクタでdeleteしときーや
-  std::vector<long> writable_client_fds;
+  // std::vector<long> writable_client_fds;
 };
 
 #endif

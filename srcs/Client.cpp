@@ -79,7 +79,7 @@ long Client::send(long client_fd) {
   ret = ::send(client_fd, response.c_str(), response.size(), 0);
 
   if (ret >= 0) {
-    std::cout << "send to " + hostIp << ":" << port << std::endl;
+    std::cout << "send to   " + hostIp << ":" << port << std::endl;
 
     /* std::cout << "\n\x1b[36m████ Response ████\n";
     std::cout << response;

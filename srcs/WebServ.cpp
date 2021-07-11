@@ -50,102 +50,139 @@ void WebServ::start(void) {
     while (n == 0) {
       memcpy(&rfd_set, &master_set, sizeof(master_set));
       FD_ZERO(&wfd_set);
-      for (std::vector<long>::iterator it_ = writable_client_fds.begin();
-           it_ != writable_client_fds.end(); ++it_)
-        FD_SET(*it_, &wfd_set);
+      for (std::map<long, ISocket *>::iterator it = sockets.begin();
+           it != sockets.end(); ++it)
+        if (dynamic_cast<Client *>(it->second)) {
+          int client_fd = it->first;
+          Client *client = dynamic_cast<Client *>(sockets[client_fd]);
+
+          if (client->socket_status == WRITE_CLIENT ||
+              client->socket_status == WRITE_FILE ||
+              client->socket_status == WRITE_CGI)
+            FD_SET(client_fd, &wfd_set);
+        }
 
       n = select(max_fd + 1, &rfd_set, &wfd_set, NULL, &timeout);
     }
 
     if (n > 0) {
-      // accept new client
       for (std::map<long, ISocket *>::iterator it = sockets.begin();
            it != sockets.end(); ++it) {
-        // if that elem is Server
+        // サーバーソケットでISSETがtrueなのはnew clientの1パターンしかない
+        // これはサーバーソケットならば常に可能性があるから、enum管理不要
         if (dynamic_cast<Server *>(it->second)) {
-          long server_fd = it->first;
+          int server_fd = it->first;
 
           if (FD_ISSET(server_fd, &rfd_set)) {
+
             Client *client = new Client();
-            long client_fd = client->makeSocket(server_fd);
+            client->socket_status = READ_CLIENT;
+            int client_fd = client->makeSocket(server_fd);
 
             FD_SET(client_fd, &master_set);
             if (client_fd > max_fd) max_fd = client_fd;
             sockets[client_fd] = client;
 
-            n = 0;
             break;
           }
         }
-      }
 
-      // recv readables
-      if (n > 0)
-        for (std::map<long, ISocket *>::iterator it = sockets.begin();
-             it != sockets.end(); ++it) {
-          if (dynamic_cast<Client *>(it->second)) {
-            long client_fd = it->first;
+        // クライアントソケットでread/writeの可能性は全部で6パターン
+        if (dynamic_cast<Client *>(it->second)) {
+          int client_fd = it->first;
+          Client *client = dynamic_cast<Client *>(sockets[client_fd]);
 
-            if (FD_ISSET(client_fd, &rfd_set)) {
-              Client *client = dynamic_cast<Client *>(sockets[client_fd]);
+          // パターン１：クライアントからrecvする
+          // READ_CLIENT（最初はみんなこれ）
+          if (client->socket_status == READ_CLIENT &&
+              FD_ISSET(client_fd, &rfd_set)) {
 
-              long ret = client->recv(client_fd);
+            long ret = client->recv(client_fd);
 
-              if (ret == -1) {
-                close(client_fd);
-                FD_CLR(client_fd, &rfd_set);
-                FD_CLR(client_fd, &master_set);
-                delete it->second;
-                sockets.erase(it);
-                throw std::runtime_error("recv error\n");
-              } else if (ret == 0) {
-                close(client_fd);
-                FD_CLR(client_fd, &rfd_set);
-                FD_CLR(client_fd, &master_set);
-                delete it->second;
-                sockets.erase(it);
-              } else {
-                writable_client_fds.push_back(client_fd);
-              }
+            if (ret == -1) {
+              close(client_fd);
+              FD_CLR(client_fd, &rfd_set);
+              FD_CLR(client_fd, &master_set);
+              delete it->second;
+              sockets.erase(it);
+              throw std::runtime_error("recv error\n");
+            } else if (ret == 0) {
+              close(client_fd);
+              FD_CLR(client_fd, &rfd_set);
+              FD_CLR(client_fd, &master_set);
+              delete it->second;
+              sockets.erase(it);
+            } else {
+              // パースしてつぎのsocket_statusをうまい具合に設定したい！
+              // client->ParseRequest();
+              //　この処理はそのさきでやる
+              client->makeResponse();
 
-              n = 0;
-              break;
+              // この処理はレスポンスが完成したらする
+              // writable_client_fds.push_back(client_fd);
+              client->socket_status = WRITE_CLIENT;
             }
+            break;
           }
-        }
 
-      // send to writables
-      if (n > 0)
-        for (std::vector<long>::iterator it = writable_client_fds.begin();
-             it != writable_client_fds.end(); ++it) {
-          long client_fd = *it;
-
-          if (FD_ISSET(client_fd, &wfd_set)) {
+          // パターン６：クライアントにsendする
+          // WRITE_CLIENT（最後、みんなこれ）
+          if (client->socket_status == WRITE_CLIENT &&
+              FD_ISSET(client_fd, &wfd_set)) {
             Client *client = dynamic_cast<Client *>(sockets[client_fd]);
 
-            client->makeResponse();
-
+            // 完成したレスポンスを送る
             long ret = client->send(client_fd);
 
             if (ret == -1) {
               close(client_fd);
               FD_CLR(client_fd, &rfd_set);
               FD_CLR(client_fd, &master_set);
-              sockets.erase(*it);
-              writable_client_fds.erase(it);
+              sockets.erase(it);
+              // writable_client_fds.erase(it);
               throw std::runtime_error("send error\n");
             } else {
               // TODO: can we send all data by one send(2)?
-              writable_client_fds.erase(it);
+              // writable_client_fds.erase(it);
+              // 次のrequestを待つ
+              client->socket_status = READ_CLIENT;
             }
-
-            n = 0;
             break;
           }
         }
+      }
 
     } else {
       throw std::runtime_error("select error\n");
     }
   }
 }
+
+/*
+
+selectぐるぐる
+
+・アクセプトするソケット
+|
+|
+・クライアントからrecvするソケット
+|
+|       (あいまい)
+cgi? --n--GET,DELETE的-y-・ファイルをreadするソケット--|
+|          |                                      |
+y          n----・ファイルにwriteするソケット------- |
+|                                              |
+|
+|
+(forkしてinfdとoutfdをゲット)                   |
+|                                            |
+|                                            |
+----cgiでinfdにwriteするソケット                |
+          |                                  |
+          |___・cgiでoutfdからreadするソケット-|
+                                            |
+                                           |
+                                           |
+                                          ・クライアントにsendするソケット
+
+*/
