@@ -74,7 +74,6 @@ void WebServ::start(void) {
           int server_fd = it->first;
 
           if (FD_ISSET(server_fd, &rfd_set)) {
-
             Client *client = new Client();
             client->socket_status = READ_CLIENT;
             int client_fd = client->makeSocket(server_fd);
@@ -93,10 +92,9 @@ void WebServ::start(void) {
           Client *client = dynamic_cast<Client *>(sockets[client_fd]);
 
           // パターン１：クライアントからrecvする
-          // READ_CLIENT（最初はみんなこれ）
+          // READ_CLIENT（最初はみんなこれ
           if (client->socket_status == READ_CLIENT &&
               FD_ISSET(client_fd, &rfd_set)) {
-
             long ret = client->recv(client_fd);
 
             if (ret == -1) {
@@ -114,23 +112,55 @@ void WebServ::start(void) {
               sockets.erase(it);
             } else {
               // パースしてつぎのsocket_statusをうまい具合に設定したい！
-              // client->ParseRequest();
-              //　この処理はそのさきでやる
+              // client->ParseRequest();　//
+              // 全部recvできてなてなかったら次もREAD_CLIENT
+
+              // read/writeの前までつくる
               client->makeResponse();
 
-              // この処理はレスポンスが完成したらする
-              // writable_client_fds.push_back(client_fd);
+              // この処理はレスポンスが完成したらするから、パターン2~5の中でやると思う
               client->socket_status = WRITE_CLIENT;
             }
             break;
           }
 
+          // パターン２：特定のファイルをreadする
+          // READ_FILE
+          if (client->socket_status == READ_FILE &&
+              FD_ISSET(client_fd, &rfd_set)) {
+            // 単なるGETとか
+            break;
+          }
+
+          // パターン３：特定のファイルにwriteする
+          // WRITE_FILE
+          if (client->socket_status == WRITE_FILE &&
+              FD_ISSET(client_fd, &wfd_set)) {
+            // POSTでファイルuploadとか
+            break;
+          }
+
+          // パターン４：CGIにこっちの標準入力をwriteする
+          // WRITE_CGI
+          if (client->socket_status == WRITE_CGI &&
+              FD_ISSET(client_fd, &wfd_set)) {
+            client->socket_status = WRITE_CLIENT;
+            break;
+          }
+
+          // パターン５：CGIの標準出力をreadする（パターン４の次に来るところ）
+          // READ_CGI
+          if (client->socket_status == READ_CGI &&
+              FD_ISSET(client_fd, &rfd_set)) {
+            //
+
+            break;
+          }
+
           // パターン６：クライアントにsendする
-          // WRITE_CLIENT（最後、みんなこれ）
+          // WRITE_CLIENT（最後もみんなこれ）
           if (client->socket_status == WRITE_CLIENT &&
               FD_ISSET(client_fd, &wfd_set)) {
-            Client *client = dynamic_cast<Client *>(sockets[client_fd]);
-
             // 完成したレスポンスを送る
             long ret = client->send(client_fd);
 
