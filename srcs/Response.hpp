@@ -4,10 +4,11 @@
 #include <algorithm>
 #include <map>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "utility.hpp"
 
 struct ResponseStatus {
   std::map<int, std::string> code;
@@ -35,6 +36,7 @@ class Response {
   void SetVersion(std::string version);
   void SetStatusCode(int status);
   void SetBody(std::string body);
+  void SetBody(const char* raw);
 
   void AppendHeader(std::string key, std::string value);
   void AppendHeader(std::pair<std::string, std::string> pair);
@@ -48,16 +50,6 @@ class Response {
   const std::string& GetBody() const;
 
   std::string Str() const;
-
-  // exception
-  class StatusException : public std::domain_error {
-   public:
-    StatusException(const std::string& what);
-  };
-  class HeaderKeyException : public std::invalid_argument {
-   public:
-    HeaderKeyException(const std::string& what);
-  };
 
  private:
   void SetReasonPhrase(std::string reason);

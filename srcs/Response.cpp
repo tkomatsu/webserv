@@ -61,6 +61,8 @@ const ResponseStatus Response::kResponseStatus = ResponseStatus();
 
 Response::Response() : http_version_("HTTP/1.1") {}
 
+Response::~Response() {}
+
 void Response::SetVersion(std::string version) { http_version_ = version; }
 
 void Response::SetStatusCode(int status) {
@@ -73,6 +75,8 @@ void Response::SetStatusCode(int status) {
 void Response::SetReasonPhrase(std::string reason) { reason_phrase_ = reason; }
 
 void Response::SetBody(std::string body) { body_ = body; }
+
+void Response::SetBody(const char* raw) { body_ = std::string(raw); }
 
 void Response::AppendHeader(std::string key, std::string value) {
   headers_[key] = value;
