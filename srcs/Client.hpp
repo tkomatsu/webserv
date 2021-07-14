@@ -1,6 +1,8 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "Request.hpp"
+#include "Response.hpp"
 #include "main.hpp"
 
 enum SocketStatus {
@@ -24,14 +26,21 @@ class Client : public ISocket {
 
   static const int buf_max;
 
+  Response &GetResponse() { return response; };
+  
   int socket_status;
 
+  int write_cgi_fd;
+  int read_cgi_fd;
+
  private:
-  std::string response;
+  Request request;
+  Response response;
 
   struct sockaddr_in addr;
   int port;
   std::string hostIp;
+
 };
 
 #endif

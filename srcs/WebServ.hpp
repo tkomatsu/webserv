@@ -12,15 +12,14 @@ class WebServ {
   void start(void);
 
   static const std::string default_path;
+  static const int buf_max;
 
  private:
   void parseConfig(const std::string& path);
 
-  long max_fd;
-  fd_set master_set;
+  int max_fd;
 
   std::map<long, ISocket*> sockets;  // デストラクタでdeleteしときーや
-  // std::vector<long> writable_client_fds;
 };
 
 #endif

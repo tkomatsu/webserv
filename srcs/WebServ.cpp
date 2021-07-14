@@ -1,10 +1,11 @@
 #include "WebServ.hpp"
 
 const std::string WebServ::default_path = "./conf/default.conf";
+const int WebServ::buf_max = 8192;
 
 WebServ::WebServ(const std::string &path) {
   max_fd = 0;
-  FD_ZERO(&master_set);
+  // FD_ZERO(&master_set);
 
   parseConfig(path);
 }
@@ -31,16 +32,6 @@ void WebServ::parseConfig(const std::string &path) {
 }
 
 void WebServ::start(void) {
-  // set listening sockets
-  for (std::map<long, ISocket *>::iterator it = sockets.begin();
-       it != sockets.end(); ++it) {
-    long server_fd = it->first;
-
-    FD_SET(it->first, &master_set);
-    if (server_fd > max_fd) max_fd = server_fd;
-  }
-  if (max_fd == 0) throw std::runtime_error("no server error\n");
-
   while (true) {
     int n = 0;
     fd_set rfd_set, wfd_set;
@@ -48,19 +39,36 @@ void WebServ::start(void) {
 
     // selecting readables or writables
     while (n == 0) {
-      memcpy(&rfd_set, &master_set, sizeof(master_set));
+      FD_ZERO(&rfd_set);
       FD_ZERO(&wfd_set);
+
       for (std::map<long, ISocket *>::iterator it = sockets.begin();
-           it != sockets.end(); ++it)
-        if (dynamic_cast<Client *>(it->second)) {
+           it != sockets.end(); ++it) {
+        // set listening sockets
+        if (dynamic_cast<Server *>(it->second)) {
+          int serevr_fd = it->first;
+
+          FD_SET(serevr_fd, &rfd_set);
+          max_fd = std::max(max_fd, serevr_fd);
+        } else if (dynamic_cast<Client *>(it->second)) {
           int client_fd = it->first;
           Client *client = dynamic_cast<Client *>(sockets[client_fd]);
 
-          if (client->socket_status == WRITE_CLIENT ||
-              client->socket_status == WRITE_FILE ||
-              client->socket_status == WRITE_CGI)
+          if (client->socket_status == READ_CLIENT) {
+            FD_SET(client_fd, &rfd_set);
+            max_fd = std::max(max_fd, client_fd);
+          } else if (client->socket_status == WRITE_CLIENT) {
             FD_SET(client_fd, &wfd_set);
+            max_fd = std::max(max_fd, client_fd);
+          } else if (client->socket_status == READ_CGI) {
+            FD_SET(client->read_cgi_fd, &rfd_set);
+            max_fd = std::max(max_fd, client->read_cgi_fd);
+          } else if (client->socket_status == WRITE_CGI) {
+            FD_SET(client->write_cgi_fd, &wfd_set);
+            max_fd = std::max(max_fd, client->write_cgi_fd);
+          }
         }
+      }
 
       n = select(max_fd + 1, &rfd_set, &wfd_set, NULL, &timeout);
     }
@@ -78,7 +86,7 @@ void WebServ::start(void) {
             client->socket_status = READ_CLIENT;
             int client_fd = client->makeSocket(server_fd);
 
-            FD_SET(client_fd, &master_set);
+            // FD_SET(client_fd, &master_set);
             if (client_fd > max_fd) max_fd = client_fd;
             sockets[client_fd] = client;
 
@@ -99,15 +107,11 @@ void WebServ::start(void) {
 
             if (ret == -1) {
               close(client_fd);
-              FD_CLR(client_fd, &rfd_set);
-              FD_CLR(client_fd, &master_set);
               delete it->second;
               sockets.erase(it);
               throw std::runtime_error("recv error\n");
             } else if (ret == 0) {
               close(client_fd);
-              FD_CLR(client_fd, &rfd_set);
-              FD_CLR(client_fd, &master_set);
               delete it->second;
               sockets.erase(it);
             } else {
@@ -119,7 +123,7 @@ void WebServ::start(void) {
               client->makeResponse();
 
               // この処理はレスポンスが完成したらするから、パターン2~5の中でやると思う
-              client->socket_status = WRITE_CLIENT;
+              // client->socket_status = WRITE_CLIENT;
             }
             break;
           }
@@ -127,7 +131,7 @@ void WebServ::start(void) {
           // パターン２：特定のファイルをreadする
           // READ_FILE
           if (client->socket_status == READ_FILE &&
-              FD_ISSET(client_fd, &rfd_set)) {
+              FD_ISSET(client_fd, &rfd_set)) {  // client_fdではない何か
             // 単なるGETとか
             break;
           }
@@ -135,7 +139,7 @@ void WebServ::start(void) {
           // パターン３：特定のファイルにwriteする
           // WRITE_FILE
           if (client->socket_status == WRITE_FILE &&
-              FD_ISSET(client_fd, &wfd_set)) {
+              FD_ISSET(client_fd, &wfd_set)) {  // client_fdではない何か
             // POSTでファイルuploadとか
             break;
           }
@@ -143,16 +147,25 @@ void WebServ::start(void) {
           // パターン４：CGIにこっちの標準入力をwriteする
           // WRITE_CGI
           if (client->socket_status == WRITE_CGI &&
-              FD_ISSET(client_fd, &wfd_set)) {
-            client->socket_status = WRITE_CLIENT;
+              FD_ISSET(client->write_cgi_fd, &wfd_set)) {
+            write(client->write_cgi_fd, "", 0);
+            close(client->write_cgi_fd);
+            client->socket_status = READ_CGI;
             break;
           }
 
           // パターン５：CGIの標準出力をreadする（パターン４の次に来るところ）
           // READ_CGI
           if (client->socket_status == READ_CGI &&
-              FD_ISSET(client_fd, &rfd_set)) {
-            //
+              FD_ISSET(client->read_cgi_fd, &rfd_set)) {
+            char buf[WebServ::buf_max] = {0};
+            
+            std::cout << read(client->read_cgi_fd, buf, Client::buf_max - 1) << std::endl;
+            
+            close(client->read_cgi_fd);
+
+            client->GetResponse().SetBody(buf);
+            client->socket_status = WRITE_CLIENT;
 
             break;
           }
@@ -166,14 +179,10 @@ void WebServ::start(void) {
 
             if (ret == -1) {
               close(client_fd);
-              FD_CLR(client_fd, &rfd_set);
-              FD_CLR(client_fd, &master_set);
               sockets.erase(it);
-              // writable_client_fds.erase(it);
               throw std::runtime_error("send error\n");
             } else {
               // TODO: can we send all data by one send(2)?
-              // writable_client_fds.erase(it);
               // 次のrequestを待つ
               client->socket_status = READ_CLIENT;
             }
@@ -216,3 +225,6 @@ y          n----・ファイルにwriteするソケット------- |
                                           ・クライアントにsendするソケット
 
 */
+
+// なぜかsetされない   ->  ゲッターを参照で返してなかった
+// うまくexecされない  ->　chmod 755　したらできた
