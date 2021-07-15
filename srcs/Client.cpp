@@ -6,9 +6,9 @@
 
 const int Client::buf_max = 8192;
 
-long Client::makeSocket(long _fd) {
+int Client::SetSocket(int _fd) {
   socklen_t len = sizeof(addr);
-  long fd = accept(_fd, (struct sockaddr *)&addr, &len);
+  int fd = accept(_fd, (struct sockaddr *)&addr, &len);
 
   port = ntohs(addr.sin_port);
   hostIp = ft_inet_ntoa(addr.sin_addr);
@@ -30,7 +30,9 @@ void Client::makeResponse(void) {
   while (getline(ifs, line)) body += line + "\n";
   ifs.close(); */
 
-  // リクエストきたらとりま決め打ちでCGI
+  //　本当はパース結果によってただファイルを読んだり、ファイルに書き込んだり
+  // いろんなパターンが考えられるけど
+  // 今はリクエストきたらとりま決め打ちでCGI
   GenProcessForCGI();
   response.SetVersion("1.1");
   response.SetStatus(200);
@@ -39,12 +41,11 @@ void Client::makeResponse(void) {
   response.SetHeader("Content-Type", "text/html");
   response.SetHeader("Server", "Webserv");
   response.SetHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
-
-  socket_status = WRITE_CGI;
+  SetStatus(WRITE_CGI);
 }
 
-long Client::recv(long client_fd) {
-  long ret;
+int Client::recv(int client_fd) {
+  int ret;
   char buf[Client::buf_max] = {0};
 
   ret = ::recv(client_fd, buf, Client::buf_max - 1, 0);
@@ -52,7 +53,7 @@ long Client::recv(long client_fd) {
   if (ret >= 0) {
     size_t i = std::string(buf).find("\r\n\r\n");
     if (i != std::string::npos) {
-      std::cout << "recv from " + hostIp << ":" << port << std::endl;
+      std::cout << "\nrecv from " + hostIp << ":" << port << std::endl;
 
     } else {
       // TODO: if size of data exceed WebServ::buf_max,
@@ -63,8 +64,8 @@ long Client::recv(long client_fd) {
   return ret;
 }
 
-long Client::send(long client_fd) {
-  long ret;
+int Client::send(int client_fd) {
+  int ret;
 
   ret = ::send(client_fd, response.GetResponse().c_str(),
                response.GetResponse().size(), 0);
@@ -77,7 +78,7 @@ long Client::send(long client_fd) {
 
 void Client::GenProcessForCGI(void) {
   char **args = ft_split("./docs/perl.cgi+mcgee+mine", '+');
-  char envs_zikauchi[20][40] = {
+  char envs_zikauchi[20][50] = {
       "AUTH_TYPE=",
       "CONTENT_LENGTH=",
       "CONTENT_TYPE=",
@@ -133,10 +134,15 @@ void Client::GenProcessForCGI(void) {
   fcntl(read_cgi_fd, F_SETFL, O_NONBLOCK);
   close(pipe_read[1]);
 
-  /* i = 0;
+  i = 0;
   while (args[i]) {
     free(args[i++]);
   }
-  free(args); */
-  // フリー処理はいったん置いとく
+  free(args);
+
+  i = 0;
+  while (envs[i]) {
+    free(envs[i++]);
+  }
+  free(envs);
 }

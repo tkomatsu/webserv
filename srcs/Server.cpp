@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-long Server::makeSocket(long _fd) {
+int Server::SetSocket(int _fd) {
   (void)_fd;
   long fd;
 

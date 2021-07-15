@@ -16,22 +16,23 @@ enum SocketStatus {
 
 class Client : public ISocket {
  public:
-  long makeSocket(long _fd);
+  int SetSocket(int _fd);
   void makeResponse(void);
   bool ParseRequest(void);
   void GenProcessForCGI(void);
 
-  long recv(long client_fd);
-  long send(long client_fd);
+  int recv(int client_fd);
+  int send(int client_fd);
 
   static const int buf_max;
 
   Response &GetResponse() { return response; };
-  
-  int socket_status;
-
-  int write_cgi_fd;
-  int read_cgi_fd;
+  int GetStatus() { return socket_status; };
+  void SetStatus(int status) { socket_status = status; }
+  int GetWriteFileFd() { return write_file_fd; };
+  int GetReadFileFd() { return read_file_fd; };
+  int GetWriteCgiFd() { return write_cgi_fd; };
+  int GetReadCgiFd() { return read_cgi_fd; };
 
  private:
   Request request;
@@ -41,6 +42,13 @@ class Client : public ISocket {
   int port;
   std::string hostIp;
 
+  int socket_status;  // enum
+
+  int write_file_fd;
+  int read_file_fd;
+
+  int write_cgi_fd;
+  int read_cgi_fd;
 };
 
 #endif

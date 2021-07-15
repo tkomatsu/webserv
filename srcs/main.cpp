@@ -1,8 +1,6 @@
 #include "main.hpp"
 
 int main(int argc, char *argv[]) {
-  (void)argc;
-
   signal(SIGCHLD, SIG_IGN);
 
   if (!(argc == 1 || argc == 2)) {
@@ -13,7 +11,7 @@ int main(int argc, char *argv[]) {
   try {
     WebServ webserv(argc == 2 ? argv[1] : WebServ::default_path);
 
-    webserv.start();
+    webserv.Activate();
   } catch (std::exception &e) {
     std::cerr << e.what() << std::endl;
   }
