@@ -69,10 +69,10 @@ void Response::SetStatusCode(int status) {
   if (kResponseStatus.code.find(status) == kResponseStatus.code.end())
     throw StatusException("Invalid status code");
   status_code_ = status;
-  SetReasonPhrase(kResponseStatus.code.find(status)->second);
+  SetStatusMessage(kResponseStatus.code.find(status)->second);
 }
 
-void Response::SetReasonPhrase(std::string reason) { reason_phrase_ = reason; }
+void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
 
 void Response::SetBody(std::string body) { body_ = body; }
 
@@ -92,7 +92,7 @@ const std::string& Response::GetVersion() const { return http_version_; }
 
 int Response::GetStatusCode() const { return status_code_; }
 
-const std::string& Response::GetReasonPhrase() const { return reason_phrase_; }
+const std::string& Response::GetStatusMessage() const { return status_message_; }
 
 const std::map<std::string, std::string>& Response::GetAllHeader() const {
   return headers_;
@@ -110,7 +110,7 @@ std::string Response::Str() const {
   std::stringstream s;
   const char* ret;
 
-  s << http_version_ << " " << status_code_ << " " << reason_phrase_ << "\r\n";
+  s << http_version_ << " " << status_code_ << " " << status_message_ << "\r\n";
   for (std::map<std::string, std::string>::const_iterator i = headers_.begin();
        i != headers_.end(); ++i) {
     s << i->first << ": " << i->second << "\r\n";

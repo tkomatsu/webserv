@@ -2,6 +2,7 @@
 #define UTILITY_HPP
 
 #include <stdexcept>
+#include <ctime>
 
 enum Method {
   GET, POST, DELETE, INVALID,

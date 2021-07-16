@@ -22,7 +22,7 @@ class Response {
  private:
   std::string http_version_;
   int status_code_;
-  std::string reason_phrase_;
+  std::string status_message_;
   std::map<std::string, std::string> headers_;
   std::string body_;
 
@@ -44,7 +44,7 @@ class Response {
 
   const std::string& GetVersion() const;
   int GetStatusCode() const;
-  const std::string& GetReasonPhrase() const;
+  const std::string& GetStatusMessage() const;
   const std::map<std::string, std::string>& GetAllHeader() const;
   const std::string& GetHeader(const std::string& key) const;
   const std::string& GetBody() const;
@@ -52,7 +52,7 @@ class Response {
   std::string Str() const;
 
  private:
-  void SetReasonPhrase(std::string reason);
+  void SetStatusMessage(std::string reason);
 
 };
 
