@@ -7,7 +7,7 @@ WebServ::WebServ(const std::string &path) {
   max_fd = 0;
   timeout = (struct timeval){1, 0};
 
-  parseConfig(path);
+  ParseConig(path);
 }
 
 WebServ::~WebServ() {
@@ -19,7 +19,7 @@ WebServ::~WebServ() {
   sockets.clear();
 }
 
-void WebServ::parseConfig(const std::string &path) {
+void WebServ::ParseConig(const std::string &path) {
   // TODO: parse config fully
   (void)path;
 
@@ -113,7 +113,7 @@ int WebServ::ReadClient(map_iter it) {
     // 全部recvできてなてなかったら次もREAD_CLIENT
 
     // read/writeの前までつくる、次何やるかを決める
-    client->makeResponse();
+    client->MakeResponse();
   }
 
   return ret;
@@ -130,6 +130,8 @@ int WebServ::ReadCGI(map_iter it) {
   close(client->GetReadCgiFd());
 
   client->GetResponse().SetBody(buf);
+  client->GetResponse().AppendHeader(
+      "Content-Length", ft_itoa(client->GetResponse().GetBody().length()));
   client->SetStatus(WRITE_CLIENT);
 
   return ret;

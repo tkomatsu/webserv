@@ -17,7 +17,7 @@ enum SocketStatus {
 class Client : public ISocket {
  public:
   int SetSocket(int _fd);
-  void makeResponse(void);
+  void MakeResponse(void);
   bool ParseRequest(void);
   void GenProcessForCGI(void);
 

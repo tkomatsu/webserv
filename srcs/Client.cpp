@@ -20,9 +20,9 @@ int Client::SetSocket(int _fd) {
 }
 
 // TODO: make good response content
-void Client::makeResponse(void) {
+void Client::MakeResponse(void) {
   // std::ifstream ifs("./docs/html/index.html");
-  std::string header;
+  // std::string header;
   // std::string body;
   // std::string line;
 
@@ -30,17 +30,19 @@ void Client::makeResponse(void) {
   while (getline(ifs, line)) body += line + "\n";
   ifs.close(); */
 
+  // parse
+
   //　本当はパース結果によってただファイルを読んだり、ファイルに書き込んだり
   // いろんなパターンが考えられるけど
   // 今はリクエストきたらとりま決め打ちでCGI
   GenProcessForCGI();
   response.SetVersion("1.1");
-  response.SetStatus(200);
+  response.SetStatusCode(200);
   response.SetReason("OK");
 
-  response.SetHeader("Content-Type", "text/html");
-  response.SetHeader("Server", "Webserv");
-  response.SetHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
+  response.AppendHeader("Content-Type", "text/html");
+  response.AppendHeader("Server", "Webserv");
+  response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
   SetStatus(WRITE_CGI);
 }
 
@@ -67,8 +69,7 @@ int Client::recv(int client_fd) {
 int Client::send(int client_fd) {
   int ret;
 
-  ret = ::send(client_fd, response.GetResponse().c_str(),
-               response.GetResponse().size(), 0);
+  ret = ::send(client_fd, response.Str().c_str(), response.Str().size(), 0);
   if (ret >= 0) {
     std::cout << "send to   " + hostIp << ":" << port << std::endl;
   }
@@ -121,7 +122,6 @@ void Client::GenProcessForCGI(void) {
     close(pipe_read[0]);
     close(pipe_read[1]);
 
-    // std::cout << "これはbodyだ。まぎまぎまぎ\n";
     execve("./docs/perl.cgi", args, envs);
     exit(EXIT_FAILURE);
   }
