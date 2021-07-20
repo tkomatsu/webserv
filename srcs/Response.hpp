@@ -12,12 +12,12 @@
 
 class Response {
  public:
-  struct ResponseStatus {
+  struct Status {
     std::map<int, std::string> code;
-    ResponseStatus();
+    Status();
   };
 
-  static const ResponseStatus kResponseStatus;
+  static const Status kResponseStatus;
 
  private:
   std::string http_version_;

@@ -1,7 +1,7 @@
 #include "Response.hpp"
 
 // const std::map<int, std::string> Response::kResponseStatus = {
-Response::ResponseStatus::ResponseStatus() {
+Response::Status::Status() {
   code[100] = "Continue";
   code[101] = "Swithing Protocol";
   code[102] = "Processing";
@@ -57,7 +57,7 @@ Response::ResponseStatus::ResponseStatus() {
   code[511] = "Network Authentication Required";
 };
 
-const Response::ResponseStatus Response::kResponseStatus = ResponseStatus();
+const Response::Status Response::kResponseStatus = Status();
 
 Response::Response() : http_version_("1.1") {}
 
