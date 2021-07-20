@@ -1,19 +1,17 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-class Server;
-#include "main.hpp"
+#include <arpa/inet.h>
+#include <fcntl.h>
 
-class Server : public ISocket {
+#include "Socket.hpp"
+
+class Server : public Socket {
  public:
-  Server(int port_, std::string hostIp_) : port(port_), hostIp(hostIp_){};
+  Server(int port_, std::string host_ip__) : Socket(port_, host_ip__){};
 
   int SetSocket(int _fd);
-
- private:
-  struct sockaddr_in addr;
-  int port;
-  std::string hostIp;  // like "127.0.0.1"
+  void SetStatus(int status) { socket_status = status; }
 };
 
 #endif

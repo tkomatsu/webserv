@@ -3,18 +3,10 @@
 
 #include "Request.hpp"
 #include "Response.hpp"
+#include "Socket.hpp"
 #include "main.hpp"
 
-enum SocketStatus {
-  READ_CLIENT,
-  READ_FILE,
-  READ_CGI,
-  WRITE_CGI,
-  WRITE_FILE,
-  WRITE_CLIENT,
-};
-
-class Client : public ISocket {
+class Client : public Socket {
  public:
   int SetSocket(int _fd);
   void Prepare(void);
@@ -36,12 +28,6 @@ class Client : public ISocket {
  private:
   Request request;
   Response response;
-
-  struct sockaddr_in addr;
-  int port;
-  std::string hostIp;
-
-  int socket_status;  // enum
 
   int write_fd;
   int read_fd;

@@ -11,7 +11,7 @@ int Client::SetSocket(int _fd) {
   int fd = accept(_fd, (struct sockaddr *)&addr, &len);
 
   port = ntohs(addr.sin_port);
-  hostIp = ft_inet_ntoa(addr.sin_addr);
+  host_ip_ = ft_inet_ntoa(addr.sin_addr);
 
   if (fd == -1) throw std::runtime_error("accept error\n");
   if (fcntl(fd, F_SETFL, O_NONBLOCK) != 0)
@@ -34,8 +34,8 @@ void Client::Prepare(void) {
 
   // int ret = request.NextStatus();
   int ret;
-  ret = READ_FILE;
-  // ret = WRITE_CGI;
+  // ret = READ_FILE;
+  ret = WRITE_CGI;
   SetStatus(ret);
 
   if (ret == READ_FILE) {
@@ -70,7 +70,7 @@ int Client::recv(int client_fd) {
   if (ret >= 0) {
     size_t i = std::string(buf).find("\r\n\r\n");
     if (i != std::string::npos) {
-      std::cout << "\nrecv from " + hostIp << ":" << port << std::endl;
+      std::cout << "\nrecv from " + host_ip_ << ":" << port << std::endl;
 
     } else {
       // TODO: if size of data exceed WebServ::buf_max,
@@ -86,7 +86,7 @@ int Client::send(int client_fd) {
 
   ret = ::send(client_fd, response.Str().c_str(), response.Str().size(), 0);
   if (ret >= 0) {
-    std::cout << "send to   " + hostIp << ":" << port << std::endl;
+    std::cout << "send to   " + host_ip_ << ":" << port << std::endl;
   }
 
   return ret;

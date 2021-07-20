@@ -1,5 +1,9 @@
 #include "Server.hpp"
 
+#include <string.h>
+
+#include <stdexcept>
+
 int Server::SetSocket(int _fd) {
   (void)_fd;
   long fd;
@@ -9,7 +13,7 @@ int Server::SetSocket(int _fd) {
 
   memset((char *)&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = inet_addr(hostIp.c_str());
+  addr.sin_addr.s_addr = inet_addr(host_ip_.c_str());
   addr.sin_port = htons(port);
 
   if (fcntl(fd, F_SETFL, O_NONBLOCK) != 0)

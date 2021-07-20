@@ -16,9 +16,9 @@
 #include <string>
 #include <vector>
 
-#include "ISocket.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
+#include "Socket.hpp"
 #include "WebServ.hpp"
 
 #endif

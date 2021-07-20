@@ -6,7 +6,7 @@ class WebServ;
 
 class WebServ {
  public:
-  typedef std::map<int, ISocket*>::iterator map_iter;
+  typedef std::map<int, Socket*>::iterator map_iter;
 
  public:
   WebServ(const std::string& path);
@@ -34,7 +34,7 @@ class WebServ {
   fd_set rfd_set, wfd_set;
   struct timeval timeout;
 
-  std::map<int, ISocket*> sockets;  // デストラクタでdeleteしときーや
+  std::map<int, Socket*> sockets;  // デストラクタでdeleteしときーや
 };
 
 #endif

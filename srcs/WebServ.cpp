@@ -12,7 +12,7 @@ WebServ::WebServ(const std::string &path) {
 
 WebServ::~WebServ() {
   // delete all pointers
-  for (std::map<int, ISocket *>::iterator it = sockets.begin();
+  for (std::map<int, Socket *>::iterator it = sockets.begin();
        it != sockets.end(); ++it) {
     delete it->second;
   }
@@ -39,7 +39,7 @@ int WebServ::HasUsableIO() {
     FD_ZERO(&rfd_set);
     FD_ZERO(&wfd_set);
 
-    for (std::map<int, ISocket *>::iterator it = sockets.begin();
+    for (std::map<int, Socket *>::iterator it = sockets.begin();
          it != sockets.end(); ++it) {
       // set listening sockets
       if (dynamic_cast<Server *>(it->second)) {
@@ -144,7 +144,8 @@ int WebServ::ReadFile(map_iter it) {
   return ret;
 }
 
-int WebServ::WriteFile(map_iter it) { (void)it; 
+int WebServ::WriteFile(map_iter it) {
+  (void)it;
   return 1;
 }
 
@@ -205,7 +206,7 @@ void WebServ::Activate(void) {
     int n = HasUsableIO();  // polling I/O
 
     if (n > 0) {
-      for (std::map<int, ISocket *>::iterator it = sockets.begin();
+      for (std::map<int, Socket *>::iterator it = sockets.begin();
            it != sockets.end(); ++it) {
         // サーバーソケット
         if (dynamic_cast<Server *>(it->second)) {
@@ -225,13 +226,15 @@ void WebServ::Activate(void) {
 
           // パターン２：特定のファイルをreadする
           if (client->GetStatus() == READ_FILE &&
-              FD_ISSET(client->GetReadFd(), &rfd_set)) {  // client_fdではない何か
+              FD_ISSET(client->GetReadFd(),
+                       &rfd_set)) {  // client_fdではない何か
             if (ReadFile(it)) break;
           }
 
           // パターン３：特定のファイルにwriteする
           if (client->GetStatus() == WRITE_FILE &&
-              FD_ISSET(client->GetWriteFd(), &wfd_set)) {  // client_fdではない何か
+              FD_ISSET(client->GetWriteFd(),
+                       &wfd_set)) {  // client_fdではない何か
             if (WriteFile(it)) break;
           }
 
