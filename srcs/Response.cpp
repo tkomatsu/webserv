@@ -76,33 +76,11 @@ void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
 
 void Response::SetBody(std::string body) { body_ = body; }
 
-void Response::AppendHeader(std::string key, std::string value) {
-  headers_[key] = value;
-}
-
-void Response::AppendHeader(std::pair<std::string, std::string> pair) {
-  headers_[pair.first] = pair.second;
-}
-
-void Response::AppendBody(std::string str) { body_ += str; }
-
 const std::string& Response::GetVersion() const { return http_version_; }
 
 int Response::GetStatusCode() const { return status_code_; }
 
 const std::string& Response::GetStatusMessage() const { return status_message_; }
-
-const std::map<std::string, std::string>& Response::GetAllHeader() const {
-  return headers_;
-}
-
-const std::string& Response::GetHeader(const std::string& key) const {
-  if (headers_.find(key) == headers_.end())
-    throw HeaderKeyException("No such header");
-  return headers_.find(key)->second;
-}
-
-const std::string& Response::GetBody() const { return body_; }
 
 std::string Response::Str() const {
   std::stringstream s;

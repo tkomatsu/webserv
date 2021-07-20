@@ -36,14 +36,6 @@ const std::string& Request::GetURI() const { return uri_; }
 
 const std::string& Request::GetVersion() const { return http_version_; }
 
-const std::string& Request::GetHeader(const std::string& key) const {
-  if (headers_.find(key) == headers_.end())
-    throw HeaderKeyException("No such header");
-  return headers_.find(key)->second;
-}
-
-std::string Request::GetBody() const { return body_; }
-
 size_t Request::ParseStartline(size_t idx) {
   if (raw_.find("\r\n") == std::string::npos)
     throw ParseStartlineException("not yet");

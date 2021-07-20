@@ -1,17 +1,13 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
-#include <string>
-#include <map>
-#include <vector>
-
-#include "utility.hpp"
+#include "HttpMessage.hpp"
 
 enum ParseStatus {
   PARSE_INIT, PARSE_STARTLINE, PARSE_HEADER, PARSE_BODY, PARSE_COMPLETE,
 };
 
-class Request {
+class Request : public HttpMessage {
 
  private:
   Request(const Request& other);
@@ -23,8 +19,6 @@ class Request {
   enum Method method_;
   std::string uri_;
   std::string http_version_;
-  std::map<std::string, std::string> headers_;
-  std::string body_;
 
  public:
   Request();
@@ -35,8 +29,21 @@ class Request {
   enum Method GetMethod() const;
   const std::string& GetURI() const;
   const std::string& GetVersion() const;
-  const std::string& GetHeader(const std::string& key) const;
-  std::string GetBody() const;
+
+  class ParseBodyException : public std::runtime_error {
+   public:
+    ParseBodyException(const std::string& what);
+  };
+
+  class ParseHeaderException : public std::runtime_error {
+   public:
+    ParseHeaderException(const std::string& what);
+  };
+
+  class ParseStartlineException : public std::runtime_error {
+   public:
+    ParseStartlineException(const std::string& what);
+  };
 
  private:
   void ParseRequest();
