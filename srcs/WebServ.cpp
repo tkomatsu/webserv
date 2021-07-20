@@ -57,12 +57,18 @@ int WebServ::HasUsableIO() {
         } else if (client->GetStatus() == WRITE_CLIENT) {
           FD_SET(client_fd, &wfd_set);
           max_fd = std::max(max_fd, client_fd);
+        } else if (client->GetStatus() == READ_FILE) {
+          FD_SET(client->GetReadFd(), &rfd_set);
+          max_fd = std::max(max_fd, client->GetReadFd());
+        } else if (client->GetStatus() == WRITE_FILE) {
+          FD_SET(client->GetWriteFd(), &wfd_set);
+          max_fd = std::max(max_fd, client->GetWriteFd());
         } else if (client->GetStatus() == READ_CGI) {
-          FD_SET(client->GetReadCgiFd(), &rfd_set);
-          max_fd = std::max(max_fd, client->GetReadCgiFd());
+          FD_SET(client->GetReadFd(), &rfd_set);
+          max_fd = std::max(max_fd, client->GetReadFd());
         } else if (client->GetStatus() == WRITE_CGI) {
-          FD_SET(client->GetWriteCgiFd(), &wfd_set);
-          max_fd = std::max(max_fd, client->GetWriteCgiFd());
+          FD_SET(client->GetWriteFd(), &wfd_set);
+          max_fd = std::max(max_fd, client->GetWriteFd());
         }
       }
     }
@@ -113,10 +119,33 @@ int WebServ::ReadClient(map_iter it) {
     // 全部recvできてなてなかったら次もREAD_CLIENT
 
     // read/writeの前までつくる、次何やるかを決める
-    client->MakeResponse();
+    // if recv done
+    client->Prepare();
   }
 
   return ret;
+}
+
+int WebServ::ReadFile(map_iter it) {
+  int client_fd = it->first;
+  Client *client = dynamic_cast<Client *>(sockets[client_fd]);
+  int ret = 1;
+  char buf[WebServ::buf_max] = {0};
+
+  read(client->GetReadFd(), buf, Client::buf_max - 1);
+
+  close(client->GetReadFd());
+
+  client->GetResponse().SetBody(buf);
+  client->GetResponse().AppendHeader(
+      "Content-Length", ft_itoa(client->GetResponse().GetBody().length()));
+  client->SetStatus(WRITE_CLIENT);
+
+  return ret;
+}
+
+int WebServ::WriteFile(map_iter it) { (void)it; 
+  return 1;
 }
 
 int WebServ::ReadCGI(map_iter it) {
@@ -125,9 +154,9 @@ int WebServ::ReadCGI(map_iter it) {
   int ret = 1;
   char buf[WebServ::buf_max] = {0};
 
-  read(client->GetReadCgiFd(), buf, Client::buf_max - 1);
+  read(client->GetReadFd(), buf, Client::buf_max - 1);
 
-  close(client->GetReadCgiFd());
+  close(client->GetReadFd());
 
   client->GetResponse().SetBody(buf);
   client->GetResponse().AppendHeader(
@@ -142,8 +171,8 @@ int WebServ::WriteCGI(map_iter it) {
   Client *client = dynamic_cast<Client *>(sockets[client_fd]);
   int ret = 1;
 
-  write(client->GetWriteCgiFd(), "", 0);
-  close(client->GetWriteCgiFd());
+  write(client->GetWriteFd(), "", 0);
+  close(client->GetWriteFd());
   client->SetStatus(READ_CGI);
 
   return ret;
@@ -196,27 +225,25 @@ void WebServ::Activate(void) {
 
           // パターン２：特定のファイルをreadする
           if (client->GetStatus() == READ_FILE &&
-              FD_ISSET(client_fd, &rfd_set)) {  // client_fdではない何か
-            // 単なるGETとか
-            break;
+              FD_ISSET(client->GetReadFd(), &rfd_set)) {  // client_fdではない何か
+            if (ReadFile(it)) break;
           }
 
           // パターン３：特定のファイルにwriteする
           if (client->GetStatus() == WRITE_FILE &&
-              FD_ISSET(client_fd, &wfd_set)) {  // client_fdではない何か
-            // POSTでファイルuploadとか
-            break;
+              FD_ISSET(client->GetWriteFd(), &wfd_set)) {  // client_fdではない何か
+            if (WriteFile(it)) break;
           }
 
           // パターン４：CGIにこっちの標準入力をwriteする
           if (client->GetStatus() == WRITE_CGI &&
-              FD_ISSET(client->GetWriteCgiFd(), &wfd_set)) {
+              FD_ISSET(client->GetWriteFd(), &wfd_set)) {
             if (WriteCGI(it)) break;
           }
 
           // パターン５：CGIの標準出力をreadする（パターン４の次に来るところ）
           if (client->GetStatus() == READ_CGI &&
-              FD_ISSET(client->GetReadCgiFd(), &rfd_set)) {
+              FD_ISSET(client->GetReadFd(), &rfd_set)) {
             if (ReadCGI(it)) break;
           }
 

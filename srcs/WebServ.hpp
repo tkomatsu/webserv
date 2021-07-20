@@ -18,10 +18,10 @@ class WebServ {
   int AcceptSession(map_iter it);
 
   int ReadClient(map_iter it);
-  // int ReadFile(map_iter it);
+  int ReadFile(map_iter it);
   int ReadCGI(map_iter it);
   int WriteCGI(map_iter it);
-  // int WriteFile(map_iter it);
+  int WriteFile(map_iter it);
   int WriteClient(map_iter it);
 
   static const std::string default_path;

@@ -26,7 +26,7 @@ void Request::ParseRequest() {
   }
 
   method_ = GET;
-  uri_ = "/";
+  uri_ = "/index.html";
   headers_["Content-Type"] = "text/html; charset=UTF-8";
   headers_["Date"] = "Wed, 02 Feb 2042 00:42:42 GMT";
   headers_["Server"] = "webserv";

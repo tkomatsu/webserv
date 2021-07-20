@@ -17,7 +17,7 @@ enum SocketStatus {
 class Client : public ISocket {
  public:
   int SetSocket(int _fd);
-  void MakeResponse(void);
+  void Prepare(void);
   bool ParseRequest(void);
   void GenProcessForCGI(void);
 
@@ -26,13 +26,12 @@ class Client : public ISocket {
 
   static const int buf_max;
 
+  void SetStatus(int status) { socket_status = status; }
+
   Response &GetResponse() { return response; };
   int GetStatus() { return socket_status; };
-  void SetStatus(int status) { socket_status = status; }
-  int GetWriteFileFd() { return write_file_fd; };
-  int GetReadFileFd() { return read_file_fd; };
-  int GetWriteCgiFd() { return write_cgi_fd; };
-  int GetReadCgiFd() { return read_cgi_fd; };
+  int GetWriteFd() { return write_fd; };
+  int GetReadFd() { return read_fd; };
 
  private:
   Request request;
@@ -44,11 +43,8 @@ class Client : public ISocket {
 
   int socket_status;  // enum
 
-  int write_file_fd;
-  int read_file_fd;
-
-  int write_cgi_fd;
-  int read_cgi_fd;
+  int write_fd;
+  int read_fd;
 };
 
 #endif

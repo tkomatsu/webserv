@@ -20,7 +20,7 @@ int Client::SetSocket(int _fd) {
 }
 
 // TODO: make good response content
-void Client::MakeResponse(void) {
+void Client::Prepare(void) {
   // std::ifstream ifs("./docs/html/index.html");
   // std::string header;
   // std::string body;
@@ -32,18 +32,33 @@ void Client::MakeResponse(void) {
 
   // parse
 
-  //　本当はパース結果によってただファイルを読んだり、ファイルに書き込んだり
-  // いろんなパターンが考えられるけど
-  // 今はリクエストきたらとりま決め打ちでCGI
-  GenProcessForCGI();
-  response.SetVersion("1.1");
-  response.SetStatusCode(200);
-  response.SetReason("OK");
+  // int ret = request.NextStatus();
+  int ret;
+  ret = READ_FILE;
+  // ret = WRITE_CGI;
+  SetStatus(ret);
 
-  response.AppendHeader("Content-Type", "text/html");
-  response.AppendHeader("Server", "Webserv");
-  response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
-  SetStatus(WRITE_CGI);
+  if (ret == READ_FILE) {
+    read_fd = open("./docs/html/index.html", O_RDONLY);
+
+    response.SetVersion("1.1");
+    response.SetStatusCode(200);
+    response.SetReason("OK");
+    response.AppendHeader("Content-Type", "text/html");
+    response.AppendHeader("Server", "Webserv");
+    response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
+  }
+  if (ret == WRITE_CGI) {
+    GenProcessForCGI();
+
+    response.SetVersion("1.1");
+    response.SetStatusCode(200);
+    response.SetReason("OK");
+    response.AppendHeader("Content-Type", "text/html");
+    response.AppendHeader("Server", "Webserv");
+    response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
+    // Content-Lengthとか今わからないやつもある
+  }
 }
 
 int Client::recv(int client_fd) {
@@ -126,12 +141,12 @@ void Client::GenProcessForCGI(void) {
     exit(EXIT_FAILURE);
   }
 
-  write_cgi_fd = pipe_write[1];
-  fcntl(write_cgi_fd, F_SETFL, O_NONBLOCK);
+  write_fd = pipe_write[1];
+  fcntl(write_fd, F_SETFL, O_NONBLOCK);
   close(pipe_write[0]);
 
-  read_cgi_fd = pipe_read[0];
-  fcntl(read_cgi_fd, F_SETFL, O_NONBLOCK);
+  read_fd = pipe_read[0];
+  fcntl(read_fd, F_SETFL, O_NONBLOCK);
   close(pipe_read[1]);
 
   i = 0;
