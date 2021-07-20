@@ -10,13 +10,13 @@
 
 #include "utility.hpp"
 
-struct ResponseStatus {
-  std::map<int, std::string> code;
-  ResponseStatus();
-};
-
 class Response {
  public:
+  struct ResponseStatus {
+    std::map<int, std::string> code;
+    ResponseStatus();
+  };
+
   static const ResponseStatus kResponseStatus;
 
  private:
@@ -36,7 +36,6 @@ class Response {
   void SetVersion(std::string version);
   void SetStatusCode(int status);
   void SetBody(std::string body);
-  void SetBody(const char* raw);
 
   void AppendHeader(std::string key, std::string value);
   void AppendHeader(std::pair<std::string, std::string> pair);

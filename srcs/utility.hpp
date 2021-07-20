@@ -29,4 +29,9 @@ class ParseHeaderException : public std::runtime_error {
   ParseHeaderException(const std::string& what);
 };
 
+class ParseStartlineException : public std::runtime_error {
+ public:
+  ParseStartlineException(const std::string& what);
+};
+
 #endif /* UTILITY_HPP */

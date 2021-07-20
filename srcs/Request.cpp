@@ -1,19 +1,22 @@
 #include "Request.hpp"
 
-Request::Request(const char* raw) : raw_(std::string(raw)), status_(PARSE_INIT) {
+Request::Request() : status_(PARSE_INIT) {
   ParseRequest();
 }
 
-void Request::AppendRawData(const char* raw) {
-  raw_ += std::string(raw);
+void Request::AppendRawData(std::string raw) {
+  raw_ += raw;
   ParseRequest();
 }
 
 void Request::ParseRequest() {
   try {
-    ParseStartline();
-    ParseHeader();
-    ParseBody();
+    size_t idx = 0;
+    idx = ParseStartline(idx);
+    idx = ParseHeader(idx);
+    idx = ParseBody(idx);
+  } catch (ParseStartlineException& e) {
+    /* Incomplete parsing startline */
   } catch (ParseHeaderException& e) {
     /* Incomplete parsing header */
   } catch (ParseBodyException& e) {
@@ -41,11 +44,16 @@ const std::string& Request::GetHeader(const std::string& key) const {
 
 std::string Request::GetBody() const { return body_; }
 
-void Request::ParseStartline() {
+size_t Request::ParseStartline(size_t idx) {
+  if (raw_.find("\r\n") == std::string::npos)
+    throw ParseStartlineException("not yet");
+  return idx;
 }
 
-void Request::ParseHeader() {
+size_t Request::ParseHeader(size_t idx) {
+  return idx;
 }
 
-void Request::ParseBody() {
+size_t Request::ParseBody(size_t idx) {
+  return idx;
 }

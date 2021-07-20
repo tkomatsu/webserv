@@ -1,8 +1,8 @@
 #include "Response.hpp"
 
 // const std::map<int, std::string> Response::kResponseStatus = {
-ResponseStatus::ResponseStatus() {
-  code[100] = "Conginue";
+Response::ResponseStatus::ResponseStatus() {
+  code[100] = "Continue";
   code[101] = "Swithing Protocol";
   code[102] = "Processing";
   code[103] = "Early Hints";
@@ -57,9 +57,9 @@ ResponseStatus::ResponseStatus() {
   code[511] = "Network Authentication Required";
 };
 
-const ResponseStatus Response::kResponseStatus = ResponseStatus();
+const Response::ResponseStatus Response::kResponseStatus = ResponseStatus();
 
-Response::Response() : http_version_("HTTP/1.1") {}
+Response::Response() : http_version_("1.1") {}
 
 Response::~Response() {}
 
@@ -75,8 +75,6 @@ void Response::SetStatusCode(int status) {
 void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
 
 void Response::SetBody(std::string body) { body_ = body; }
-
-void Response::SetBody(const char* raw) { body_ = std::string(raw); }
 
 void Response::AppendHeader(std::string key, std::string value) {
   headers_[key] = value;
@@ -110,7 +108,7 @@ std::string Response::Str() const {
   std::stringstream s;
   const char* ret;
 
-  s << http_version_ << " " << status_code_ << " " << status_message_ << "\r\n";
+  s << "HTTP/" << http_version_ << " " << status_code_ << " " << status_message_ << "\r\n";
   for (std::map<std::string, std::string>::const_iterator i = headers_.begin();
        i != headers_.end(); ++i) {
     s << i->first << ": " << i->second << "\r\n";

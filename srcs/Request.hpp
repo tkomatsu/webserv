@@ -14,7 +14,6 @@ enum ParseStatus {
 class Request {
 
  private:
-  Request();
   Request(const Request& other);
   Request& operator=(const Request& rhs);
 
@@ -28,10 +27,10 @@ class Request {
   std::string body_;
 
  public:
-  Request(const char* raw = NULL);
+  Request();
   ~Request();
 
-  void AppendRawData(const char* raw);
+  void AppendRawData(std::string raw);
 
   enum Method GetMethod() const;
   const std::string& GetURI() const;
@@ -41,9 +40,9 @@ class Request {
 
  private:
   void ParseRequest();
-  void ParseStartline();
-  void ParseHeader();
-  void ParseBody();
+  size_t ParseStartline(size_t idx);
+  size_t ParseHeader(size_t idx);
+  size_t ParseBody(size_t idx);
 
 };
 
