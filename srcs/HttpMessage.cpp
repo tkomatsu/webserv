@@ -32,4 +32,12 @@ const std::string& HttpMessage::GetHeader(const std::string& key) const {
 const std::string& HttpMessage::GetBody() const { return body_; }
 
 const std::string HttpMessage::Now() const {
+  struct tm* now = std::gmtime(NULL);
+  std::stringstream s;
+  const std::string kWkday[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+  const std::string kMonth[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  s << kWkday[now->tm_wday] << ", ";
+  s << now->tm_mday << " " << kMonth[now->tm_mon] << 1900 + now->tm_year << " ";
+  s << now->tm_hour << ":" << now->tm_min << ":" << now->tm_sec << " GMT";
+  return s.str();
 }

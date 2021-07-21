@@ -5,6 +5,7 @@
 #include <string>
 #include <stdexcept>
 #include <ctime>
+#include <sstream>
 
 #include "utility.hpp"
 
@@ -29,6 +30,8 @@ class HttpMessage {
   const http_header& GetAllHeader() const;
   const std::string& GetHeader(const std::string& key) const;
   const std::string& GetBody() const;
+
+  const std::string Now() const;
 
   class HeaderKeyException : public std::invalid_argument {
    public:
