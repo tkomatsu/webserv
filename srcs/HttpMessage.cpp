@@ -4,6 +4,8 @@ HttpMessage::HttpMessage() {}
 
 HttpMessage::~HttpMessage() {}
 
+void HttpMessage::SetVersion(std::string version) { http_version_ = version; }
+
 void HttpMessage::AppendHeader(std::string key, std::string value) {
   headers_[key] = value;
 }
@@ -13,6 +15,8 @@ void HttpMessage::AppendHeader(std::pair<std::string, std::string> pair) {
 }
 
 void HttpMessage::AppendBody(std::string str) { body_ += str; }
+
+const std::string& HttpMessage::GetVersion() const { return http_version_; }
 
 const HttpMessage::http_header& HttpMessage::GetAllHeader() const {
   return headers_;

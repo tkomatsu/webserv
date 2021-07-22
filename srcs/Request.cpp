@@ -26,15 +26,12 @@ void Request::ParseRequest() {
   method_ = GET;
   uri_ = "/";
   headers_["Content-Type"] = "text/html; charset=UTF-8";
-  headers_["Date"] = "Wed, 02 Feb 2042 00:42:42 GMT";
-  headers_["Server"] = "webserv";
+  headers_["Date"] = Now();
 }
 
 enum Method Request::GetMethod() const { return method_; }
 
 const std::string& Request::GetURI() const { return uri_; }
-
-const std::string& Request::GetVersion() const { return http_version_; }
 
 size_t Request::ParseStartline(size_t idx) {
   if (raw_.find("\r\n") == std::string::npos)

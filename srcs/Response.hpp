@@ -14,7 +14,6 @@ class Response : public HttpMessage {
   static const Status kResponseStatus;
 
  private:
-  std::string http_version_;
   int status_code_;
   std::string status_message_;
 
@@ -25,11 +24,9 @@ class Response : public HttpMessage {
   Response();
   ~Response();
 
-  void SetVersion(std::string version);
   void SetStatusCode(int status);
   void SetBody(std::string body);
 
-  const std::string& GetVersion() const;
   int GetStatusCode() const;
   const std::string& GetStatusMessage() const;
 

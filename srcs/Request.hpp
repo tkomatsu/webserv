@@ -18,7 +18,6 @@ class Request : public HttpMessage {
 
   enum Method method_;
   std::string uri_;
-  std::string http_version_;
 
  public:
   Request();
@@ -28,7 +27,6 @@ class Request : public HttpMessage {
 
   enum Method GetMethod() const;
   const std::string& GetURI() const;
-  const std::string& GetVersion() const;
 
   class ParseBodyException : public std::runtime_error {
    public:

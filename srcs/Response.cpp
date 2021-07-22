@@ -59,11 +59,11 @@ Response::Status::Status() {
 
 const Response::Status Response::kResponseStatus = Status();
 
-Response::Response() : http_version_("1.1") {}
+Response::Response() {
+  http_version_ = "1.1";
+}
 
 Response::~Response() {}
-
-void Response::SetVersion(std::string version) { http_version_ = version; }
 
 void Response::SetStatusCode(int status) {
   if (kResponseStatus.code.find(status) == kResponseStatus.code.end())
@@ -75,8 +75,6 @@ void Response::SetStatusCode(int status) {
 void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
 
 void Response::SetBody(std::string body) { body_ = body; }
-
-const std::string& Response::GetVersion() const { return http_version_; }
 
 int Response::GetStatusCode() const { return status_code_; }
 
