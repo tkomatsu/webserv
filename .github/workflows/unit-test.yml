@@ -11,7 +11,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: build
-      run: make
     - name: unit test
       run: make check
