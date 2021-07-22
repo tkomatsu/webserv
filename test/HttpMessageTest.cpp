@@ -41,3 +41,15 @@ TEST_F(HttpMessageTest, Date) {
   std::string date = message.Now(now);
   EXPECT_STREQ(buf, date.c_str());
 }
+
+TEST_F(HttpMessageTest, Exception) {
+  HttpMessage message;
+  message.AppendHeader("name", "value");
+  try {
+    message.GetHeader("aaa");
+  } catch (HttpMessage::HeaderKeyException& e) {
+    SUCCEED();
+    return ;
+  }
+  FAIL();
+}
