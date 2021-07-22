@@ -31,7 +31,7 @@ class HttpMessage {
   const std::string& GetHeader(const std::string& key) const;
   const std::string& GetBody() const;
 
-  const std::string Now() const;
+  std::string Now(time_t time = std::time(NULL)) const;
 
   class HeaderKeyException : public std::invalid_argument {
    public:
