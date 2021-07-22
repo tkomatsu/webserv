@@ -1,5 +1,6 @@
 #include "Client.hpp"
 
+#include <dirent.h>
 #include <unistd.h>
 
 #include "utility.hpp"
@@ -35,29 +36,67 @@ void Client::Prepare(void) {
   // int ret = request.NextStatus();
   int ret;
   // ret = READ_FILE;
-  ret = WRITE_CGI;
+  // ret = READ_FILE;
+  // ret = WRITE_FILE;
+  // ret = WRITE_CGI;
+  ret = WRITE_CLIENT;
   SetStatus(ret);
+
+  bool is_autoindex = true;
 
   if (ret == READ_FILE) {
     read_fd = open("./docs/html/index.html", O_RDONLY);
+    fcntl(read_fd, F_SETFL, O_NONBLOCK);
 
-    response.SetVersion("1.1");
     response.SetStatusCode(200);
-    response.SetReason("OK");
+    response.SetReason(Response::kResponseStatus.code.at(200));
     response.AppendHeader("Content-Type", "text/html");
     response.AppendHeader("Server", "Webserv");
     response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
-  }
-  if (ret == WRITE_CGI) {
+  } else if (ret == WRITE_FILE) {
+    write_fd = open("./docs/html/post.html", O_RDWR | O_CREAT, 0644);
+    fcntl(write_fd, F_SETFL, O_NONBLOCK);
+
+    response.SetStatusCode(201);
+    response.SetReason(Response::kResponseStatus.code.at(201));
+    response.AppendHeader("Content-Type", "text/html");
+    response.AppendHeader("Server", "Webserv");
+    response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
+    response.AppendHeader("Content-Location", "/post.html");
+  } else if (ret == WRITE_CGI) {
     GenProcessForCGI();
 
-    response.SetVersion("1.1");
     response.SetStatusCode(200);
-    response.SetReason("OK");
+    response.SetReason(Response::kResponseStatus.code.at(200));
     response.AppendHeader("Content-Type", "text/html");
     response.AppendHeader("Server", "Webserv");
     response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
     // Content-Lengthとか今わからないやつもある
+  } else if (ret == WRITE_CLIENT) {
+    if (is_autoindex) {
+      response.SetStatusCode(200);
+      response.SetReason(Response::kResponseStatus.code.at(200));
+      response.AppendHeader("Content-Type", "text/html");
+      response.AppendHeader("Server", "Webserv");
+      response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
+
+      DIR *dirp = opendir("./docs");
+      struct dirent *dp;
+      fileinfo info;
+
+      while ((dp = readdir(dirp)) != NULL) {
+        info.dirent = dp;
+        stat(("./docs/" + std::string(dp->d_name)).c_str(), info.stat);
+        index.push_back(info);
+      }
+      closedir(dirp);
+
+      for (std::vector<fileinfo>::iterator it = index.begin();
+           it != index.end(); ++it) {
+        fileinfo tmp = *it;
+        response.AppendBody("<p>" + std::string(tmp.dirent->d_name) + "</p>\n");
+      }
+    }
   }
 }
 
@@ -95,23 +134,24 @@ int Client::send(int client_fd) {
 void Client::GenProcessForCGI(void) {
   char **args = ft_split("./docs/perl.cgi+mcgee+mine", '+');
   char envs_zikauchi[20][50] = {
+
       "AUTH_TYPE=",
       "CONTENT_LENGTH=",
       "CONTENT_TYPE=",
       "GATEWAY_INTERFACE=CGI/1.1",
-      "PATH_INFO=",
-      "PATH_TRANSLATED=",
-      "QUERY_STRING=aaa+bbb",
-      "REMOTE_ADDR=172.17.0.1",
+      "PATH_INFO=/perl.cgi",
+      "PATH_TRANSLATED=./docs/mcgee/mine",
+      "QUERY_STRING=",
+      "REMOTE_ADDR=127.0.0.1",
       "REMOTE_IDENT=",
       "REMOTE_USER=",
       "REQUEST_METHOD=GET",
-      "REQUEST_URI=",
-      "SCRIPT_NAME=/docs/perl.cgi",
-      "SERVER_NAME=",
-      "SERVER_PORT=4200",
+      "REQUEST_URI=/sample.cgi/hoge/fuga",
+      "SCRIPT_NAME=/perl.cgi",
+      "SERVER_NAME=localhost",
+      "SERVER_PORT=4200 ",
       "SERVER_PROTOCOL=HTTP/1.1",
-      "SERVER_SOFTWARE=webserv",
+      "SERVER_SOFTWARE=WEBSERV/0.3",
   };
   char **envs = (char **)malloc(sizeof(char *) * 18);
   int i = 0;

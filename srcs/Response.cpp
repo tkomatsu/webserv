@@ -96,17 +96,16 @@ void Response::SetReason(std::string reason) { status_message_ = reason; }
 
 void Response::SetBody(std::string body) { body_ = body; }
 
-void Response::SetBody(const char* raw) { body_ = std::string(raw); }
-
 void Response::AppendHeader(std::string key, std::string value) {
   headers_[key] = value;
 }
 
+void Response::AppendBody(std::string str) { body_ += str; }
+
 std::string Response::Str() const {
   std::stringstream s;
 
-  s << "HTTP/" + http_version_ << " " << status_code_ << " " << status_message_
-    << "\r\n";
+  s << http_version_ << " " << status_code_ << " " << status_message_ << "\r\n";
   for (std::map<std::string, std::string>::const_iterator i = headers_.begin();
        i != headers_.end(); ++i) {
     s << i->first << ": " << i->second << "\r\n";

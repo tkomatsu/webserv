@@ -29,7 +29,6 @@ class Request {
 
  public:
   Request();
-  Request(char* raw);  // これやるとセグる…
   ~Request();
 
   void AppendRawData(const char* raw);

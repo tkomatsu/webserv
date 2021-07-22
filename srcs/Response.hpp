@@ -22,7 +22,6 @@ class Response {
   void SetStatusCode(int);
   void SetReason(std::string);
   void SetBody(std::string);
-  void SetBody(const char* raw);  // キャストされるからいらない…？
 
   void AppendHeader(std::string key, std::string value);
   void AppendHeader(std::pair<std::string, std::string> pair);

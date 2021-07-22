@@ -6,6 +6,11 @@
 #include "Socket.hpp"
 #include "main.hpp"
 
+typedef struct fileinfo {
+  struct dirent *dirent;
+  struct stat *stat;
+} fileinfo;
+
 class Client : public Socket {
  public:
   int SetSocket(int _fd);
@@ -31,6 +36,8 @@ class Client : public Socket {
 
   int write_fd;
   int read_fd;
+
+  std::vector<fileinfo> index;
 };
 
 #endif

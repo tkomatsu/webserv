@@ -1,11 +1,9 @@
 #include "Request.hpp"
 
-Request::Request() : status_(PARSE_INIT) { ParseRequest(); };
-
-Request::Request(char* raw) : raw_(std::string(raw)), status_(PARSE_INIT) {
-  ParseRequest();
+Request::Request() : status_(PARSE_INIT) {
   (void)status_;
-}
+  ParseRequest();
+};
 
 Request::~Request(){};
 

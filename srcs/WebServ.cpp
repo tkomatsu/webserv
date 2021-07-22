@@ -114,12 +114,6 @@ int WebServ::ReadClient(map_iter it) {
     delete it->second;
     sockets.erase(it);
   } else {
-    // パースしてつぎのsocket_statusをうまい具合に設定したい！
-    // client->ParseRequest();　//
-    // 全部recvできてなてなかったら次もREAD_CLIENT
-
-    // read/writeの前までつくる、次何やるかを決める
-    // if recv done
     client->Prepare();
   }
 
@@ -137,16 +131,21 @@ int WebServ::ReadFile(map_iter it) {
   close(client->GetReadFd());
 
   client->GetResponse().SetBody(buf);
-  client->GetResponse().AppendHeader(
-      "Content-Length", ft_itoa(client->GetResponse().GetBody().length()));
   client->SetStatus(WRITE_CLIENT);
 
   return ret;
 }
 
 int WebServ::WriteFile(map_iter it) {
-  (void)it;
-  return 1;
+  int client_fd = it->first;
+  Client *client = dynamic_cast<Client *>(sockets[client_fd]);
+  int ret = 1;
+
+  write(client->GetWriteFd(), "<p>This is post.</p>", 20);
+  close(client->GetWriteFd());
+  client->SetStatus(WRITE_CLIENT);
+
+  return ret;
 }
 
 int WebServ::ReadCGI(map_iter it) {
@@ -160,8 +159,6 @@ int WebServ::ReadCGI(map_iter it) {
   close(client->GetReadFd());
 
   client->GetResponse().SetBody(buf);
-  client->GetResponse().AppendHeader(
-      "Content-Length", ft_itoa(client->GetResponse().GetBody().length()));
   client->SetStatus(WRITE_CLIENT);
 
   return ret;
@@ -184,6 +181,9 @@ int WebServ::WriteClient(map_iter it) {
   Client *client = dynamic_cast<Client *>(sockets[client_fd]);
   int ret;
 
+  client->GetResponse().AppendHeader(
+      "Content-Length", ft_itoa(client->GetResponse().GetBody().length()));
+  
   // 完成したレスポンスを送る
   ret = client->send(client_fd);
 
