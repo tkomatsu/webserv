@@ -84,7 +84,6 @@ const std::string& Response::GetStatusMessage() const { return status_message_; 
 
 std::string Response::Str() const {
   std::stringstream s;
-  const char* ret;
 
   s << "HTTP/" << http_version_ << " " << status_code_ << " " << status_message_ << "\r\n";
   for (std::map<std::string, std::string>::const_iterator i = headers_.begin();

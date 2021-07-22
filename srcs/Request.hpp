@@ -32,17 +32,17 @@ class Request : public HttpMessage {
 
   class ParseBodyException : public std::runtime_error {
    public:
-    ParseBodyException(const std::string& what);
+    ParseBodyException(const std::string& what) : std::runtime_error(what) {}
   };
 
   class ParseHeaderException : public std::runtime_error {
    public:
-    ParseHeaderException(const std::string& what);
+    ParseHeaderException(const std::string& what) : std::runtime_error(what) {}
   };
 
   class ParseStartlineException : public std::runtime_error {
    public:
-    ParseStartlineException(const std::string& what);
+    ParseStartlineException(const std::string& what) : std::runtime_error(what) {}
   };
 
  private:

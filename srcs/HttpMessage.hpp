@@ -35,7 +35,7 @@ class HttpMessage {
 
   class HeaderKeyException : public std::invalid_argument {
    public:
-    HeaderKeyException(const std::string& what);
+    HeaderKeyException(const std::string& what) : std::invalid_argument(what) {}
   };
 
 };

@@ -4,20 +4,15 @@ HttpMessage::HttpMessage() {}
 
 HttpMessage::~HttpMessage() {}
 
-class ParseBodyException : public std::runtime_error {
- public:
-  ParseBodyException(const std::string& what);
-};
+void HttpMessage::AppendHeader(std::string key, std::string value) {
+  headers_[key] = value;
+}
 
-class ParseHeaderException : public std::runtime_error {
- public:
-  ParseHeaderException(const std::string& what);
-};
+void HttpMessage::AppendHeader(std::pair<std::string, std::string> pair) {
+  headers_[pair.first] = pair.second;
+}
 
-class ParseStartlineException : public std::runtime_error {
- public:
-  ParseStartlineException(const std::string& what);
-};
+void HttpMessage::AppendBody(std::string str) { body_ += str; }
 
 const HttpMessage::http_header& HttpMessage::GetAllHeader() const {
   return headers_;

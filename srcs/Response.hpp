@@ -37,7 +37,7 @@ class Response : public HttpMessage {
 
   class StatusException : public std::domain_error {
    public:
-    StatusException(const std::string& what);
+    StatusException(const std::string& what) : std::domain_error(what) {}
   };
 
  private:
