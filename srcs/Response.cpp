@@ -71,7 +71,6 @@ void Response::SetStatusCode(int status) {
 
 void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
 
-void Response::SetReason(std::string reason) { status_message_ = reason; }
 
 void Response::SetBody(std::string body) { body_ = body; }
 

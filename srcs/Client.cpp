@@ -49,7 +49,6 @@ void Client::Prepare(void) {
     fcntl(read_fd, F_SETFL, O_NONBLOCK);
 
     response.SetStatusCode(200);
-    response.SetReason(Response::kResponseStatus.code.at(200));
     response.AppendHeader("Content-Type", "text/html");
     response.AppendHeader("Server", "Webserv");
     response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
@@ -58,14 +57,12 @@ void Client::Prepare(void) {
     fcntl(write_fd, F_SETFL, O_NONBLOCK);
 
     response.SetStatusCode(201);
-    response.SetReason(Response::kResponseStatus.code.at(201));
     response.AppendHeader("Content-Type", "text/html");
     response.AppendHeader("Server", "Webserv");
     response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
     response.AppendHeader("Content-Location", "/post.html");
   } else if (ret == WRITE_CGI) {
     response.SetStatusCode(200);
-    response.SetReason(Response::kResponseStatus.code.at(200));
     response.AppendHeader("Content-Type", "text/html");
     response.AppendHeader("Server", "Webserv");
     response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
@@ -73,7 +70,6 @@ void Client::Prepare(void) {
   } else if (ret == WRITE_CLIENT) {
     if (is_autoindex) {
       response.SetStatusCode(200);
-      response.SetReason(Response::kResponseStatus.code.at(200));
       response.AppendHeader("Content-Type", "text/html");
       response.AppendHeader("Server", "Webserv");
       response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
@@ -124,7 +120,7 @@ void Client::Prepare(void) {
         else
           tmp += "-\n";
       }
-      tmp += "</pre><hr></body>\n</html>";
+      tmp += "</pre><hr></body>\n</html>\n";
 
       response.SetBody(tmp);
     }
