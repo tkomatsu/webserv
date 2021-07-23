@@ -7,11 +7,19 @@ HttpMessage::~HttpMessage() {}
 void HttpMessage::SetVersion(std::string version) { http_version_ = version; }
 
 void HttpMessage::AppendHeader(std::string key, std::string value) {
-  headers_[key] = value;
+  if (headers_.find(key) == headers_.end()) {
+    headers_[key] = value;
+  } else {
+    headers_[key] = headers_[key] + "," + value;
+  }
 }
 
 void HttpMessage::AppendHeader(std::pair<std::string, std::string> pair) {
-  headers_[pair.first] = pair.second;
+  if (headers_.find(pair.first) == headers_.end()) {
+    headers_[pair.first] = pair.second;
+  } else {
+    headers_[pair.first] = headers_[pair.first] + "," + pair.second;
+  }
 }
 
 void HttpMessage::AppendBody(std::string str) { body_ += str; }
