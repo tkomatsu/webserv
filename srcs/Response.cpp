@@ -1,13 +1,7 @@
 #include "Response.hpp"
 
-#include <iostream>
-#include <sstream>
-
-#include "utility.hpp"
-
-// const std::map<int, std::string> Response::kResponseStatus = {
-ResponseStatus::ResponseStatus() {
-  code[100] = "Conginue";
+Response::Status::Status() {
+  code[100] = "Continue";
   code[101] = "Swithing Protocol";
   code[102] = "Processing";
   code[103] = "Early Hints";
@@ -62,13 +56,24 @@ ResponseStatus::ResponseStatus() {
   code[511] = "Network Authentication Required";
 };
 
-const ResponseStatus Response::kResponseStatus = ResponseStatus();
+const Response::Status Response::kResponseStatus = Status();
 
-Response::Response() : http_version_("HTTP/1.1") {}
+Response::Response() { http_version_ = "1.1"; }
 
 Response::~Response() {}
 
-const std::string& Response::GetVersion() const { return http_version_; }
+void Response::SetStatusCode(int status) {
+  if (kResponseStatus.code.find(status) == kResponseStatus.code.end())
+    throw StatusException("Invalid status code");
+  status_code_ = status;
+  SetStatusMessage(kResponseStatus.code.find(status)->second);
+}
+
+void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
+
+void Response::SetReason(std::string reason) { status_message_ = reason; }
+
+void Response::SetBody(std::string body) { body_ = body; }
 
 int Response::GetStatusCode() const { return status_code_; }
 
@@ -76,36 +81,12 @@ const std::string& Response::GetStatusMessage() const {
   return status_message_;
 }
 
-const std::map<std::string, std::string>& Response::GetAllHeader() const {
-  return headers_;
-}
-
-const std::string& Response::GetHeader(const std::string& key) const {
-  if (headers_.find(key) == headers_.end())
-    throw HeaderKeyException("No such header");
-  return headers_.find(key)->second;
-}
-
-const std::string& Response::GetBody() const { return body_; }
-
-void Response::SetVersion(std::string version) { http_version_ = version; }
-
-void Response::SetStatusCode(int status) { status_code_ = status; }
-
-void Response::SetReason(std::string reason) { status_message_ = reason; }
-
-void Response::SetBody(std::string body) { body_ = body; }
-
-void Response::AppendHeader(std::string key, std::string value) {
-  headers_[key] = value;
-}
-
-void Response::AppendBody(std::string str) { body_ += str; }
-
 std::string Response::Str() const {
   std::stringstream s;
 
-  s << http_version_ << " " << status_code_ << " " << status_message_ << "\r\n";
+  s << "HTTP/" << http_version_ << " " << status_code_ << " " << status_message_
+    << "\r\n";
+
   for (std::map<std::string, std::string>::const_iterator i = headers_.begin();
        i != headers_.end(); ++i) {
     s << i->first << ": " << i->second << "\r\n";

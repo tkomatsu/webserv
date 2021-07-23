@@ -38,8 +38,8 @@ void Client::Prepare(void) {
   // ret = READ_FILE;
   // ret = READ_FILE;
   // ret = WRITE_FILE;
-  // ret = WRITE_CGI;
-  ret = WRITE_CLIENT;
+  ret = WRITE_CGI;
+  // ret = WRITE_CLIENT;
   SetStatus(ret);
 
   bool is_autoindex = true;

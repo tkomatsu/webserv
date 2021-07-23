@@ -2,7 +2,6 @@
 #define SOCKET_HPP
 
 #include <netinet/in.h>
-
 #include <string>
 
 enum SocketStatus {

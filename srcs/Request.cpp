@@ -1,22 +1,25 @@
 #include "Request.hpp"
 
 Request::Request() : status_(PARSE_INIT) {
-  (void)status_;
   ParseRequest();
-};
+}
 
 Request::~Request(){};
 
-void Request::AppendRawData(const char* raw) {
-  raw_ += std::string(raw);
+void Request::AppendRawData(std::string raw) {
+  raw_ += raw;
+
   ParseRequest();
 }
 
 void Request::ParseRequest() {
   try {
-    ParseStartline();
-    ParseHeader();
-    ParseBody();
+    size_t idx = 0;
+    idx = ParseStartline(idx);
+    idx = ParseHeader(idx);
+    idx = ParseBody(idx);
+  } catch (ParseStartlineException& e) {
+    /* Incomplete parsing startline */
   } catch (ParseHeaderException& e) {
     /* Incomplete parsing header */
   } catch (ParseBodyException& e) {
@@ -24,28 +27,26 @@ void Request::ParseRequest() {
   }
 
   method_ = GET;
-  uri_ = "/index.html";
+
+  uri_ = "/";
   headers_["Content-Type"] = "text/html; charset=UTF-8";
-  headers_["Date"] = "Wed, 02 Feb 2042 00:42:42 GMT";
-  headers_["Server"] = "webserv";
+  headers_["Date"] = Now();
 }
 
 enum Method Request::GetMethod() const { return method_; }
 
 const std::string& Request::GetURI() const { return uri_; }
 
-const std::string& Request::GetVersion() const { return http_version_; }
-
-const std::string& Request::GetHeader(const std::string& key) const {
-  if (headers_.find(key) == headers_.end())
-    throw HeaderKeyException("No such header");
-  return headers_.find(key)->second;
+size_t Request::ParseStartline(size_t idx) {
+  if (raw_.find("\r\n") == std::string::npos)
+    throw ParseStartlineException("not yet");
+  return idx;
 }
 
-std::string Request::GetBody() const { return body_; }
+size_t Request::ParseHeader(size_t idx) {
+  return idx;
+}
 
-void Request::ParseStartline() {}
-
-void Request::ParseHeader() {}
-
-void Request::ParseBody() {}
+size_t Request::ParseBody(size_t idx) {
+  return idx;
+}
