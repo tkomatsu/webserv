@@ -4,7 +4,6 @@ const std::string WebServ::default_path = "./conf/default.conf";
 const int WebServ::buf_max = 8192;
 
 WebServ::WebServ(const std::string &path) {
-  max_fd = 0;
   timeout = (struct timeval){1, 0};
 
   ParseConig(path);
@@ -30,53 +29,6 @@ void WebServ::ParseConig(const std::string &path) {
 
     sockets[fd] = server;
   }
-}
-
-int WebServ::HasUsableIO() {
-  int n = 0;
-
-  while (n == 0) {
-    FD_ZERO(&rfd_set);
-    FD_ZERO(&wfd_set);
-
-    for (std::map<int, Socket *>::iterator it = sockets.begin();
-         it != sockets.end(); ++it) {
-      // set listening sockets
-      if (dynamic_cast<Server *>(it->second)) {
-        int serevr_fd = it->first;
-
-        FD_SET(serevr_fd, &rfd_set);
-        max_fd = std::max(max_fd, serevr_fd);
-      } else if (dynamic_cast<Client *>(it->second)) {
-        int client_fd = it->first;
-        Client *client = dynamic_cast<Client *>(sockets[client_fd]);
-
-        if (client->GetStatus() == READ_CLIENT) {
-          FD_SET(client_fd, &rfd_set);
-          max_fd = std::max(max_fd, client_fd);
-        } else if (client->GetStatus() == WRITE_CLIENT) {
-          FD_SET(client_fd, &wfd_set);
-          max_fd = std::max(max_fd, client_fd);
-        } else if (client->GetStatus() == READ_FILE) {
-          FD_SET(client->GetReadFd(), &rfd_set);
-          max_fd = std::max(max_fd, client->GetReadFd());
-        } else if (client->GetStatus() == WRITE_FILE) {
-          FD_SET(client->GetWriteFd(), &wfd_set);
-          max_fd = std::max(max_fd, client->GetWriteFd());
-        } else if (client->GetStatus() == READ_CGI) {
-          FD_SET(client->GetReadFd(), &rfd_set);
-          max_fd = std::max(max_fd, client->GetReadFd());
-        } else if (client->GetStatus() == WRITE_CGI) {
-          FD_SET(client->GetWriteFd(), &wfd_set);
-          max_fd = std::max(max_fd, client->GetWriteFd());
-        }
-      }
-    }
-
-    n = select(max_fd + 1, &rfd_set, &wfd_set, NULL, &timeout);
-  }
-
-  return n;
 }
 
 int WebServ::AcceptSession(map_iter it) {
@@ -182,8 +134,8 @@ int WebServ::WriteClient(map_iter it) {
   int ret;
 
   client->GetResponse().AppendHeader(
-      "Content-Length", ft_itoa(client->GetResponse().GetBody().length()));
-  
+      "Content-Length", ft_ltoa(client->GetResponse().GetBody().length()));
+
   // 完成したレスポンスを送る
   ret = client->send(client_fd);
 
@@ -199,6 +151,54 @@ int WebServ::WriteClient(map_iter it) {
   }
 
   return ret;
+}
+
+int WebServ::HasUsableIO() {
+  int n = 0;
+
+  while (n == 0) {
+    FD_ZERO(&rfd_set);
+    FD_ZERO(&wfd_set);
+    max_fd = 0;
+
+    for (std::map<int, Socket *>::iterator it = sockets.begin();
+         it != sockets.end(); ++it) {
+      // set listening sockets
+      if (dynamic_cast<Server *>(it->second)) {
+        int serevr_fd = it->first;
+
+        FD_SET(serevr_fd, &rfd_set);
+        max_fd = std::max(max_fd, serevr_fd);
+      } else if (dynamic_cast<Client *>(it->second)) {
+        int client_fd = it->first;
+        Client *client = dynamic_cast<Client *>(sockets[client_fd]);
+
+        if (client->GetStatus() == READ_CLIENT) {
+          FD_SET(client_fd, &rfd_set);
+          max_fd = std::max(max_fd, client_fd);
+        } else if (client->GetStatus() == WRITE_CLIENT) {
+          FD_SET(client_fd, &wfd_set);
+          max_fd = std::max(max_fd, client_fd);
+        } else if (client->GetStatus() == READ_FILE) {
+          FD_SET(client->GetReadFd(), &rfd_set);
+          max_fd = std::max(max_fd, client->GetReadFd());
+        } else if (client->GetStatus() == WRITE_FILE) {
+          FD_SET(client->GetWriteFd(), &wfd_set);
+          max_fd = std::max(max_fd, client->GetWriteFd());
+        } else if (client->GetStatus() == READ_CGI) {
+          FD_SET(client->GetReadFd(), &rfd_set);
+          max_fd = std::max(max_fd, client->GetReadFd());
+        } else if (client->GetStatus() == WRITE_CGI) {
+          FD_SET(client->GetWriteFd(), &wfd_set);
+          max_fd = std::max(max_fd, client->GetWriteFd());
+        }
+      }
+    }
+
+    n = select(max_fd + 1, &rfd_set, &wfd_set, NULL, &timeout);
+  }
+
+  return n;
 }
 
 void WebServ::Activate(void) {

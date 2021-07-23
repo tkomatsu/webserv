@@ -8,7 +8,7 @@
 
 typedef struct fileinfo {
   struct dirent *dirent;
-  struct stat *stat;
+  struct stat stat;
 } fileinfo;
 
 class Client : public Socket {

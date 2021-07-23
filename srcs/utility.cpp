@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sstream>
 
+#include <sstream>
 #include <string>
 
 static int ft_count(std::string s, char c) {
@@ -47,7 +47,7 @@ std::string ft_inet_ntoa(struct in_addr in) {
   return ret;
 }
 
-std::string ft_itoa(long num) {
+std::string ft_ltoa(long num) {
   std::stringstream out;
   out << num;
   std::string ret = out.str();
