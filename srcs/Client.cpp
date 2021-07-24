@@ -45,16 +45,16 @@ void Client::Prepare(void) {
   bool is_autoindex = true;
 
   if (ret == READ_FILE) {
-    read_fd = open("./docs/html/index.html", O_RDONLY);
-    fcntl(read_fd, F_SETFL, O_NONBLOCK);
+    read_fd_ = open("./docs/html/index.html", O_RDONLY);
+    fcntl(read_fd_, F_SETFL, O_NONBLOCK);
 
     response.SetStatusCode(200);
     response.AppendHeader("Content-Type", "text/html");
     response.AppendHeader("Server", "Webserv");
     response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
   } else if (ret == WRITE_FILE) {
-    write_fd = open("./docs/html/post.html", O_RDWR | O_CREAT, 0644);
-    fcntl(write_fd, F_SETFL, O_NONBLOCK);
+    write_fd_ = open("./docs/html/post.html", O_RDWR | O_CREAT, 0644);
+    fcntl(write_fd_, F_SETFL, O_NONBLOCK);
 
     response.SetStatusCode(201);
     response.AppendHeader("Content-Type", "text/html");
@@ -208,12 +208,12 @@ void Client::GenProcessForCGI(void) {
     exit(EXIT_FAILURE);
   }
 
-  write_fd = pipe_write[1];
-  fcntl(write_fd, F_SETFL, O_NONBLOCK);
+  write_fd_ = pipe_write[1];
+  fcntl(write_fd_, F_SETFL, O_NONBLOCK);
   close(pipe_write[0]);
 
-  read_fd = pipe_read[0];
-  fcntl(read_fd, F_SETFL, O_NONBLOCK);
+  read_fd_ = pipe_read[0];
+  fcntl(read_fd_, F_SETFL, O_NONBLOCK);
   close(pipe_read[1]);
 
   i = 0;

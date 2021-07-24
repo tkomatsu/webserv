@@ -27,15 +27,15 @@ class Client : public Socket {
 
   Response &GetResponse() { return response; };
   int GetStatus() { return socket_status; };
-  int GetWriteFd() { return write_fd; };
-  int GetReadFd() { return read_fd; };
+  int GetWriteFd() { return write_fd_; };
+  int GetReadFd() { return read_fd_; };
 
  private:
   Request request;
   Response response;
 
-  int write_fd;
-  int read_fd;
+  int write_fd_;
+  int read_fd_;
 
   std::vector<fileinfo> index;
 };
