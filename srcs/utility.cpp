@@ -8,6 +8,8 @@
 
 namespace ft {
 
+namespace {
+
 static int count(std::string s, char c) {
   int word = 0, len = 0, i = 0;
 
@@ -22,6 +24,8 @@ static int count(std::string s, char c) {
   if (len > 0) word++;
   return (word);
 }
+
+}  // namespace
 
 char **split(std::string s, char c) {
   char **p;
