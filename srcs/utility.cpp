@@ -6,7 +6,9 @@
 #include <sstream>
 #include <string>
 
-static int ft_count(std::string s, char c) {
+namespace ft {
+
+static int count(std::string s, char c) {
   int word = 0, len = 0, i = 0;
 
   while (s[i]) {
@@ -21,12 +23,11 @@ static int ft_count(std::string s, char c) {
   return (word);
 }
 
-char **ft_split(std::string s, char c) {
+char **split(std::string s, char c) {
   char **p;
   int i = 0, j = 0, cnt;
 
-  if (!(p = (char **)malloc(sizeof(char *) * (ft_count(s, c) + 1))))
-    return (NULL);
+  if (!(p = (char **)malloc(sizeof(char *) * (count(s, c) + 1)))) return (NULL);
   while (s[j]) {
     while (s[j] == c) j++;
     cnt = j;
@@ -37,7 +38,7 @@ char **ft_split(std::string s, char c) {
   return (p);
 }
 
-std::string ft_inet_ntoa(struct in_addr in) {
+std::string inet_ntoa(struct in_addr in) {
   char buffer[18];
   std::string ret;
 
@@ -47,10 +48,12 @@ std::string ft_inet_ntoa(struct in_addr in) {
   return ret;
 }
 
-std::string ft_ltoa(long num) {
+std::string ltoa(long num) {
   std::stringstream out;
   out << num;
   std::string ret = out.str();
 
   return ret;
 }
+
+}  // namespace ft

@@ -1,6 +1,8 @@
 #ifndef UTILITY_HPP
 #define UTILITY_HPP
 
+#include <netinet/in.h>
+
 #include <ctime>
 #include <string>
 
@@ -11,8 +13,12 @@ enum Method {
   INVALID,
 };
 
-char** ft_split(std::string s, char c);
-std::string ft_inet_ntoa(struct in_addr in);
-std::string ft_ltoa(long num);
+namespace ft {
+
+char** split(std::string s, char c);
+std::string inet_ntoa(struct in_addr in);
+std::string ltoa(long num);
+
+}  // namespace ft
 
 #endif /* UTILITY_HPP */

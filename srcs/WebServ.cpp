@@ -139,7 +139,7 @@ int WebServ::WriteClient(map_iter it) {
   int ret;
 
   client->GetResponse().AppendHeader(
-      "Content-Length", ft_ltoa(client->GetResponse().GetBody().length()));
+      "Content-Length", ft::ltoa(client->GetResponse().GetBody().length()));
 
   // 完成したレスポンスを送る
   ret = client->send(client_fd);

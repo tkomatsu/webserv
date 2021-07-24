@@ -16,7 +16,7 @@ int Client::SetSocket(int _fd) {
   int fd = accept(_fd, (struct sockaddr *)&addr, &len);
 
   port = ntohs(addr.sin_port);
-  host_ip_ = ft_inet_ntoa(addr.sin_addr);
+  host_ip_ = ft::inet_ntoa(addr.sin_addr);
 
   if (fd == -1) throw std::runtime_error("accept error\n");
   if (fcntl(fd, F_SETFL, O_NONBLOCK) != 0)
@@ -112,7 +112,7 @@ void Client::Prepare(void) {
 
         tmp += std::string(19, ' ');
         if (S_ISREG(info.stat.st_mode))
-          tmp += ft_ltoa(info.stat.st_size) + "\n";
+          tmp += ft::ltoa(info.stat.st_size) + "\n";
         else
           tmp += "-\n";
       }
@@ -155,7 +155,7 @@ int Client::send(int client_fd) {
 }
 
 void Client::GenProcessForCGI(void) {
-  char **args = ft_split("./docs/perl.cgi+mcgee+mine", '+');
+  char **args = ft::split("./docs/perl.cgi+mcgee+mine", '+');
   char envs_zikauchi[20][50] = {
 
       "AUTH_TYPE=",
