@@ -174,7 +174,7 @@ int WebServ::HasUsableIO() {
 
         FD_SET(serevr_fd, &rfd_set);
         max_fd = std::max(max_fd, serevr_fd);
-      } else if (dynamic_cast<Client *>(it->second)) {
+      } else {
         int client_fd = it->first;
         Client *client = dynamic_cast<Client *>(sockets[client_fd]);
 
