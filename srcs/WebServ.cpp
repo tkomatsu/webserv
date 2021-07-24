@@ -1,6 +1,6 @@
-#include <unistd.h>
-
 #include "WebServ.hpp"
+
+#include <unistd.h>
 
 #include "Client.hpp"
 #include "Server.hpp"
@@ -178,24 +178,36 @@ int WebServ::HasUsableIO() {
         int client_fd = it->first;
         Client *client = dynamic_cast<Client *>(sockets[client_fd]);
 
-        if (client->GetStatus() == READ_CLIENT) {
-          FD_SET(client_fd, &rfd_set);
-          max_fd = std::max(max_fd, client_fd);
-        } else if (client->GetStatus() == WRITE_CLIENT) {
-          FD_SET(client_fd, &wfd_set);
-          max_fd = std::max(max_fd, client_fd);
-        } else if (client->GetStatus() == READ_FILE) {
-          FD_SET(client->GetReadFd(), &rfd_set);
-          max_fd = std::max(max_fd, client->GetReadFd());
-        } else if (client->GetStatus() == WRITE_FILE) {
-          FD_SET(client->GetWriteFd(), &wfd_set);
-          max_fd = std::max(max_fd, client->GetWriteFd());
-        } else if (client->GetStatus() == READ_CGI) {
-          FD_SET(client->GetReadFd(), &rfd_set);
-          max_fd = std::max(max_fd, client->GetReadFd());
-        } else if (client->GetStatus() == WRITE_CGI) {
-          FD_SET(client->GetWriteFd(), &wfd_set);
-          max_fd = std::max(max_fd, client->GetWriteFd());
+        switch (client->GetStatus()) {
+          case READ_CLIENT:
+            FD_SET(client_fd, &rfd_set);
+            max_fd = std::max(max_fd, client_fd);
+            break;
+
+          case WRITE_CLIENT:
+            FD_SET(client_fd, &wfd_set);
+            max_fd = std::max(max_fd, client_fd);
+            break;
+
+          case READ_FILE:
+            FD_SET(client->GetReadFd(), &rfd_set);
+            max_fd = std::max(max_fd, client->GetReadFd());
+            break;
+
+          case WRITE_FILE:
+            FD_SET(client->GetWriteFd(), &wfd_set);
+            max_fd = std::max(max_fd, client->GetWriteFd());
+            break;
+
+          case READ_CGI:
+            FD_SET(client->GetReadFd(), &rfd_set);
+            max_fd = std::max(max_fd, client->GetReadFd());
+            break;
+
+          case WRITE_CGI:
+            FD_SET(client->GetWriteFd(), &wfd_set);
+            max_fd = std::max(max_fd, client->GetWriteFd());
+            break;
         }
       }
     }

@@ -38,88 +38,95 @@ void Client::Prepare(void) {
 
   bool is_autoindex = true;
 
-  if (ret == READ_FILE) {
-    read_fd_ = open("./docs/html/index.html", O_RDONLY);
-    fcntl(read_fd_, F_SETFL, O_NONBLOCK);
+  switch (ret) {
+    case READ_FILE:
+      read_fd_ = open("./docs/html/index.html", O_RDONLY);
+      fcntl(read_fd_, F_SETFL, O_NONBLOCK);
 
-    response.SetStatusCode(200);
-    response.AppendHeader("Content-Type", "text/html");
-    response.AppendHeader("Server", "Webserv");
-    response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
-  } else if (ret == WRITE_FILE) {
-    write_fd_ = open("./docs/html/post.html", O_RDWR | O_CREAT, 0644);
-    fcntl(write_fd_, F_SETFL, O_NONBLOCK);
-
-    response.SetStatusCode(201);
-    response.AppendHeader("Content-Type", "text/html");
-    response.AppendHeader("Server", "Webserv");
-    response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
-    response.AppendHeader("Content-Location", "/post.html");
-  } else if (ret == WRITE_CGI) {
-    GenProcessForCGI();
-
-    response.SetStatusCode(200);
-    response.AppendHeader("Content-Type", "text/html");
-    response.AppendHeader("Server", "Webserv");
-    response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
-    // Content-Lengthとか今わからないやつもある
-  } else if (ret == WRITE_CLIENT) {
-    if (is_autoindex) {
       response.SetStatusCode(200);
       response.AppendHeader("Content-Type", "text/html");
       response.AppendHeader("Server", "Webserv");
       response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
+      break;
 
-      DIR *dirp = opendir("./docs");
-      struct dirent *dp;
-      fileinfo info;
+    case WRITE_FILE:
+      write_fd_ = open("./docs/html/post.html", O_RDWR | O_CREAT, 0644);
+      fcntl(write_fd_, F_SETFL, O_NONBLOCK);
 
-      index.clear();
-      while ((dp = readdir(dirp)) != NULL) {
-        info.dirent = dp;
-        stat(("./docs/" + std::string(dp->d_name)).c_str(), &info.stat);
-        index.push_back(info);
-      }
-      closedir(dirp);
+      response.SetStatusCode(201);
+      response.AppendHeader("Content-Type", "text/html");
+      response.AppendHeader("Server", "Webserv");
+      response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
+      response.AppendHeader("Content-Location", "/post.html");
+      break;
 
-      std::string tmp;
+    case WRITE_CGI:
+      GenProcessForCGI();
 
-      tmp += "<html>\n<head><title>Index of ";
-      tmp += "/";
-      tmp += "</title></head>\n<body bgcolor=\"white\">\n<h1>Index of ";
-      tmp += "/</h1><hr><pre><a href=\"../\">../</a>\n";
+      response.SetStatusCode(200);
+      response.AppendHeader("Content-Type", "text/html");
+      response.AppendHeader("Server", "Webserv");
+      response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
+      break;
 
-      for (std::vector<fileinfo>::iterator it = index.begin();
-           it != index.end(); ++it) {
-        fileinfo info = *it;
+    case WRITE_CLIENT:
+      if (is_autoindex) {
+        response.SetStatusCode(200);
+        response.AppendHeader("Content-Type", "text/html");
+        response.AppendHeader("Server", "Webserv");
+        response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
 
-        if (info.dirent->d_name[0] == '.') continue;
+        DIR *dirp = opendir("./docs");
+        struct dirent *dp;
+        fileinfo info;
 
-        tmp += "<a href=\"" + std::string(info.dirent->d_name) + "/\">";
-        if (std::string(info.dirent->d_name).length() >= 50)
-          tmp += std::string(info.dirent->d_name).substr(0, 47) + "..&gt;";
-        else {
-          tmp += std::string(info.dirent->d_name);
-          if (S_ISDIR(info.stat.st_mode)) tmp += "/";
+        index.clear();
+        while ((dp = readdir(dirp)) != NULL) {
+          info.dirent = dp;
+          stat(("./docs/" + std::string(dp->d_name)).c_str(), &info.stat);
+          index.push_back(info);
         }
-        tmp += "</a>" +
-               std::string(
-                   50 - std::min((size_t)50,
-                                 std::string(info.dirent->d_name).length()),
-                   ' ');
-        if (!S_ISDIR(info.stat.st_mode)) tmp += " ";
-        tmp += response.Now(info.stat.st_mtimespec.tv_sec);
+        closedir(dirp);
 
-        tmp += std::string(19, ' ');
-        if (S_ISREG(info.stat.st_mode))
-          tmp += ft::ltoa(info.stat.st_size) + "\n";
-        else
-          tmp += "-\n";
+        std::string tmp;
+
+        tmp += "<html>\n<head><title>Index of ";
+        tmp += "/";
+        tmp += "</title></head>\n<body bgcolor=\"white\">\n<h1>Index of ";
+        tmp += "/</h1><hr><pre><a href=\"../\">../</a>\n";
+
+        for (std::vector<fileinfo>::iterator it = index.begin();
+             it != index.end(); ++it) {
+          fileinfo info = *it;
+
+          if (info.dirent->d_name[0] == '.') continue;
+
+          tmp += "<a href=\"" + std::string(info.dirent->d_name) + "/\">";
+          if (std::string(info.dirent->d_name).length() >= 50)
+            tmp += std::string(info.dirent->d_name).substr(0, 47) + "..&gt;";
+          else {
+            tmp += std::string(info.dirent->d_name);
+            if (S_ISDIR(info.stat.st_mode)) tmp += "/";
+          }
+          tmp += "</a>" +
+                 std::string(
+                     50 - std::min((size_t)50,
+                                   std::string(info.dirent->d_name).length()),
+                     ' ');
+          if (!S_ISDIR(info.stat.st_mode)) tmp += " ";
+          tmp += response.Now(info.stat.st_mtimespec.tv_sec);
+
+          tmp += std::string(19, ' ');
+          if (S_ISREG(info.stat.st_mode))
+            tmp += ft::ltoa(info.stat.st_size) + "\n";
+          else
+            tmp += "-\n";
+        }
+        tmp += "</pre><hr></body>\n</html>\n";
+
+        response.SetBody(tmp);
       }
-      tmp += "</pre><hr></body>\n</html>\n";
-
-      response.SetBody(tmp);
-    }
+      break;
   }
 }
 
