@@ -175,25 +175,25 @@
                 <mxCell id="227" value="- HasUsableIO(): int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
                     <mxGeometry y="164" width="230" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="228" value="- AcceptSession(map_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
+                <mxCell id="228" value="- AcceptSession(socket_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
                     <mxGeometry y="190" width="230" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="229" value="- ReadClient(map_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
+                <mxCell id="229" value="- ReadClient(socket_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
                     <mxGeometry y="216" width="230" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="230" value="- ReadFIle(map_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
+                <mxCell id="230" value="- ReadFIle(socket_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
                     <mxGeometry y="242" width="230" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="231" value="- ReadCGI(map_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
+                <mxCell id="231" value="- ReadCGI(socket_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
                     <mxGeometry y="268" width="230" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="232" value="- WriteClient(map_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
+                <mxCell id="232" value="- WriteClient(socket_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
                     <mxGeometry y="294" width="230" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="233" value="- WriteFile(map_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
+                <mxCell id="233" value="- WriteFile(socket_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
                     <mxGeometry y="320" width="230" height="26" as="geometry"/>
                 </mxCell>
-                <mxCell id="234" value="- WriteCGI(map_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
+                <mxCell id="234" value="- WriteCGI(socket_iter): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontColor=#393C56;" parent="220" vertex="1">
                     <mxGeometry y="346" width="230" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="235" value="struct Config" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#F2CC8F;strokeColor=#E07A5F;fontColor=#393C56;" parent="1" vertex="1">

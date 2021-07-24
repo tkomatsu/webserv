@@ -30,9 +30,9 @@ void Client::Prepare(void) {
 
   // int ret = request.NextStatus();
   int ret;
-  ret = READ_FILE;
+  // ret = READ_FILE;
   // ret = WRITE_FILE;
-  // ret = WRITE_CGI;
+  ret = WRITE_CGI;
   // ret = WRITE_CLIENT;
   SetStatus(ret);
 

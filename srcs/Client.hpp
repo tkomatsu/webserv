@@ -16,6 +16,8 @@ typedef struct fileinfo {
 
 class Client : public Socket {
  public:
+  Client() : Socket(READ_CLIENT){};
+
   int SetSocket(int _fd);
   void Prepare(void);
   bool ParseRequest(void);

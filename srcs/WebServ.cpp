@@ -36,15 +36,15 @@ void WebServ::ParseConig(const std::string &path) {
   }
 }
 
-int WebServ::AcceptSession(map_iter it) {
-  int accepted = 0;
+int WebServ::AcceptSession(socket_iter it) {
+  int accepted = -1;
   int server_fd = it->first;
 
   // サーバーソケットでISSETがtrueなのはnew clientの1パターンしかない
   // これはサーバーソケットならば常に可能性があるから、enum管理不要
   if (FD_ISSET(server_fd, &rfd_set)) {
     Client *client = new Client();
-    client->SetStatus(READ_CLIENT);
+
     int client_fd = client->SetSocket(server_fd);
 
     if (client_fd > max_fd) max_fd = client_fd;
@@ -55,29 +55,35 @@ int WebServ::AcceptSession(map_iter it) {
   return accepted;
 }
 
-int WebServ::ReadClient(map_iter it) {
+int WebServ::ReadClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets[client_fd]);
 
   int ret = client->recv(client_fd);
 
-  if (ret == -1) {
-    close(client_fd);
-    delete it->second;
-    sockets.erase(it);
-    throw std::runtime_error("recv error\n");
-  } else if (ret == 0) {
-    close(client_fd);
-    delete it->second;
-    sockets.erase(it);
-  } else {
-    client->Prepare();
+  switch (ret) {
+    case -1:
+      close(client_fd);
+      delete it->second;
+      sockets.erase(it);
+      throw std::runtime_error("recv error\n");
+      break;
+
+    case 0:
+      close(client_fd);
+      delete it->second;
+      sockets.erase(it);
+      break;
+
+    default:
+      client->Prepare();
+      break;
   }
 
   return ret;
 }
 
-int WebServ::ReadFile(map_iter it) {
+int WebServ::ReadFile(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets[client_fd]);
   int ret = 1;
@@ -93,7 +99,7 @@ int WebServ::ReadFile(map_iter it) {
   return ret;
 }
 
-int WebServ::WriteFile(map_iter it) {
+int WebServ::WriteFile(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets[client_fd]);
   int ret = 1;
@@ -105,7 +111,7 @@ int WebServ::WriteFile(map_iter it) {
   return ret;
 }
 
-int WebServ::ReadCGI(map_iter it) {
+int WebServ::ReadCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets[client_fd]);
   int ret = 1;
@@ -121,7 +127,7 @@ int WebServ::ReadCGI(map_iter it) {
   return ret;
 }
 
-int WebServ::WriteCGI(map_iter it) {
+int WebServ::WriteCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets[client_fd]);
   int ret = 1;
@@ -133,10 +139,10 @@ int WebServ::WriteCGI(map_iter it) {
   return ret;
 }
 
-int WebServ::WriteClient(map_iter it) {
+int WebServ::WriteClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets[client_fd]);
-  int ret;
+  int ret = -1;
 
   client->GetResponse().AppendHeader(
       "Content-Length", ft::ltoa(client->GetResponse().GetBody().length()));
@@ -218,6 +224,49 @@ int WebServ::HasUsableIO() {
   return n;
 }
 
+void WebServ::ExecClientEvent(socket_iter it) {
+  int client_fd = it->first;
+  Client *client = dynamic_cast<Client *>(sockets[client_fd]);
+
+  switch (client->GetStatus()) {
+    case READ_CLIENT:
+      if (FD_ISSET(client_fd, &rfd_set)) {
+        ReadClient(it);
+      }
+      break;
+
+    case READ_FILE:
+      if (FD_ISSET(client->GetReadFd(), &rfd_set)) {
+        ReadFile(it);
+      }
+      break;
+
+    case WRITE_FILE:
+      if (FD_ISSET(client->GetWriteFd(), &wfd_set)) {
+        WriteFile(it);
+      }
+      break;
+
+    case WRITE_CGI:
+      if (FD_ISSET(client->GetWriteFd(), &wfd_set)) {
+        WriteCGI(it);
+      }
+      break;
+
+    case READ_CGI:
+      if (FD_ISSET(client->GetReadFd(), &rfd_set)) {
+        ReadCGI(it);
+      }
+      break;
+
+    case WRITE_CLIENT:
+      if (FD_ISSET(client_fd, &wfd_set)) {
+        WriteClient(it);
+      }
+      break;
+  }
+}
+
 void WebServ::Activate(void) {
   while (true) {
     int n = HasUsableIO();  // polling I/O
@@ -226,48 +275,9 @@ void WebServ::Activate(void) {
       for (std::map<int, Socket *>::iterator it = sockets.begin();
            it != sockets.end(); ++it) {
         if (dynamic_cast<Server *>(it->second)) {
-          if (AcceptSession(it)) break;
+          AcceptSession(it);
         } else {
-          int client_fd = it->first;
-          Client *client = dynamic_cast<Client *>(sockets[client_fd]);
-
-          // パターン１：クライアントからrecvする (最初はみんなこれ)
-          if (client->GetStatus() == READ_CLIENT &&
-              FD_ISSET(client_fd, &rfd_set)) {
-            if (ReadClient(it)) break;
-          }
-
-          // パターン２：特定のファイルをreadする
-          if (client->GetStatus() == READ_FILE &&
-              FD_ISSET(client->GetReadFd(),
-                       &rfd_set)) {  // client_fdではない何か
-            if (ReadFile(it)) break;
-          }
-
-          // パターン３：特定のファイルにwriteする
-          if (client->GetStatus() == WRITE_FILE &&
-              FD_ISSET(client->GetWriteFd(),
-                       &wfd_set)) {  // client_fdではない何か
-            if (WriteFile(it)) break;
-          }
-
-          // パターン４：CGIにこっちの標準入力をwriteする
-          if (client->GetStatus() == WRITE_CGI &&
-              FD_ISSET(client->GetWriteFd(), &wfd_set)) {
-            if (WriteCGI(it)) break;
-          }
-
-          // パターン５：CGIの標準出力をreadする（パターン４の次に来るところ）
-          if (client->GetStatus() == READ_CGI &&
-              FD_ISSET(client->GetReadFd(), &rfd_set)) {
-            if (ReadCGI(it)) break;
-          }
-
-          // パターン６：クライアントにsendする(最後みんなこれ)
-          if (client->GetStatus() == WRITE_CLIENT &&
-              FD_ISSET(client_fd, &wfd_set)) {
-            if (WriteClient(it)) break;
-          }
+          ExecClientEvent(it);
         }
       }
     } else {

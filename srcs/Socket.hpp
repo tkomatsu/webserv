@@ -2,6 +2,7 @@
 #define SOCKET_HPP
 
 #include <netinet/in.h>
+
 #include <string>
 
 enum SocketStatus {
@@ -16,6 +17,7 @@ enum SocketStatus {
 class Socket {
  public:
   Socket(){};
+  Socket(int status) : socket_status(status){};
   Socket(int port_, std::string host_ip__) : port(port_), host_ip_(host_ip__){};
   virtual ~Socket(){};
   virtual int SetSocket(int) = 0;  // make socket return fd
