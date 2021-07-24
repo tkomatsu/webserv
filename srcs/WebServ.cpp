@@ -225,13 +225,9 @@ void WebServ::Activate(void) {
     if (n > 0) {
       for (std::map<int, Socket *>::iterator it = sockets.begin();
            it != sockets.end(); ++it) {
-        // サーバーソケット
         if (dynamic_cast<Server *>(it->second)) {
           if (AcceptSession(it)) break;
-        }
-
-        // クライアントソケット
-        if (dynamic_cast<Client *>(it->second)) {
+        } else {
           int client_fd = it->first;
           Client *client = dynamic_cast<Client *>(sockets[client_fd]);
 
