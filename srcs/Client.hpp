@@ -1,10 +1,13 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include <sys/stat.h>
+
+#include <vector>
+
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Socket.hpp"
-#include "main.hpp"
 
 typedef struct fileinfo {
   struct dirent *dirent;

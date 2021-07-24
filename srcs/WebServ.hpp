@@ -1,8 +1,11 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-class WebServ;
-#include "main.hpp"
+
+#include <map>
+#include <string>
+
+#include "Socket.hpp"
 
 class WebServ {
  public:
@@ -34,7 +37,7 @@ class WebServ {
   fd_set rfd_set, wfd_set;
   struct timeval timeout;
 
-  std::map<int, Socket*> sockets;  // デストラクタでdeleteしときーや
+  std::map<int, Socket*> sockets;
 };
 
 #endif

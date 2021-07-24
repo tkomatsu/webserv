@@ -1,4 +1,7 @@
-#include "main.hpp"
+#include <iostream>
+#include <stdexcept>
+
+#include "WebServ.hpp"
 
 int main(int argc, char *argv[]) {
   signal(SIGCHLD, SIG_IGN);

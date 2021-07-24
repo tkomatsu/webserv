@@ -1,7 +1,11 @@
 #include "Client.hpp"
 
 #include <dirent.h>
+#include <fcntl.h>
+#include <string.h>
 #include <unistd.h>
+
+#include <iostream>
 
 #include "utility.hpp"
 
@@ -22,24 +26,14 @@ int Client::SetSocket(int _fd) {
 
 // TODO: make good response content
 void Client::Prepare(void) {
-  // std::ifstream ifs("./docs/html/index.html");
-  // std::string header;
-  // std::string body;
-  // std::string line;
-
-  /* if (ifs.fail()) throw std::runtime_error("file open error\n");
-  while (getline(ifs, line)) body += line + "\n";
-  ifs.close(); */
-
   // parse
 
   // int ret = request.NextStatus();
   int ret;
-  // ret = READ_FILE;
-  // ret = READ_FILE;
+  ret = READ_FILE;
   // ret = WRITE_FILE;
   // ret = WRITE_CGI;
-  ret = WRITE_CLIENT;
+  // ret = WRITE_CLIENT;
   SetStatus(ret);
 
   bool is_autoindex = true;
@@ -62,6 +56,8 @@ void Client::Prepare(void) {
     response.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
     response.AppendHeader("Content-Location", "/post.html");
   } else if (ret == WRITE_CGI) {
+    GenProcessForCGI();
+
     response.SetStatusCode(200);
     response.AppendHeader("Content-Type", "text/html");
     response.AppendHeader("Server", "Webserv");

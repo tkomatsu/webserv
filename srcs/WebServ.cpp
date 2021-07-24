@@ -1,4 +1,9 @@
+#include <unistd.h>
+
 #include "WebServ.hpp"
+
+#include "Client.hpp"
+#include "Server.hpp"
 
 const std::string WebServ::default_path = "./conf/default.conf";
 const int WebServ::buf_max = 8192;
