@@ -10,7 +10,7 @@ namespace ft {
 
 namespace {
 
-static int count(std::string s, char c) {
+int count(std::string s, char c) {
   int word = 0, len = 0, i = 0;
 
   while (s[i]) {
