@@ -99,6 +99,9 @@ void Request::ParseHeader() {
 
 void Request::ParseBody() {
   if (status_ == HEADER) {
+    if (raw_.find("\r\n\r\n") == std::string::npos)
+      throw ParseBodyException("Incomplete body");
     body_ += raw_;
+    raw_ = "";
   }
 }
