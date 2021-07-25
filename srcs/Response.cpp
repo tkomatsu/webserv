@@ -61,6 +61,10 @@ const Response::Status Response::kResponseStatus = Status();
 
 Response::Response() {
   http_version_ = "1.1";
+  SetStatusCode(200);
+  AppendHeader("Content-Type", "");
+  AppendHeader("Date", Now());
+  AppendHeader("Server", "webserv");
 }
 
 Response::~Response() {}
@@ -71,8 +75,6 @@ void Response::SetStatusCode(int status) {
   status_code_ = status;
   SetStatusMessage(kResponseStatus.code.find(status)->second);
 }
-
-void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
 
 void Response::SetBody(std::string body) { body_ = body; }
 
@@ -91,3 +93,5 @@ std::string Response::Str() const {
   s << "\r\n" << body_;
   return s.str();
 }
+
+void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
