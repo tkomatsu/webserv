@@ -10,7 +10,7 @@ void HttpMessage::AppendHeader(std::string key, std::string value) {
   if (headers_.find(key) == headers_.end()) {
     headers_[key] = value;
   } else {
-    headers_[key] = headers_[key] + "," + value;
+    headers_[key] = headers_[key] + (headers_[key].empty() ? "" : ",") + value;
   }
 }
 
@@ -18,7 +18,7 @@ void HttpMessage::AppendHeader(std::pair<std::string, std::string> pair) {
   if (headers_.find(pair.first) == headers_.end()) {
     headers_[pair.first] = pair.second;
   } else {
-    headers_[pair.first] = headers_[pair.first] + "," + pair.second;
+    headers_[pair.first] = headers_[pair.first] + (headers_[pair.first].empty() ? "" : ",") + pair.second;
   }
 }
 
