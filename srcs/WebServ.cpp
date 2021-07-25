@@ -95,7 +95,7 @@ int WebServ::ReadFile(socket_iter it) {
 
   close(client->GetReadFd());
 
-  client->GetResponse().SetBody(buf);
+  client->SetResponseBody(buf);
   client->SetStatus(WRITE_CLIENT);
 
   return ret;
@@ -124,7 +124,7 @@ int WebServ::ReadCGI(socket_iter it) {
 
   close(client->GetReadFd());
 
-  client->GetResponse().SetBody(buf);
+  client->SetResponseBody(buf);
   client->SetStatus(WRITE_CLIENT);
 
   return ret;
@@ -148,7 +148,7 @@ int WebServ::WriteClient(socket_iter it) {
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = -1;
 
-  client->GetResponse().AppendHeader(
+  client->AppendResponseHeader(
       "Content-Length", ft::ltoa(client->GetResponse().GetBody().length()));
 
   // 完成したレスポンスを送る
