@@ -4,7 +4,7 @@
 #include <ctime>
 
 enum Method {
-  GET, POST, DELETE, INVALID,
+  UNKNOWN, GET, POST, DELETE, INVALID,
 };
 
 #endif /* UTILITY_HPP */
