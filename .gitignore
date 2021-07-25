@@ -1,6 +1,7 @@
 .*
 !.clang-format
 !.github
+
 *.o
 test/build
 

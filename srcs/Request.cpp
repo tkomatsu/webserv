@@ -8,6 +8,7 @@ Request::~Request() {}
 
 void Request::AppendRawData(std::string raw) {
   raw_ += raw;
+
   ParseRequest();
 }
 
@@ -27,6 +28,7 @@ void Request::ParseRequest() {
   }
 
   method_ = GET;
+
   uri_ = "/";
   headers_["Content-Type"] = "text/html; charset=UTF-8";
   headers_["Date"] = Now();
