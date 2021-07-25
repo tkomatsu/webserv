@@ -13,6 +13,15 @@ enum Method {
   INVALID,
 };
 
+enum SocketStatus {
+  READ_CLIENT,
+  READ_FILE,
+  READ_CGI,
+  WRITE_CGI,
+  WRITE_FILE,
+  WRITE_CLIENT,
+};
+
 namespace ft {
 
 char** split(std::string s, char c);

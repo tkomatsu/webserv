@@ -16,8 +16,8 @@ class WebServ {
 
   void Activate(void);
 
-  static const std::string default_path;
-  static const int buf_max;
+  static const std::string default_path_;
+  static const int buf_max_;
 
  private:
   int HasUsableIO();
@@ -31,15 +31,15 @@ class WebServ {
   int WriteFile(socket_iter it);
   int WriteClient(socket_iter it);
 
-  void ExecClientEvent(socket_iter it);
+  int ExecClientEvent(socket_iter it);
 
   void ParseConig(const std::string& path);
 
-  int max_fd;
-  fd_set rfd_set, wfd_set;
-  struct timeval timeout;
+  int max_fd_;
+  fd_set rfd_set_, wfd_set_;
+  struct timeval timeout_;
 
-  std::map<int, Socket*> sockets;
+  std::map<int, Socket*> sockets_;
 };
 
 #endif

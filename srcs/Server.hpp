@@ -8,10 +8,7 @@
 
 class Server : public Socket {
  public:
-  Server(int port_, std::string host_ip__) : Socket(port_, host_ip__){};
-
-  int SetSocket(int _fd);
-  void SetStatus(int status) { socket_status = status; }
+  Server(int port, std::string host_ip) : Socket(port, host_ip){};
 };
 
 #endif

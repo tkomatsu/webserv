@@ -10,8 +10,8 @@
 #include "Socket.hpp"
 
 typedef struct fileinfo {
-  struct dirent *dirent;
-  struct stat stat;
+  struct dirent *dirent_;
+  struct stat stat_;
 } fileinfo;
 
 class Client : public Socket {
@@ -26,23 +26,24 @@ class Client : public Socket {
   int recv(int client_fd);
   int send(int client_fd);
 
-  static const int buf_max;
+  static const int buf_max_;
 
-  void SetStatus(int status) { socket_status = status; }
-
-  Response &GetResponse() { return response; };
-  int GetStatus() { return socket_status; };
+  Response &GetResponse() { return response_; };
+  int GetStatus() { return socket_status_; };
   int GetWriteFd() { return write_fd_; };
   int GetReadFd() { return read_fd_; };
 
+  std::string MakeAutoIndexContent(std::string dir_path);
+
  private:
-  Request request;
-  Response response;
+  void SetPipe(int *pipe_write, int *pipe_read);
+  void ExecCGI(int *pipe_write, int *pipe_read, char **args, char **envs);
+
+  Request request_;
+  Response response_;
 
   int write_fd_;
   int read_fd_;
-
-  std::vector<fileinfo> index;
 };
 
 #endif

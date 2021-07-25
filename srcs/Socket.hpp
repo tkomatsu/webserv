@@ -5,29 +5,24 @@
 
 #include <string>
 
-enum SocketStatus {
-  READ_CLIENT,
-  READ_FILE,
-  READ_CGI,
-  WRITE_CGI,
-  WRITE_FILE,
-  WRITE_CLIENT,
-};
+#include "utility.hpp"
 
 class Socket {
  public:
   Socket(){};
-  Socket(int status) : socket_status(status){};
-  Socket(int port_, std::string host_ip__) : port(port_), host_ip_(host_ip__){};
+  Socket(enum SocketStatus status) { socket_status_ = status; };
+  Socket(int port, std::string host_ip) : port_(port), host_ip_(host_ip){};
   virtual ~Socket(){};
-  virtual int SetSocket(int) = 0;  // make socket return fd
+
+  virtual int SetSocket(int _fd);
+  void SetStatus(enum SocketStatus status);
 
  protected:
-  struct sockaddr_in addr;
-  int port;
+  struct sockaddr_in addr_;
+  int port_;
   std::string host_ip_;
 
-  int socket_status;  // enum
+  enum SocketStatus socket_status_;
 };
 
 #endif

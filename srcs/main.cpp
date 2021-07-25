@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   }
 
   try {
-    WebServ webserv(argc == 2 ? argv[1] : WebServ::default_path);
+    WebServ webserv(argc == 2 ? argv[1] : WebServ::default_path_);
 
     webserv.Activate();
   } catch (std::exception &e) {
