@@ -3,7 +3,7 @@ name: Unit test
 on:
   push:
     branches: [main]
-  pull_request_:
+  pull_request:
     branches: [main]
 
 jobs:
