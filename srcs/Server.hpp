@@ -1,24 +1,14 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-class Server;
-#include "main.hpp"
+#include <arpa/inet.h>
+#include <fcntl.h>
 
-class Server {
+#include "Socket.hpp"
+
+class Server : public Socket {
  public:
-  Server(int port_, const char* host_) : port(port_), host(host_){};
-
-  void init(void);
-  long getFd(void) { return fd; };
-
-  std::vector<long> client_fds;
-  std::vector<long> writable_client_fds;
-
- private:
-  long fd;
-  struct sockaddr_in addr;
-  int port;
-  const char* host;
+  Server(int port, std::string host_ip) : Socket(port, host_ip){};
 };
 
 #endif

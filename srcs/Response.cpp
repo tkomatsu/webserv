@@ -1,6 +1,5 @@
 #include "Response.hpp"
 
-// const std::map<int, std::string> Response::kResponseStatus = {
 Response::Status::Status() {
   code[100] = "Continue";
   code[101] = "Swithing Protocol";
@@ -59,9 +58,7 @@ Response::Status::Status() {
 
 const Response::Status Response::kResponseStatus = Status();
 
-Response::Response() {
-  http_version_ = "1.1";
-}
+Response::Response() { http_version_ = "1.1"; }
 
 Response::~Response() {}
 
@@ -74,16 +71,21 @@ void Response::SetStatusCode(int status) {
 
 void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
 
+
 void Response::SetBody(std::string body) { body_ = body; }
 
 int Response::GetStatusCode() const { return status_code_; }
 
-const std::string& Response::GetStatusMessage() const { return status_message_; }
+const std::string& Response::GetStatusMessage() const {
+  return status_message_;
+}
 
 std::string Response::Str() const {
   std::stringstream s;
 
-  s << "HTTP/" << http_version_ << " " << status_code_ << " " << status_message_ << "\r\n";
+  s << "HTTP/" << http_version_ << " " << status_code_ << " " << status_message_
+    << "\r\n";
+
   for (std::map<std::string, std::string>::const_iterator i = headers_.begin();
        i != headers_.end(); ++i) {
     s << i->first << ": " << i->second << "\r\n";
