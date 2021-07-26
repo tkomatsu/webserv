@@ -1,5 +1,18 @@
 #include "Request.hpp"
 
+namespace {
+
+std::vector<std::string> split(std::string s, char delim) {
+  std::vector<std::string> v;
+  std::stringstream ss(s);
+  std::string item;
+  while (std::getline(ss, item, delim)) {
+    v.push_back(item);
+  }
+  return v;
+}
+
+}
 Request::Request() : status_(INIT) {
   ParseRequest();
 }
@@ -53,7 +66,7 @@ void Request::ParseStartline() {
     throw ParseStartlineException("Incomplete startline");
   if (status_ == INIT) {
     std::string startline = raw_.substr(0, raw_.find("\r\n"));
-    std::vector<std::string> startline_splitted = ft::vsplit(startline, ' ');
+    std::vector<std::string> startline_splitted = split(startline, ' ');
     std::string method = startline_splitted[0];
     if (method == "GET") {
       method_ = GET;

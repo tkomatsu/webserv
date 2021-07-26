@@ -4,7 +4,6 @@
 #include <netinet/in.h>
 
 #include <ctime>
-#include <vector>
 #include <string>
 
 enum Method {
@@ -27,7 +26,6 @@ enum SocketStatus {
 namespace ft {
 
 char** split(std::string s, char c);
-std::vector<std::string> vsplit(std::string str, char delim);
 std::string inet_ntoa(struct in_addr in);
 std::string ltoa(long num);
 

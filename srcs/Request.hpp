@@ -1,8 +1,10 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+#include <vector>
+#include <string>
+
 #include "HttpMessage.hpp"
-#include "utility.hpp"
 
 enum ParseStatus {
   INIT, STARTLINE, HEADER, BODY, DONE
