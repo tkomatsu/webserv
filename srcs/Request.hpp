@@ -2,6 +2,7 @@
 #define REQUEST_HPP
 
 #include "HttpMessage.hpp"
+#include "utility.hpp"
 
 enum ParseStatus {
   INIT, STARTLINE, HEADER, BODY, DONE

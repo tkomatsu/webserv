@@ -4,8 +4,8 @@
 #include <netinet/in.h>
 
 #include <ctime>
-#include <string>
 #include <vector>
+#include <string>
 
 enum Method {
   UNKNOWN,
@@ -27,7 +27,7 @@ enum SocketStatus {
 namespace ft {
 
 char** split(std::string s, char c);
-std::vector<std::string> split(std::string str, std::string delim);
+std::vector<std::string> vsplit(std::string str, char delim);
 std::string inet_ntoa(struct in_addr in);
 std::string ltoa(long num);
 

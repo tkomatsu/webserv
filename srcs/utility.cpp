@@ -2,9 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <sstream>
-#include <string>
 
 namespace ft {
 
@@ -42,7 +40,7 @@ char **split(std::string s, char c) {
   return (p);
 }
 
-std::vector<std::string> split(std::string s, std::string delim) {
+std::vector<std::string> vsplit(std::string s, char delim) {
   std::vector<std::string> v;
   std::stringstream ss(s);
   std::string item;

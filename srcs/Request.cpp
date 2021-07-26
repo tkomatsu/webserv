@@ -53,7 +53,8 @@ void Request::ParseStartline() {
     throw ParseStartlineException("Incomplete startline");
   if (status_ == INIT) {
     std::string startline = raw_.substr(0, raw_.find("\r\n"));
-    std::string method = startline.substr(0, startline.find(" "));
+    std::vector<std::string> startline_splitted = ft::vsplit(startline, ' ');
+    std::string method = startline_splitted[0];
     if (method == "GET") {
       method_ = GET;
     } else if (method == "POST") {
@@ -65,12 +66,10 @@ void Request::ParseStartline() {
     }
     if (method_ == INVALID)
       throw ParseFatalException("Invalid method");
-    if (startline.find("HTTP/") == std::string::npos)
+    uri_ = startline_splitted[1];
+    if (startline_splitted[2].find("HTTP/") == std::string::npos)
       throw ParseFatalException("Invalid startline");
-    uri_ = startline.substr(startline.find(" ") + 1, startline.rfind(" ") - 1);
-    http_version_ = startline.substr(startline.rfind(" ") + 6, startline.rfind(" ") + 8);
-    if (http_version_ != "1.1")
-      throw ParseFatalException("Invalid version");
+    http_version_ = startline_splitted[2].substr(5);
     raw_ = raw_.substr(raw_.find("\r\n") + 2);
   }
 }
