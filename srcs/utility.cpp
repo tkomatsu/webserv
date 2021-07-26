@@ -42,6 +42,16 @@ char **split(std::string s, char c) {
   return (p);
 }
 
+std::vector<std::string> split(std::string s, std::string delim) {
+  std::vector<std::string> v;
+  std::stringstream ss(s);
+  std::string item;
+  while (std::getline(ss, item, delim)) {
+    v.push_back(item);
+  }
+  return v;
+}
+
 std::string inet_ntoa(struct in_addr in) {
   char buffer[18];
   std::string ret;
