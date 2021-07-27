@@ -24,6 +24,6 @@ TEST_F(RequestTest, Standard) {
   EXPECT_EQ(request.GetMethod(), GET);
   EXPECT_EQ(request.GetURI(), "/");
   EXPECT_EQ(request.GetVersion(), "1.1");
-//  EXPECT_EQ(request.GetHeader("Host"), "www.google.com");
+  EXPECT_EQ(request.GetHeader("Host"), "www.google.com");
   EXPECT_EQ(request.GetBody() ,"");
 }

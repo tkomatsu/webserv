@@ -59,4 +59,13 @@ std::string ltoa(long num) {
   return ret;
 }
 
+std::string trim(std::string s, std::string chars) {
+  std::string::size_type pos = s.find_first_not_of(chars);
+  if (pos == std::string::npos)
+    return "";
+  std::string::size_type endpos = s.find_last_not_of(chars);
+  std::string ret = s.substr(pos, endpos - pos + 1);
+  return ret;
+}
+
 }  // namespace ft

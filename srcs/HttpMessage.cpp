@@ -1,4 +1,5 @@
 #include "HttpMessage.hpp"
+#include "utility.hpp"
 
 HttpMessage::HttpMessage() {}
 
@@ -7,6 +8,8 @@ HttpMessage::~HttpMessage() {}
 void HttpMessage::SetVersion(std::string version) { http_version_ = version; }
 
 void HttpMessage::AppendHeader(std::string key, std::string value) {
+  key = ft::trim(key);
+  value = ft::trim(value);
   if (headers_.find(key) == headers_.end()) {
     headers_[key] = value;
   } else {
@@ -15,11 +18,7 @@ void HttpMessage::AppendHeader(std::string key, std::string value) {
 }
 
 void HttpMessage::AppendHeader(std::pair<std::string, std::string> pair) {
-  if (headers_.find(pair.first) == headers_.end()) {
-    headers_[pair.first] = pair.second;
-  } else {
-    headers_[pair.first] = headers_[pair.first] + (headers_[pair.first].empty() ? "" : ",") + pair.second;
-  }
+  AppendHeader(pair.first, pair.second);
 }
 
 void HttpMessage::AppendBody(std::string str) { body_ += str; }

@@ -39,12 +39,6 @@ void Request::ParseRequest() {
   } catch (ParseFatalException& e) {
     /* Parsing completed. Fatal error */
   }
-
-  method_ = GET;
-
-  uri_ = "/";
-  headers_["Content-Type"] = "text/html; charset=UTF-8";
-  headers_["Date"] = Now();
 }
 
 enum Method Request::GetMethod() const {
@@ -84,6 +78,7 @@ void Request::ParseStartline() {
       throw ParseFatalException("Invalid startline");
     http_version_ = startline_splitted[2].substr(5);
     raw_ = raw_.substr(raw_.find("\r\n") + 2);
+    status_ = STARTLINE;
   }
 }
 
@@ -92,20 +87,8 @@ void Request::ParseHeader() {
     if (raw_.find("\r\n\r\n") == std::string::npos)
       throw ParseHeaderException("Incomplete header");
     std::string header = raw_.substr(0, raw_.find("\r\n\r\n"));
-    std::string::size_type pos = 0;
-    while ((pos = header.find("\r\n", pos)) != std::string::npos) {
-      std::string line = header.substr(pos, header.find("\r\n", pos) - pos);
-      if (line.empty())
-        break;
-      std::string::size_type colon = line.find(":");
-      if (colon == std::string::npos)
-        throw ParseFatalException("Invalid header");
-      std::string key = line.substr(0, colon - 1);
-      std::string value = line.substr(colon + 1);
-      value = value.substr(value.find_first_not_of(" ") + 1, value.find_last_not_of(" ") - 1);
-      headers_[key] = value;
-      pos += 2;
-    }
+    std::vector<std::string> header_splitted = split(header, ':');
+    AppendHeader(header_splitted[0], header_splitted[1]);
     raw_ = raw_.substr(raw_.find("\r\n\r\n") + 4);
     status_ = HEADER;
   }

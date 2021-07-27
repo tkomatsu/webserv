@@ -1,20 +1,6 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-/* <<<<<<< HEAD
-#include <map>
-#include <string>
-#include <vector>
-
-struct ResponseStatus {
-  std::map<int, std::string> code;
-  ResponseStatus();
-};
-
-class Response {
- public:
-  static const ResponseStatus kResponseStatus;
-======= */
 #include <sstream>
 
 #include "HttpMessage.hpp"
