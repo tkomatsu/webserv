@@ -11,6 +11,7 @@ protected:
     requests["put"] = "PUT / HTTP/1.1\r\nHost: www.google.com\r\n\r\n";
     requests["head"] = "HEAD / HTTP/1.1\r\nHost: www.google.com\r\n\r\n";
     requests["invalid"] = "Host:www.google.com\r\n\r\n";
+    requests["no length"] = "GET / HTTP/1.1\r\nHost: www.google.com\r\nDate: Mon, 1 Jan 2010 01:01:01 GMT\r\n\r\n";
     requests["body"] = "POST / HTTP/1.1\r\nHost: www.google.com\r\nContent-Length: 27\r\n\r\nhello world. this isa test.";
     requests["chunk"] = "POST / HTTP/1.1\r\nContent-Type: text/plain\r\nTransfer-Encoding: chunked\r\n\r\n7\r\nMozilla\r\n9\r\nDeveloper\r\n7\r\nNetwork\r\n0\r\n\r\n";
   }
@@ -72,12 +73,23 @@ TEST_F(RequestTest, Invalid_method) {
 }
 
 TEST_F(RequestTest, Invalid_request) {
-  Request request;
-  try {
-    request.AppendRawData(requests["invalid"]);
-    FAIL();
-  } catch (Request::RequestFatalException &e) {
-    EXPECT_STREQ(e.what(), "Invalid startline");
+  {
+    Request request;
+    try {
+      request.AppendRawData(requests["invalid"]);
+      FAIL();
+    } catch (Request::RequestFatalException &e) {
+      EXPECT_STREQ(e.what(), "Invalid startline");
+    }
+  }
+  {
+    Request request;
+    try {
+      request.AppendRawData(requests["no length"]);
+      FAIL();
+    } catch (Request::RequestFatalException &e) {
+      EXPECT_STREQ(e.what(), "Length Required");
+    }
   }
 }
 
