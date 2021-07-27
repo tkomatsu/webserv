@@ -21,7 +21,6 @@ class Request : public HttpMessage {
   std::string raw_;
   enum ParseStatus status_;
 
-
   enum Method method_;
   std::string uri_;
 

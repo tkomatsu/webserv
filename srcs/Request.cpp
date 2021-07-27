@@ -136,6 +136,10 @@ void Request::ParseBody() {
           status_ = BODY;
       }
     } catch (HeaderKeyException) {
+      if (raw_.empty()) {
+        status_ = BODY;
+        return ;
+      }
       if (flag)
         throw RequestFatalException("Length Required");
     }
