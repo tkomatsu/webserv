@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <cstdlib>
 
 #include "HttpMessage.hpp"
 
