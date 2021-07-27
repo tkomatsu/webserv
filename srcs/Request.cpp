@@ -109,15 +109,19 @@ void Request::ParseHeader() {
 
 void Request::ParseBody() {
   if (status_ == HEADER) {
-    try {
+    bool flag = false;
+    try { /* not chunked */
       std::string::size_type len = strtoul(GetHeader("Content-Length").c_str(), NULL, 10);
-      body_ += raw_;
-      raw_ = "";
-      if (body_.size() == len)
+      if (raw_.size() == len) {
+        body_ += raw_;
+        raw_ = "";
         status_ = BODY;
+      }
       return ;
-    } catch (HeaderKeyException) {}
-    try {
+    } catch (HeaderKeyException) {
+      flag = true;
+    }
+    try { /* chunked content */
       std::string encode = GetHeader("Transfer-Encoding");
       if (encode != "chunked")
         throw RequestFatalException("Invalid Transfer-Encoding");
@@ -131,20 +135,9 @@ void Request::ParseBody() {
         if (len == 0)
           status_ = BODY;
       }
-
-      /*
-      std::string readable = raw_.substr(0, raw_.find_last_of("\r\n"));
-
-      // 最後がチャンクのサイズ指定だった場合は、最後の数字を部分を削る
-      std::string last_line = readable.substr(readable.find_last_of("\r\n") + 2);
-      char *ptr;
-      unsigned long len = strtoul(last_line.c_str(), &ptr, 16);
-      if (ptr != NULL)
-        readable = readable.substr(0, readable.find_last_of("\r\n"));
-
-      raw_ = raw_.substr(readable.size() + 2);
-      */
-
-    } catch (HeaderKeyException) {}
+    } catch (HeaderKeyException) {
+      if (flag)
+        throw RequestFatalException("Length Required");
+    }
   }
 }
