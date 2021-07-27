@@ -5,7 +5,7 @@
 class RequestTest : public testing::Test {
 protected:
   virtual void SetUp() {
-    requests.push_back("GET / HTTP/1.1\r\nHost: www.google.com\r\n\r\n");
+    requests.push_back("GET / HTTP/1.1\r\nHost: www.google.com\r\nDate: Mon, 1 Jan 2010 01:01:01 GMT\r\n\r\n");
     requests.push_back("POST / HTTP/1.1\r\nHost: www.google.com\r\n\r\n");
     requests.push_back("Host:www.google.com\r\n\r\n");
     requests.push_back("PUT / HTTP/1.3\r\nHost: www.google.com\r\n\r\n");
@@ -25,5 +25,6 @@ TEST_F(RequestTest, Standard) {
   EXPECT_EQ(request.GetURI(), "/");
   EXPECT_EQ(request.GetVersion(), "1.1");
   EXPECT_EQ(request.GetHeader("Host"), "www.google.com");
+  EXPECT_EQ(request.GetHeader("Date"), "Mon, 1 Jan 2010 01:01:01 GMT");
   EXPECT_EQ(request.GetBody() ,"");
 }
