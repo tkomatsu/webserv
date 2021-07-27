@@ -31,34 +31,33 @@ void Request::AppendRawData(std::string raw) {
   ParseRequest();
 }
 
-void Request::ParseRequest() {
-  try {
-    ParseStartline();
-    ParseHeader();
-    ParseBody();
-  } catch (ParseStartlineException& e) {
-    /* Incomplete parsing startline */
-  } catch (ParseHeaderException& e) {
-    /* Incomplete parsing header */
-  } catch (ParseBodyException& e) {
-    /* Parsing header completed. Imcomplete parsing body */
-  } catch (ParseFatalException& e) {
-    /* Parsing completed. Fatal error */
-  }
-}
-
 enum Method Request::GetMethod() const {
-  if (method_ == UNKNOWN) {
-    throw ParseStartlineException("Method is not defined");
+  /* この前にパースの時点で例外が吐かれるので、理論上はここに来ることはない */
+  if (method_ == UNKNOWN || INVALID <= method_) {
+    throw RequestFatalException("Method is not defined");
   }
   return method_;
 }
 
 const std::string& Request::GetURI() const {
   if (uri_.empty()) {
-    throw ParseStartlineException("URI is not defined");
+    throw RequestFatalException("URI is not defined");
   }
   return uri_;
+}
+
+void Request::ParseRequest() {
+  try {
+    ParseStartline();
+    ParseHeader();
+    ParseBody();
+  } catch (ParseStartlineException& e) {
+    status_ = INIT;
+  } catch (ParseHeaderException& e) {
+    status_ = STARTLINE;
+  } catch (ParseBodyException& e) {
+    status_ = HEADER;
+  }
 }
 
 void Request::ParseStartline() {
@@ -67,6 +66,8 @@ void Request::ParseStartline() {
   if (status_ == INIT) {
     std::string startline = raw_.substr(0, raw_.find("\r\n"));
     std::vector<std::string> startline_splitted = split(startline, ' ');
+    if (startline_splitted.size() != 3)
+      throw RequestFatalException("Invalid startline");
     std::string method = startline_splitted[0];
     if (method == "GET") {
       method_ = GET;
@@ -78,10 +79,10 @@ void Request::ParseStartline() {
       method_ = INVALID;
     }
     if (method_ == INVALID)
-      throw ParseFatalException("Invalid method");
+      throw RequestFatalException("Invalid method");
     uri_ = startline_splitted[1];
     if (startline_splitted[2].find("HTTP/") == std::string::npos)
-      throw ParseFatalException("Invalid startline");
+      throw RequestFatalException("Invalid HTTP version");
     http_version_ = startline_splitted[2].substr(5);
     raw_ = raw_.substr(raw_.find("\r\n") + 2);
     status_ = STARTLINE;
@@ -108,8 +109,6 @@ void Request::ParseHeader() {
 
 void Request::ParseBody() {
   if (status_ == HEADER) {
-    if (raw_.find("\r\n\r\n") == std::string::npos)
-      throw ParseBodyException("Incomplete body");
     body_ += raw_;
     raw_ = "";
   }

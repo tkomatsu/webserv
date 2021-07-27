@@ -7,7 +7,7 @@
 #include "HttpMessage.hpp"
 
 enum ParseStatus {
-  INIT, STARTLINE, HEADER, BODY, DONE
+  INIT, STARTLINE, HEADER, BODY, DONE,
 //  PARSE_INIT, PARSE_STARTLINE, PARSE_HEADER, PARSE_BODY, PARSE_COMPLETE,
 };
 
@@ -33,7 +33,7 @@ class Request : public HttpMessage {
   enum Method GetMethod() const;
   const std::string& GetURI() const;
 
-  // Exception
+  // Parse exception
   class ParseBodyException : public std::runtime_error {
    public:
     ParseBodyException(const std::string& what) : std::runtime_error(what) {}
@@ -46,9 +46,11 @@ class Request : public HttpMessage {
    public:
     ParseStartlineException(const std::string& what) : std::runtime_error(what) {}
   };
-  class ParseFatalException : public std::runtime_error {
+
+  // Fatal exception
+  class RequestFatalException : public std::runtime_error {
    public:
-    ParseFatalException(const std::string& what) : std::runtime_error(what) {}
+    RequestFatalException(const std::string& what) : std::runtime_error(what) {}
   };
 
  private:
