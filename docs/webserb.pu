@@ -1,5 +1,8 @@
 @startuml webserv
 
+skinparam monochrome true
+skinparam shadowing false
+
 class Webserv {
   - max_fd : int
   - sockets : map<int, Socket>
