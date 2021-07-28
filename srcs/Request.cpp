@@ -20,7 +20,7 @@ std::pair<std::string, std::string> div(std::string s, char delim) {
 
 }
 
-Request::Request() : status_(INIT) {
+Request::Request() : status_(STARTLINE) {
   ParseRequest();
 }
 
@@ -46,24 +46,28 @@ const std::string& Request::GetURI() const {
   return uri_;
 }
 
+enum Request::ParseStatus Request::GetStatus() const {
+  return status_;
+}
+
 void Request::ParseRequest() {
   try {
     ParseStartline();
     ParseHeader();
     ParseBody();
   } catch (ParseStartlineException& e) {
-    status_ = INIT;
-  } catch (ParseHeaderException& e) {
     status_ = STARTLINE;
-  } catch (ParseBodyException& e) {
+  } catch (ParseHeaderException& e) {
     status_ = HEADER;
+  } catch (ParseBodyException& e) {
+    status_ = BODY;
   }
 }
 
 void Request::ParseStartline() {
   if (raw_.find("\r\n") == std::string::npos)
     throw ParseStartlineException("Incomplete startline");
-  if (status_ == INIT) {
+  if (status_ == STARTLINE) {
     std::string startline = raw_.substr(0, raw_.find("\r\n"));
     std::vector<std::string> startline_splitted = split(startline, ' ');
     if (startline_splitted.size() != 3)
@@ -85,12 +89,12 @@ void Request::ParseStartline() {
       throw RequestFatalException("Invalid HTTP version");
     http_version_ = startline_splitted[2].substr(5);
     raw_ = raw_.substr(raw_.find("\r\n") + 2);
-    status_ = STARTLINE;
+    status_ = HEADER;
   }
 }
 
 void Request::ParseHeader() {
-  if (status_ == STARTLINE) {
+  if (status_ == HEADER) {
     if (raw_.find("\r\n\r\n") == std::string::npos)
       throw ParseHeaderException("Incomplete header");
     std::string flat = raw_.substr(0, raw_.find("\r\n\r\n"));
@@ -103,19 +107,19 @@ void Request::ParseHeader() {
       AppendHeader(header);
     }
     raw_ = raw_.substr(raw_.find("\r\n\r\n") + 4);
-    status_ = HEADER;
+    status_ = BODY;
   }
 }
 
 void Request::ParseBody() {
-  if (status_ == HEADER) {
+  if (status_ == BODY) {
     bool flag = false;
     try { /* not chunked */
       std::string::size_type len = strtoul(GetHeader("Content-Length").c_str(), NULL, 10);
       if (raw_.size() == len) {
         body_ += raw_;
         raw_ = "";
-        status_ = BODY;
+        status_ = DONE;
       }
       return ;
     } catch (HeaderKeyException) {
@@ -133,11 +137,11 @@ void Request::ParseBody() {
           raw_ = raw_.substr(raw_.find("\r\n") + 2 + len + 2);
         }
         if (len == 0)
-          status_ = BODY;
+          status_ = DONE;
       }
     } catch (HeaderKeyException) {
       if (raw_.empty()) {
-        status_ = BODY;
+        status_ = DONE;
         return ;
       }
       if (flag)

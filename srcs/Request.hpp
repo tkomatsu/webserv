@@ -7,12 +7,15 @@
 
 #include "HttpMessage.hpp"
 
-enum ParseStatus {
-  INIT, STARTLINE, HEADER, BODY, DONE,
-//  PARSE_INIT, PARSE_STARTLINE, PARSE_HEADER, PARSE_BODY, PARSE_COMPLETE,
-};
-
 class Request : public HttpMessage {
+
+ public:
+  enum ParseStatus {
+    STARTLINE,
+    HEADER,
+    BODY,
+    DONE,
+  };
 
  private:
   Request(const Request& other);
@@ -32,6 +35,7 @@ class Request : public HttpMessage {
 
   enum Method GetMethod() const;
   const std::string& GetURI() const;
+  enum ParseStatus GetStatus() const;
 
   // Parse exception
   class ParseBodyException : public std::runtime_error {
