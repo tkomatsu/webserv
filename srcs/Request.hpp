@@ -21,7 +21,6 @@ class Request : public HttpMessage {
   Request(const Request& other);
   Request& operator=(const Request& rhs);
 
-  std::string raw_;
   enum ParseStatus status_;
 
   enum Method method_;

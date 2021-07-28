@@ -13,6 +13,8 @@ class HttpMessage {
  protected:
   typedef std::map<std::string, std::string> http_header;
 
+  std::string raw_;
+
   std::string http_version_;
   http_header headers_;
   std::string body_;
@@ -28,6 +30,7 @@ class HttpMessage {
   void AppendHeader(std::string key, std::string value);
   void AppendHeader(std::pair<std::string, std::string> pair);
   void AppendBody(std::string);
+  void AppendRawData(std::string raw);
 
   const std::string& GetVersion() const;
   const http_header& GetAllHeader() const;

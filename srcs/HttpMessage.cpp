@@ -23,6 +23,8 @@ void HttpMessage::AppendHeader(std::pair<std::string, std::string> pair) {
 
 void HttpMessage::AppendBody(std::string str) { body_ += str; }
 
+void HttpMessage::AppendRawData(std::string str) { raw_ += str; }
+
 const std::string& HttpMessage::GetVersion() const { return http_version_; }
 
 const HttpMessage::http_header& HttpMessage::GetAllHeader() const {
