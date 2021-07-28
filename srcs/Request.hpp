@@ -1,21 +1,27 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
 
+#include <vector>
+#include <string>
+#include <cstdlib>
+
 #include "HttpMessage.hpp"
 
-enum ParseStatus {
-  PARSE_INIT, PARSE_STARTLINE, PARSE_HEADER, PARSE_BODY, PARSE_COMPLETE,
-};
-
 class Request : public HttpMessage {
+
+ public:
+  enum ParseStatus {
+    STARTLINE,
+    HEADER,
+    BODY,
+    DONE,
+  };
 
  private:
   Request(const Request& other);
   Request& operator=(const Request& rhs);
 
-  std::string raw_;
   enum ParseStatus status_;
-
 
   enum Method method_;
   std::string uri_;
@@ -28,27 +34,33 @@ class Request : public HttpMessage {
 
   enum Method GetMethod() const;
   const std::string& GetURI() const;
+  enum ParseStatus GetStatus() const;
 
+  // Parse exception
   class ParseBodyException : public std::runtime_error {
    public:
     ParseBodyException(const std::string& what) : std::runtime_error(what) {}
   };
-
   class ParseHeaderException : public std::runtime_error {
    public:
     ParseHeaderException(const std::string& what) : std::runtime_error(what) {}
   };
-
   class ParseStartlineException : public std::runtime_error {
    public:
     ParseStartlineException(const std::string& what) : std::runtime_error(what) {}
   };
 
+  // Fatal exception
+  class RequestFatalException : public std::runtime_error {
+   public:
+    RequestFatalException(const std::string& what) : std::runtime_error(what) {}
+  };
+
  private:
-  void ParseRequest();
-  size_t ParseStartline(size_t idx);
-  size_t ParseHeader(size_t idx);
-  size_t ParseBody(size_t idx);
+  void ParseMessage();
+  void ParseStartline();
+  void ParseHeader();
+  void ParseBody();
 
 };
 

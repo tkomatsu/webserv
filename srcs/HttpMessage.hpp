@@ -13,12 +13,16 @@ class HttpMessage {
  protected:
   typedef std::map<std::string, std::string> http_header;
 
+  std::string raw_;
+
   std::string http_version_;
   http_header headers_;
   std::string body_;
 
   HttpMessage(const HttpMessage&);
   HttpMessage& operator=(const HttpMessage&);
+
+  void AppendRawData(std::string raw);
 
  public:
   HttpMessage();

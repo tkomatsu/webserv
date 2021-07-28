@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <sstream>
-#include <string>
+#include <vector>
 
 namespace ft {
 
@@ -57,6 +56,15 @@ std::string ltoa(long num) {
   out << num;
   std::string ret = out.str();
 
+  return ret;
+}
+
+std::string trim(std::string s, std::string chars) {
+  std::string::size_type pos = s.find_first_not_of(chars);
+  if (pos == std::string::npos)
+    return "";
+  std::string::size_type endpos = s.find_last_not_of(chars);
+  std::string ret = s.substr(pos, endpos - pos + 1);
   return ret;
 }
 

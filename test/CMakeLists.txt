@@ -28,6 +28,7 @@ set(WEBSERV_SRC
   ${SRC_DIR}/HttpMessage.cpp
   ${SRC_DIR}/Response.cpp
   ${SRC_DIR}/Request.cpp
+  ${SRC_DIR}/utility.cpp
 )
 
 add_executable(
