@@ -11,7 +11,6 @@ enum Method {
   GET,
   POST,
   DELETE,
-  INVALID,
 };
 
 enum SocketStatus {

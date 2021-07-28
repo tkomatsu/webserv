@@ -32,7 +32,7 @@ void Request::AppendRawData(std::string raw) {
 }
 
 enum Method Request::GetMethod() const {
-  if (method_ == UNKNOWN || INVALID <= method_) {
+  if (method_ == UNKNOWN) {
     /* この前にパースの時点で例外が吐かれるので、理論上はここに来ることはない */
     throw RequestFatalException("Method is not defined");
   }
@@ -80,10 +80,8 @@ void Request::ParseStartline() {
     } else if (method == "DELETE") {
       method_ = DELETE;
     } else {
-      method_ = INVALID;
-    }
-    if (method_ == INVALID)
       throw RequestFatalException("Invalid method");
+    }
     uri_ = startline_splitted[1];
     if (startline_splitted[2].find("HTTP/") == std::string::npos)
       throw RequestFatalException("Invalid HTTP version");
