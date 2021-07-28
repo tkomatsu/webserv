@@ -22,6 +22,8 @@ class HttpMessage {
   HttpMessage(const HttpMessage&);
   HttpMessage& operator=(const HttpMessage&);
 
+  void AppendRawData(std::string raw);
+
  public:
   HttpMessage();
   ~HttpMessage();
@@ -30,7 +32,6 @@ class HttpMessage {
   void AppendHeader(std::string key, std::string value);
   void AppendHeader(std::pair<std::string, std::string> pair);
   void AppendBody(std::string);
-  void AppendRawData(std::string raw);
 
   const std::string& GetVersion() const;
   const http_header& GetAllHeader() const;
