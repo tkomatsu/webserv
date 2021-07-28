@@ -21,14 +21,14 @@ std::pair<std::string, std::string> div(std::string s, char delim) {
 }
 
 Request::Request() : status_(STARTLINE) {
-  ParseRequest();
+  ParseMessage();
 }
 
 Request::~Request() {}
 
 void Request::AppendRawData(std::string raw) {
   raw_ += raw;
-  ParseRequest();
+  ParseMessage();
 }
 
 enum Method Request::GetMethod() const {
@@ -50,7 +50,7 @@ enum Request::ParseStatus Request::GetStatus() const {
   return status_;
 }
 
-void Request::ParseRequest() {
+void Request::ParseMessage() {
   try {
     ParseStartline();
     ParseHeader();

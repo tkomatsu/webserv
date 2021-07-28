@@ -58,7 +58,7 @@ class Request : public HttpMessage {
   };
 
  private:
-  void ParseRequest();
+  void ParseMessage();
   void ParseStartline();
   void ParseHeader();
   void ParseBody();
