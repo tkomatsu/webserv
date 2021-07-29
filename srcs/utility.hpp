@@ -5,6 +5,9 @@
 
 #include <ctime>
 #include <string>
+#include <vector>
+#include <string>
+#include <cstdlib>
 
 enum Method {
   UNKNOWN,

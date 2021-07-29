@@ -1,7 +1,7 @@
 #include "Request.hpp"
 
-Request::Request() : status_(STARTLINE) {
-  ParseMessage();
+Request::Request() {
+  status_ = STARTLINE;
 }
 
 Request::~Request() {}
@@ -28,20 +28,6 @@ const std::string& Request::GetURI() const {
 
 enum Request::ParseStatus Request::GetStatus() const {
   return status_;
-}
-
-void Request::ParseMessage() {
-  try {
-    ParseStartline();
-    ParseHeader();
-    ParseBody();
-  } catch (ParseStartlineException& e) {
-    status_ = STARTLINE;
-  } catch (ParseHeaderException& e) {
-    status_ = HEADER;
-  } catch (ParseBodyException& e) {
-    status_ = BODY;
-  }
 }
 
 void Request::ParseStartline() {
@@ -72,21 +58,11 @@ void Request::ParseStartline() {
 }
 
 void Request::ParseHeader() {
-  if (status_ == HEADER) {
-    if (raw_.find("\r\n\r\n") == std::string::npos)
-      throw ParseHeaderException("Incomplete header");
-    std::string flat = raw_.substr(0, raw_.find("\r\n\r\n"));
-    std::vector<std::string> all = ft::vsplit(flat, '\r');
-    for (int i = 0; i < all.size(); i++) {
-      all[i] = ft::trim(all[i], "\n");
-    }
-    for (int i = 0; i < all.size(); i++) {
-      std::pair<std::string, std::string> header = ft::div(all[i], ':');
-      AppendHeader(header);
-    }
-    raw_ = raw_.substr(raw_.find("\r\n\r\n") + 4);
-    status_ = BODY;
-  }
+  HttpMessage::ParseHeader();
+}
+
+void Request::ParseMessage() {
+  HttpMessage::ParseMessage();
 }
 
 void Request::ParseBody() {

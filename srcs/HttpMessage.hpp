@@ -10,8 +10,19 @@
 #include "utility.hpp"
 
 class HttpMessage {
+
+ public:
+  enum ParseStatus {
+    STARTLINE,
+    HEADER,
+    BODY,
+    DONE,
+  };
+
  protected:
   typedef std::map<std::string, std::string> http_header;
+
+  enum ParseStatus status_;
 
   std::string raw_;
 
@@ -22,7 +33,11 @@ class HttpMessage {
   HttpMessage(const HttpMessage&);
   HttpMessage& operator=(const HttpMessage&);
 
-  void AppendRawData(std::string raw);
+  virtual void AppendRawData(std::string raw);
+  virtual void ParseMessage();
+  virtual void ParseStartline();
+  virtual void ParseHeader();
+  virtual void ParseBody();
 
  public:
   HttpMessage();
