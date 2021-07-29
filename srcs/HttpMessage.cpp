@@ -2,7 +2,7 @@
 
 #include "utility.hpp"
 
-HttpMessage::HttpMessage() {}
+HttpMessage::HttpMessage() : status_(STARTLINE) {}
 
 HttpMessage::~HttpMessage() {}
 

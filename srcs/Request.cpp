@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request() : method_(INVALID) { status_ = STARTLINE; }
+Request::Request() : method_(INVALID) {}
 
 Request::~Request() {}
 

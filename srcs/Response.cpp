@@ -68,6 +68,10 @@ Response::Response() {
 
 Response::~Response() {}
 
+void Response::AppendRawData(std::string raw) {
+  HttpMessage::AppendRawData(raw);
+}
+
 void Response::SetStatusCode(int status) {
   if (kResponseStatus.code.find(status) == kResponseStatus.code.end())
     throw StatusException("Invalid status code");
@@ -98,3 +102,16 @@ std::string Response::Str() const {
 }
 
 void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
+
+void Response::ParseStartline() { HttpMessage::ParseStartline(); }
+
+void Response::ParseHeader() { HttpMessage::ParseHeader(); }
+
+void Response::ParseMessage() { HttpMessage::ParseMessage(); }
+
+void Response::ParseBody() {
+  if (status_ == BODY) {
+    AppendBody(raw_);
+    status_ = DONE;
+  }
+}

@@ -24,6 +24,8 @@ class Response : public HttpMessage {
   Response();
   ~Response();
 
+  virtual void AppendRawData(std::string raw);
+
   void SetStatusCode(int status);
   void SetBody(std::string body);
 
@@ -39,6 +41,10 @@ class Response : public HttpMessage {
 
  private:
   void SetStatusMessage(std::string reason);
+  virtual void ParseMessage();
+  virtual void ParseStartline();
+  virtual void ParseHeader();
+  virtual void ParseBody();
 };
 
 #endif /* RESPONSE_HPP */
