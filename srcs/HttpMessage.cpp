@@ -80,10 +80,10 @@ void HttpMessage::ParseHeader() {
       throw ParseHeaderException("Incomplete header");
     std::string flat = raw_.substr(0, raw_.find("\r\n\r\n"));
     std::vector<std::string> all = ft::vsplit(flat, '\r');
-    for (int i = 0; i < all.size(); i++) {
+    for (std::string::size_type i = 0; i < all.size(); i++) {
       all[i] = ft::trim(all[i], "\n");
     }
-    for (int i = 0; i < all.size(); i++) {
+    for (std::string::size_type i = 0; i < all.size(); i++) {
       std::pair<std::string, std::string> header = ft::div(all[i], ':');
       AppendHeader(header);
     }
