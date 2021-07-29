@@ -1,6 +1,6 @@
 #include "Request.hpp"
 
-Request::Request() { status_ = STARTLINE; }
+Request::Request() : method_(INVALID) { status_ = STARTLINE; }
 
 Request::~Request() {}
 
@@ -9,7 +9,7 @@ void Request::AppendRawData(std::string raw) {
 }
 
 enum Method Request::GetMethod() const {
-  if (method_ == UNKNOWN) {
+  if (method_ == INVALID) {
     /* この前にパースの時点で例外が吐かれるので、理論上はここに来ることはない */
     throw RequestFatalException("Method is not defined");
   }

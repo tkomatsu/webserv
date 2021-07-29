@@ -9,10 +9,10 @@
 #include <vector>
 
 enum Method {
-  UNKNOWN,
   GET,
   POST,
   DELETE,
+  INVALID,
 };
 
 enum SocketStatus {
