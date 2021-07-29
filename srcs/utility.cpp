@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <sstream>
 #include <vector>
 
@@ -61,11 +62,26 @@ std::string ltoa(long num) {
 
 std::string trim(std::string s, std::string chars) {
   std::string::size_type pos = s.find_first_not_of(chars);
-  if (pos == std::string::npos)
-    return "";
+  if (pos == std::string::npos) return "";
   std::string::size_type endpos = s.find_last_not_of(chars);
   std::string ret = s.substr(pos, endpos - pos + 1);
   return ret;
+}
+
+std::vector<std::string> vsplit(std::string s, char delim) {
+  std::vector<std::string> v;
+  std::stringstream ss(s);
+  std::string item;
+  while (std::getline(ss, item, delim)) {
+    v.push_back(item);
+  }
+  return v;
+}
+
+std::pair<std::string, std::string> div(std::string s, char delim) {
+  std::string k = s.substr(0, s.find(delim));
+  std::string v = s.substr(s.find(delim) + 1);
+  return std::make_pair(k, v);
 }
 
 }  // namespace ft

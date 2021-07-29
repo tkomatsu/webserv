@@ -97,4 +97,19 @@ std::string Response::Str() const {
   return s.str();
 }
 
-void Response::SetStatusMessage(std::string msg) { status_message_ = msg; }
+void Response::SetStatusMessage(const std::string& msg) {
+  status_message_ = msg;
+}
+
+void Response::ParseStartline() { HttpMessage::ParseStartline(); }
+
+void Response::ParseHeader() { HttpMessage::ParseHeader(); }
+
+void Response::ParseMessage() { HttpMessage::ParseMessage(); }
+
+void Response::ParseBody() {
+  if (status_ == BODY) {
+    AppendBody(raw_);
+    status_ = DONE;
+  }
+}
