@@ -32,7 +32,6 @@ class HttpMessage {
   HttpMessage(const HttpMessage&);
   HttpMessage& operator=(const HttpMessage&);
 
-  virtual void AppendRawData(std::string raw);
   virtual void ParseMessage();
   virtual void ParseStartline();
   virtual void ParseHeader();
@@ -42,10 +41,13 @@ class HttpMessage {
   HttpMessage();
   ~HttpMessage();
 
-  void SetVersion(std::string version);
-  void AppendHeader(std::string key, std::string value);
-  void AppendHeader(std::pair<std::string, std::string> pair);
-  void AppendBody(std::string);
+  void AppendRawData(const std::string& raw);
+
+  void SetVersion(const std::string& version);
+  void AppendHeader(const std::string& key, const std::string& value);
+  void AppendHeader(const std::pair<std::string, std::string>& pair);
+  void AppendBody(const std::string&);
+  void RemoveHeader(const std::string& key);
 
   const std::string& GetVersion() const;
   const http_header& GetAllHeader() const;

@@ -6,27 +6,38 @@ HttpMessage::HttpMessage() : status_(STARTLINE) {}
 
 HttpMessage::~HttpMessage() {}
 
-void HttpMessage::SetVersion(std::string version) { http_version_ = version; }
+void HttpMessage::SetVersion(const std::string& version) {
+  http_version_ = version;
+}
 
-void HttpMessage::AppendHeader(std::string key, std::string value) {
-  key = ft::trim(key);
-  value = ft::trim(value);
-  if (headers_.find(key) == headers_.end()) {
-    headers_[key] = value;
+void HttpMessage::AppendHeader(const std::string& key,
+                               const std::string& value) {
+  std::string k = ft::trim(key);
+  std::string v = ft::trim(value);
+  if (headers_.find(k) == headers_.end()) {
+    headers_[k] = v;
   } else {
-    headers_[key] = headers_[key] + (headers_[key].empty() ? "" : ",") + value;
+    headers_[k] = headers_[k] + (headers_[k].empty() ? "" : ",") + v;
   }
 }
 
-void HttpMessage::AppendHeader(std::pair<std::string, std::string> pair) {
+void HttpMessage::AppendHeader(
+    const std::pair<std::string, std::string>& pair) {
   AppendHeader(pair.first, pair.second);
 }
 
-void HttpMessage::AppendBody(std::string str) { body_ += str; }
+void HttpMessage::AppendBody(const std::string& str) { body_ += str; }
 
-void HttpMessage::AppendRawData(std::string str) {
+void HttpMessage::AppendRawData(const std::string& str) {
   raw_ += str;
   ParseMessage();
+}
+
+void HttpMessage::RemoveHeader(const std::string& key) {
+  http_header::iterator it = headers_.find(key);
+  if (it != headers_.end()) {
+    headers_.erase(it);
+  }
 }
 
 const std::string& HttpMessage::GetVersion() const { return http_version_; }

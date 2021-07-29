@@ -24,8 +24,6 @@ class Response : public HttpMessage {
   Response();
   ~Response();
 
-  virtual void AppendRawData(std::string raw);
-
   void SetStatusCode(int status);
   void SetBody(std::string body);
 

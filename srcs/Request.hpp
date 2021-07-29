@@ -15,8 +15,6 @@ class Request : public HttpMessage {
   Request();
   ~Request();
 
-  virtual void AppendRawData(std::string raw);
-
   enum Method GetMethod() const;
   const std::string& GetURI() const;
   enum ParseStatus GetStatus() const;

@@ -55,16 +55,17 @@ class HttpMessage {
   - http_version : string
   - headers : map<string, string>
   - body : string
-  + SetVersion(string) : void
-  + AppendHeader(string, string) : void
-  + AppendHeader(pair<string, string>) : void
-  + AppendBody(string) : void
+  + AppendRawData(const string&) : void
+  + AppendHeader(const string&, const string&) : void
+  + AppendHeader(const pair<string, string>&) : void
+  + AppendBody(const string&) : void
+  + RemoveHeader(const string&)
+  + SetVersion(const string&) : void
   + GetVersion() const : const string&
   + GetAllHeader() const : const map<string, string>&
   + GetHeader(const string&) const : const string&
   + GetBody() const : const string&
   + Now(time_t) : string
-  # {abstract} AppendRawData(string) : void
   - {abstract} ParseMessage() : void
   - {abstract} ParseStartline() : void
   - {abstract} ParseHeader() : void
@@ -77,7 +78,6 @@ class Request {
   + GetMethod() const : enum Method
   + GetURI() const : const string&
   + GetStatus() const : enum ParseStatus
-  + {abstract} AppendRawData(string) : void
   - {abstract} ParseMessage() : void
   - {abstract} ParseStartline() : void
   - {abstract} ParseHeader() : void
@@ -93,7 +93,6 @@ class Response {
   + GetStautsMessage() const : const string&
   + Str() : string
   - SetStatusMessage(string) : void
-  + {abstract} AppendRawData(string) : void
   - {abstract} ParseMessage() : void
   - {abstract} ParseStartline() : void
   - {abstract} ParseHeader() : void

@@ -4,10 +4,6 @@ Request::Request() : method_(INVALID) {}
 
 Request::~Request() {}
 
-void Request::AppendRawData(std::string raw) {
-  HttpMessage::AppendRawData(raw);
-}
-
 enum Method Request::GetMethod() const {
   if (method_ == INVALID) {
     /* この前にパースの時点で例外が吐かれるので、理論上はここに来ることはない */
