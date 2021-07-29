@@ -1,0 +1,109 @@
+@startuml webserv
+
+skinparam monochrome true
+skinparam shadowing false
+
+class Webserv {
+  - max_fd : int
+  - sockets : map<int, Socket>
+  + Activate() : void
+  - ParseConfig(const string&) : void
+  - HasUsableIO() : int
+  - AcceptSession(map<int, Socket>::iterator) : void
+  - ReadClient(map<int, Socket>::iterator) : void
+  - ReadFile(map<int, Socket>::iterator) : void
+  - ReadCGI(map<int, Socket>::iterator) : void
+  - WriteClient(map<int, Socket>::iterator) : void
+  - WriteFile(map<int, Socket>::iterator) : void
+  - WriteCGI(map<int, Socket>::iterator) : void
+}
+
+class Socket {
+  # address : struct sockaddr_in
+  # port : int
+  # host : char*
+  # status : enum ClientStatus
+  # config : struct Config
+  + Socket(int, string)
+  + SetSocket() : void
+  + GetStatus() const : enum ClientStatus
+}
+
+class Server {
+  + Server()
+  + Accept() : int
+}
+
+class Client {
+  - request : Request
+  - response : Response
+  - write_fd : int
+  - read_fd : int
+  + HandleRequest(int) : bool
+  + ReadFile(int) : bool
+  + WriteFile(int) : bool
+  + WriteCGI(int) : bool
+  + ReadCGI(int) : bool
+  + HandleResponse(int) : bool
+  + GetWriteFd() const : int
+  + GetReadFd() const : int
+}
+
+class Request {
+  - status : enum ParseStatus
+  - method : enum Method
+  - uri : string
+  + AppendRawData(string) : void
+  + GetMethod() const : enum Method
+  + GetURI() const : const string&
+  + GetStatus() const : enum ParseStatus
+  - ParseMessage() : void
+  - ParseStartline() : void
+  - ParseHeader() : void
+  - ParseBody() : void
+}
+
+class Response {
+  - status_code : interface
+  - status_message : string
+  + {static} const kResponseStatus : Status
+  + SetStatusCode(int) : void
+  + GetStatusCode() const : int
+  + GetStautsMessage() const : const string&
+  + Str() : string
+  - SetStatusMessage(string) : void
+}
+
+class HttpMessage {
+  - raw : string
+  - http_version : string
+  - headers : map<string, string>
+  - body : string
+  + SetVersion(string) : void
+  + AppendHeader(string, string) : void
+  + AppendHeader(pair<string, string>) : void
+  + AppendBody(string) : void
+  # AppendRawData(string) : void
+  + GetVersion() const : const string&
+  + GetAllHeader() const : const map<string, string>&
+  + GetHeader(const string&) const : const string&
+  + GetBody() const : const string&
+  + Now(time_t) : string
+}
+
+enum Method {
+  GET
+  POST
+  DELETE
+  INVALID
+}
+
+Webserv --> Socket
+Socket <|-- Client
+Socket <|-- Server
+Client --> Request
+Client --> Response
+HttpMessage <|-- Request
+HttpMessage <|-- Response
+
+@enduml
