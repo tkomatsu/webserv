@@ -33,3 +33,4 @@ int Socket::SetSocket(int _fd) {
 }
 
 void Socket::SetStatus(enum SocketStatus status) { socket_status_ = status; }
+

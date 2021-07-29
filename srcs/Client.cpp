@@ -36,7 +36,6 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
     index.push_back(info);
   }
   closedir(dirp);
-
   std::string tmp;
   tmp += "<html>\n<head><title>Index of ";
   tmp += "/";
@@ -82,7 +81,7 @@ void Client::Prepare(void) {
   ret = READ_FILE;
   ret = WRITE_FILE;
   ret = WRITE_CGI;
-  ret = WRITE_CLIENT;
+  // ret = WRITE_CLIENT;
   SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
