@@ -3,11 +3,10 @@
 
 #include <netinet/in.h>
 
+#include <cstdlib>
 #include <ctime>
 #include <string>
 #include <vector>
-#include <string>
-#include <cstdlib>
 
 enum Method {
   UNKNOWN,

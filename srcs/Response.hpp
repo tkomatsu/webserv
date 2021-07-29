@@ -39,7 +39,6 @@ class Response : public HttpMessage {
 
  private:
   void SetStatusMessage(std::string reason);
-
 };
 
 #endif /* RESPONSE_HPP */

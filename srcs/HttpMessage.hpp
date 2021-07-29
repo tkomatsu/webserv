@@ -1,16 +1,15 @@
 #ifndef HTTPMESSAGE_H
 #define HTTPMESSAGE_H
 
-#include <map>
-#include <string>
-#include <stdexcept>
 #include <ctime>
+#include <map>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 
 #include "utility.hpp"
 
 class HttpMessage {
-
  public:
   enum ParseStatus {
     STARTLINE,
@@ -66,14 +65,14 @@ class HttpMessage {
   };
   class ParseStartlineException : public std::runtime_error {
    public:
-    ParseStartlineException(const std::string& what) : std::runtime_error(what) {}
+    ParseStartlineException(const std::string& what)
+        : std::runtime_error(what) {}
   };
 
   class HeaderKeyException : public std::invalid_argument {
    public:
     HeaderKeyException(const std::string& what) : std::invalid_argument(what) {}
   };
-
 };
 
 #endif /* HTTPMESSAGE_H */

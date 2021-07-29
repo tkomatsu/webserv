@@ -1,14 +1,11 @@
 #include "Request.hpp"
 
-Request::Request() {
-  status_ = STARTLINE;
-}
+Request::Request() { status_ = STARTLINE; }
 
 Request::~Request() {}
 
 void Request::AppendRawData(std::string raw) {
   HttpMessage::AppendRawData(raw);
-  ParseMessage();
 }
 
 enum Method Request::GetMethod() const {
@@ -26,9 +23,7 @@ const std::string& Request::GetURI() const {
   return uri_;
 }
 
-enum Request::ParseStatus Request::GetStatus() const {
-  return status_;
-}
+enum Request::ParseStatus Request::GetStatus() const { return status_; }
 
 void Request::ParseStartline() {
   if (raw_.find("\r\n") == std::string::npos)
@@ -57,25 +52,22 @@ void Request::ParseStartline() {
   }
 }
 
-void Request::ParseHeader() {
-  HttpMessage::ParseHeader();
-}
+void Request::ParseHeader() { HttpMessage::ParseHeader(); }
 
-void Request::ParseMessage() {
-  HttpMessage::ParseMessage();
-}
+void Request::ParseMessage() { HttpMessage::ParseMessage(); }
 
 void Request::ParseBody() {
   if (status_ == BODY) {
     bool flag = false;
     try { /* not chunked */
-      std::string::size_type len = strtoul(GetHeader("Content-Length").c_str(), NULL, 10);
+      std::string::size_type len =
+          strtoul(GetHeader("Content-Length").c_str(), NULL, 10);
       if (raw_.size() == len) {
         body_ += raw_;
         raw_ = "";
         status_ = DONE;
       }
-      return ;
+      return;
     } catch (HeaderKeyException) {
       flag = true;
     }
@@ -90,16 +82,14 @@ void Request::ParseBody() {
           body_ += data.substr(0, len);
           raw_ = raw_.substr(raw_.find("\r\n") + 2 + len + 2);
         }
-        if (len == 0)
-          status_ = DONE;
+        if (len == 0) status_ = DONE;
       }
     } catch (HeaderKeyException) {
       if (raw_.empty()) {
         status_ = DONE;
-        return ;
+        return;
       }
-      if (flag)
-        throw RequestFatalException("Length Required");
+      if (flag) throw RequestFatalException("Length Required");
     }
   }
 }

@@ -4,7 +4,6 @@
 #include "HttpMessage.hpp"
 
 class Request : public HttpMessage {
-
  private:
   Request(const Request& other);
   Request& operator=(const Request& rhs);
@@ -33,7 +32,6 @@ class Request : public HttpMessage {
   virtual void ParseStartline();
   virtual void ParseHeader();
   virtual void ParseBody();
-
 };
 
 #endif /* REQUEST_HPP */
