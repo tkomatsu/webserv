@@ -55,6 +55,7 @@ class HttpMessage {
   const std::string& GetBody() const;
 
   std::string Now(time_t time = std::time(NULL)) const;
+  void Clear();
 
   // Parse exception
   class ParseBodyException : public std::runtime_error {

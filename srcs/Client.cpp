@@ -92,10 +92,7 @@ void Client::Prepare(void) {
       read_fd_ = open("./docs/html/index.html", O_RDONLY);
       fcntl(read_fd_, F_SETFL, O_NONBLOCK);
 
-      response_.SetStatusCode(200);
       response_.AppendHeader("Content-Type", "text/html");
-      response_.AppendHeader("Server", "Webserv");
-      response_.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
       break;
 
     case WRITE_FILE:
@@ -104,8 +101,6 @@ void Client::Prepare(void) {
 
       response_.SetStatusCode(201);
       response_.AppendHeader("Content-Type", "text/html");
-      response_.AppendHeader("Server", "Webserv");
-      response_.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
       response_.AppendHeader("Content-Location", "/post.html");
       break;
 
@@ -114,16 +109,12 @@ void Client::Prepare(void) {
 
       response_.SetStatusCode(200);
       response_.AppendHeader("Content-Type", "text/html");
-      response_.AppendHeader("Server", "Webserv");
-      response_.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
       break;
 
     case WRITE_CLIENT:
       if (is_autoindex) {
         response_.SetStatusCode(200);
         response_.AppendHeader("Content-Type", "text/html");
-        response_.AppendHeader("Server", "Webserv");
-        response_.AppendHeader("Date", "Wed, 30 Jun 2021 08:25:23 GMT");
 
         std::string tmp = MakeAutoIndexContent("./docs");
 
@@ -163,7 +154,8 @@ int Client::send(int client_fd) {
   if (ret > 0) {
     std::cout << "send to   " + host_ip_ << ":" << port_ << std::endl;
   }
-
+  response_.Clear();
+  request_.Clear();
   return ret;
 }
 

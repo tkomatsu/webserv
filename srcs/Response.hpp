@@ -31,6 +31,7 @@ class Response : public HttpMessage {
   const std::string& GetStatusMessage() const;
 
   std::string Str() const;
+  void Clear();
 
   class StatusException : public std::domain_error {
    public:

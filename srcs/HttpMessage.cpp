@@ -60,6 +60,14 @@ std::string HttpMessage::Now(time_t time) const {
   return std::string(buf);
 }
 
+void HttpMessage::Clear() {
+  status_ = STARTLINE;
+  http_version_ = "1.1";
+  headers_.clear();
+  body_.clear();
+  raw_.clear();
+}
+
 void HttpMessage::ParseMessage() {
   try {
     ParseStartline();

@@ -21,6 +21,12 @@ const std::string& Request::GetURI() const {
 
 enum Request::ParseStatus Request::GetStatus() const { return status_; }
 
+void Request::Clear() {
+  HttpMessage::Clear();
+  method_ = INVALID;
+  uri_.clear();
+}
+
 void Request::ParseStartline() {
   if (raw_.find("\r\n") == std::string::npos)
     throw ParseStartlineException("Incomplete startline");
