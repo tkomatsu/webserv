@@ -1,25 +1,5 @@
 #include "Request.hpp"
 
-namespace {
-
-std::vector<std::string> split(std::string s, char delim) {
-  std::vector<std::string> v;
-  std::stringstream ss(s);
-  std::string item;
-  while (std::getline(ss, item, delim)) {
-    v.push_back(item);
-  }
-  return v;
-}
-
-std::pair<std::string, std::string> div(std::string s, char delim) {
-  std::string k = s.substr(0, s.find(delim));
-  std::string v = s.substr(s.find(delim) + 1);
-  return std::make_pair(k, v);
-}
-
-}
-
 Request::Request() : status_(STARTLINE) {
   ParseMessage();
 }
@@ -69,7 +49,7 @@ void Request::ParseStartline() {
     throw ParseStartlineException("Incomplete startline");
   if (status_ == STARTLINE) {
     std::string startline = raw_.substr(0, raw_.find("\r\n"));
-    std::vector<std::string> startline_splitted = split(startline, ' ');
+    std::vector<std::string> startline_splitted = ft::vsplit(startline, ' ');
     if (startline_splitted.size() != 3)
       throw RequestFatalException("Invalid startline");
     std::string method = startline_splitted[0];
@@ -96,12 +76,12 @@ void Request::ParseHeader() {
     if (raw_.find("\r\n\r\n") == std::string::npos)
       throw ParseHeaderException("Incomplete header");
     std::string flat = raw_.substr(0, raw_.find("\r\n\r\n"));
-    std::vector<std::string> all = split(flat, '\r');
+    std::vector<std::string> all = ft::vsplit(flat, '\r');
     for (int i = 0; i < all.size(); i++) {
       all[i] = ft::trim(all[i], "\n");
     }
     for (int i = 0; i < all.size(); i++) {
-      std::pair<std::string, std::string> header = div(all[i], ':');
+      std::pair<std::string, std::string> header = ft::div(all[i], ':');
       AppendHeader(header);
     }
     raw_ = raw_.substr(raw_.find("\r\n\r\n") + 4);
