@@ -1,5 +1,3 @@
-![sequence dialog](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/tkomatsu/webserv/uml/docs/webserb.pu?token=ALGGLOOAFDRRCAADZ3Q7IDTBBKEF4)
-
 ```
 $ make
 $ ./webserv
