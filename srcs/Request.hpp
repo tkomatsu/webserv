@@ -36,20 +36,6 @@ class Request : public HttpMessage {
   const std::string& GetURI() const;
   enum ParseStatus GetStatus() const;
 
-  // Parse exception
-  class ParseBodyException : public std::runtime_error {
-   public:
-    ParseBodyException(const std::string& what) : std::runtime_error(what) {}
-  };
-  class ParseHeaderException : public std::runtime_error {
-   public:
-    ParseHeaderException(const std::string& what) : std::runtime_error(what) {}
-  };
-  class ParseStartlineException : public std::runtime_error {
-   public:
-    ParseStartlineException(const std::string& what) : std::runtime_error(what) {}
-  };
-
   // Fatal exception
   class RequestFatalException : public std::runtime_error {
    public:

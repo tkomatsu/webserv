@@ -40,6 +40,20 @@ class HttpMessage {
 
   std::string Now(time_t time = std::time(NULL)) const;
 
+  // Parse exception
+  class ParseBodyException : public std::runtime_error {
+   public:
+    ParseBodyException(const std::string& what) : std::runtime_error(what) {}
+  };
+  class ParseHeaderException : public std::runtime_error {
+   public:
+    ParseHeaderException(const std::string& what) : std::runtime_error(what) {}
+  };
+  class ParseStartlineException : public std::runtime_error {
+   public:
+    ParseStartlineException(const std::string& what) : std::runtime_error(what) {}
+  };
+
   class HeaderKeyException : public std::invalid_argument {
    public:
     HeaderKeyException(const std::string& what) : std::invalid_argument(what) {}
