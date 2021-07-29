@@ -92,7 +92,7 @@ class Response {
   + GetStatusCode() const : int
   + GetStautsMessage() const : const string&
   + Str() : string
-  - SetStatusMessage(string) : void
+  - SetStatusMessage(const string&) : void
   - {abstract} ParseMessage() : void
   - {abstract} ParseStartline() : void
   - {abstract} ParseHeader() : void

@@ -38,7 +38,7 @@ class Response : public HttpMessage {
   };
 
  private:
-  void SetStatusMessage(std::string reason);
+  void SetStatusMessage(const std::string& reason);
   virtual void ParseMessage();
   virtual void ParseStartline();
   virtual void ParseHeader();
