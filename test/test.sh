@@ -25,7 +25,8 @@ cd ../../
 make re
 ./webserv &
 sleep 1
-python ./test/http/main.py
+python3 -m pip install requests
+python3 ./test/http/main.py
 
 if [ $? -eq 0 ]; then
     pkill webserv
