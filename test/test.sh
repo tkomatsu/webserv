@@ -14,6 +14,10 @@ if [ $? -ne 0 ]; then
 	./WebservTest
 fi
 
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
 echo " _     _   _         _            _   "
 echo "| |__ | |_| |_ _ __ | |_ ___  ___| |_ "
 echo "| '_ \| __| __| '_ \| __/ _ \/ __| __|"

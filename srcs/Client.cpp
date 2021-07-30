@@ -28,6 +28,7 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
     std::cout << dir_path << dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path << std::endl;
 
   DIR *dirp = opendir(dir_path.c_str());
+  if (dirp == NULL) return "";
   std::cout << dir_path << " " << dirp << std::endl;
   struct dirent *dp;
   fileinfo info;
