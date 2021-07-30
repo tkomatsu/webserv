@@ -29,6 +29,10 @@ set(WEBSERV_SRC
   ${SRC_DIR}/Response.cpp
   ${SRC_DIR}/Request.cpp
   ${SRC_DIR}/utility.cpp
+  ${SRC_DIR}/CGI.cpp
+  ${SRC_DIR}/Client.cpp
+  ${SRC_DIR}/Socket.cpp
+  ${SRC_DIR}/Server.cpp
 )
 
 add_executable(

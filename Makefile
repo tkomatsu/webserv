@@ -67,6 +67,7 @@ leak: re
 	@printf "$(_BLUE)Leak check build done$(_END)\n"
 
 check:
+	
 	cd test && ./test.sh
 
 PHONY: all clean fclean re debug leak check
