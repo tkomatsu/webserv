@@ -1,5 +1,6 @@
 #!/bin/bash
-WEBSERV_ROOT=$PWD
+
+echo $WEBSERV_ROOT
 
 echo "             _ _   _            _   "
 echo " _   _ _ __ (_) |_| |_ ___  ___| |_ "

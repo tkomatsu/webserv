@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <regex>
+
 #include "Client.hpp"
 #include "Server.hpp"
 
@@ -26,11 +28,13 @@ TEST_F(ClientTest, SetSocket) {
   }
 }
 
-// うまく動かない。関数が呼ばれてない
+void a(std::string b) { return (void)b; }
+
 TEST_F(ClientTest, AutoIndex) {
   Client client;
-  std::cout << std::string(getenv("WEBSERV_ROOT")) + "/../docs/" << std::endl;
-  std::string res = client.MakeAutoIndexContent("./");// getenv("WEBSERV_ROOT")) + "/../docs/");
+  // std::cout << std::string(getenv("WEBSERV_ROOT")) + "docs/" << std::endl;
+  std::string res = client.MakeAutoIndexContent("./");
 
-  std::cout << res << std::endl;
+  a(res);
+  EXPECT_TRUE(std::regex_match("abc", std::regex("\\w+")));
 }
