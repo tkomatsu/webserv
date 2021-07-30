@@ -25,11 +25,11 @@ class Socket {
   # status : enum ClientStatus
   # config : struct Config
   + Socket(int, string)
-  + SetSocket() : void
   + GetStatus() const : enum ClientStatus
 }
 
 class Server {
+  + SetSocket() : int
   + Server()
   + Accept() : int
 }
@@ -39,7 +39,8 @@ class Client {
   - response : Response
   - write_fd : int
   - read_fd : int
-  + HandleRequest(int) : bool
+  + SetSocket(int) : int
+  + BranchRequest(int) : enum SocketStatus
   + ReadFile(int) : bool
   + WriteFile(int) : bool
   + WriteCGI(int) : bool
@@ -107,6 +108,15 @@ enum Method {
   POST
   DELETE
   INVALID
+}
+
+enum SocketStatus {
+  READ_CLIENT
+  READ_FILE
+  READ_CGI
+  WRITE_CGI
+  WRITE_FILE
+  WRITE_CLIENT
 }
 
 Webserv *--> Socket

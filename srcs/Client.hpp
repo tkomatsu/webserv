@@ -16,7 +16,7 @@ typedef struct fileinfo {
 
 class Client : public Socket {
  public:
-  Client() : Socket(READ_CLIENT){};
+  Client() { socket_status_ = READ_CLIENT; };
 
   int SetSocket(int _fd);
   void Prepare(void);
@@ -34,7 +34,9 @@ class Client : public Socket {
   int GetReadFd() { return read_fd_; };
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
-  void AppendResponseHeader(std::string key, std::string val) {response_.AppendHeader(key, val); };
+  void AppendResponseHeader(std::string key, std::string val) {
+    response_.AppendHeader(key, val);
+  };
 
   std::string MakeAutoIndexContent(std::string dir_path);
 
