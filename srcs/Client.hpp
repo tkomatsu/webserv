@@ -5,9 +5,9 @@
 
 #include <vector>
 
+#include "ISocket.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
-#include "Socket.hpp"
 
 typedef struct fileinfo {
   struct dirent *dirent_;
@@ -34,6 +34,9 @@ class Client : public Socket {
   int GetReadFd() { return read_fd_; };
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
+
+  void SetStatus(enum SocketStatus status);
+
   void AppendResponseHeader(std::string key, std::string val) {
     response_.AppendHeader(key, val);
   };
