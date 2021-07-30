@@ -25,18 +25,15 @@ int Client::SetSocket(int _fd) {
 }
 
 std::string Client::MakeAutoIndexContent(std::string dir_path) {
-    std::cout << dir_path << dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path<< dir_path << std::endl;
-
   DIR *dirp = opendir(dir_path.c_str());
   if (dirp == NULL) return "";
-  std::cout << dir_path << " " << dirp << std::endl;
   struct dirent *dp;
   fileinfo info;
   std::vector<fileinfo> index;
 
   while ((dp = readdir(dirp)) != NULL) {
     info.dirent_ = dp;
-    stat(("./docs/" + std::string(dp->d_name)).c_str(), &info.stat_);
+    stat((dir_path + std::string(dp->d_name)).c_str(), &info.stat_);
     index.push_back(info);
   }
   closedir(dirp);
@@ -150,6 +147,7 @@ int Client::recv(int client_fd) {
       std::cout << "\nrecv from " + host_ip_ << ":" << port_ << std::endl;
     }
   }
+  // if (request_.GetStatus() == HttpMessage::DONE)
   //} else {
   // TODO: if size of data exceed WebServ::buf_max_,
   // we need to stock them.

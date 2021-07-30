@@ -30,7 +30,7 @@ cd ../../
 make re
 ./webserv &
 sleep 1
-python3 ./test/http/main.py
+./test/http/httptest
 
 if [ $? -eq 0 ]; then
     pkill webserv

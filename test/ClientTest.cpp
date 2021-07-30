@@ -28,13 +28,10 @@ TEST_F(ClientTest, SetSocket) {
   }
 }
 
-void a(std::string b) { return (void)b; }
-
 TEST_F(ClientTest, AutoIndex) {
   Client client;
   // std::cout << std::string(getenv("WEBSERV_ROOT")) + "docs/" << std::endl;
   std::string res = client.MakeAutoIndexContent("./");
 
-  a(res);
-  EXPECT_TRUE(std::regex_match("abc", std::regex("\\w+")));
+  EXPECT_TRUE(std::regex_match(res, std::regex("(.|\n)*")));
 }
