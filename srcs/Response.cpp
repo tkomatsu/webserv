@@ -97,6 +97,15 @@ std::string Response::Str() const {
   return s.str();
 }
 
+void Response::Clear() {
+  HttpMessage::Clear();
+  http_version_ = "1.1";
+  SetStatusCode(200);
+  AppendHeader("Content-Type", "");
+  AppendHeader("Date", Now());
+  AppendHeader("Server", "webserv");
+}
+
 void Response::SetStatusMessage(const std::string& msg) {
   status_message_ = msg;
 }
