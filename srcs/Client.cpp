@@ -28,17 +28,17 @@ void Client::SetStatus(enum SocketStatus status) { socket_status_ = status; }
 
 std::string Client::MakeAutoIndexContent(std::string dir_path) {
   DIR *dirp = opendir(dir_path.c_str());
+  if (dirp == NULL) return "";
   struct dirent *dp;
   fileinfo info;
   std::vector<fileinfo> index;
 
   while ((dp = readdir(dirp)) != NULL) {
     info.dirent_ = dp;
-    stat(("./docs/" + std::string(dp->d_name)).c_str(), &info.stat_);
+    stat((dir_path + std::string(dp->d_name)).c_str(), &info.stat_);
     index.push_back(info);
   }
   closedir(dirp);
-
   std::string tmp;
   tmp += "<html>\n<head><title>Index of ";
   tmp += "/";
@@ -84,7 +84,7 @@ void Client::Prepare(void) {
   ret = READ_FILE;
   ret = WRITE_FILE;
   ret = WRITE_CGI;
-  ret = WRITE_CLIENT;
+  // ret = WRITE_CLIENT;
   SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
@@ -140,6 +140,7 @@ int Client::recv(int client_fd) {
       std::cout << "\nrecv from " + host_ip_ << ":" << port_ << std::endl;
     }
   }
+  // if (request_.GetStatus() == HttpMessage::DONE)
   //} else {
   // TODO: if size of data exceed WebServ::buf_max_,
   // we need to stock them.
