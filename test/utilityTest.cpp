@@ -6,18 +6,20 @@ class utilityTest : public testing::Test {
  protected:
   virtual void SetUp() {}
   virtual void TearDown() {}
+
+  void ExpectResult(long num) {
+    std::string exp = std::to_string(num);
+    std::string ret = ft::ltoa(num);
+    EXPECT_STREQ(ret.c_str(), exp.c_str());
+  }
 };
 
-TEST_F(utilityTest, Split) {
-  std::string a = ft::ltoa(42);
-
-  EXPECT_EQ(a, "42");
-  a = ft::ltoa(2147483648);
-  EXPECT_EQ(a, "2147483648");
-  a = ft::ltoa(2147483647);
-  EXPECT_EQ(a, "2147483647");
-  a = ft::ltoa(-2147483648);
-  EXPECT_EQ(a, "-2147483648");
-  a = ft::ltoa(-2147483649);
-  EXPECT_EQ(a, "-2147483649");
+TEST_F(utilityTest, Ltoa) {
+  ExpectResult(2147483648);
+  ExpectResult(2147483647);
+  ExpectResult(-2147483648);
+  ExpectResult(-2147483649);
+  ExpectResult(42);
+  ExpectResult(-42);
+  ExpectResult(0);
 }

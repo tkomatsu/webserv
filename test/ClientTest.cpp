@@ -28,9 +28,10 @@ TEST_F(ClientTest, SetSocket) {
 
 // うまく動かない。関数が呼ばれてない
 TEST_F(ClientTest, AutoIndex) {
-  Client client;	  std::cout << "きた" << std::endl;
-							// docsフォルダのフルパス
-  std::string res = client.MakeAutoIndexContent("/Users/yudai/webserv/docs");
+  Client client;
+  std::cout << std::string(getenv("WEBSERV_ROOT")) + "/../docs/" << std::endl;
+  std::string res = client.MakeAutoIndexContent(
+      std::string(getenv("WEBSERV_ROOT")) + "/../docs/");
 
   std::cout << res << std::endl;
 }
