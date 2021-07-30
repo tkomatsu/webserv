@@ -29,7 +29,6 @@ cd ../../
 make re
 ./webserv &
 sleep 1
-python3 -m pip install requests
 python3 ./test/http/main.py
 
 if [ $? -eq 0 ]; then

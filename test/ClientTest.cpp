@@ -30,8 +30,7 @@ TEST_F(ClientTest, SetSocket) {
 TEST_F(ClientTest, AutoIndex) {
   Client client;
   std::cout << std::string(getenv("WEBSERV_ROOT")) + "/../docs/" << std::endl;
-  std::string res = client.MakeAutoIndexContent(
-      std::string(getenv("WEBSERV_ROOT")) + "/../docs/");
+  std::string res = client.MakeAutoIndexContent("./");// getenv("WEBSERV_ROOT")) + "/../docs/");
 
   std::cout << res << std::endl;
 }
