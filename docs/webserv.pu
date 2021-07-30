@@ -24,7 +24,6 @@ class Socket {
   # host : char*
   # status : enum ClientStatus
   # config : struct Config
-  + Socket(int, string)
   + GetStatus() const : enum ClientStatus
 }
 
