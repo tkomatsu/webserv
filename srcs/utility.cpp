@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <ctime>
 #include <sstream>
 #include <vector>
 
@@ -82,6 +83,12 @@ std::pair<std::string, std::string> div(std::string s, char delim) {
   std::string k = s.substr(0, s.find(delim));
   std::string v = s.substr(s.find(delim) + 1);
   return std::make_pair(k, v);
+}
+
+std::string AutoIndexNow(time_t time) {
+  char buf[80];
+  std::strftime(buf, sizeof(buf), "%d-%b-%Y %R", std::gmtime(&time));
+  return std::string(buf);
 }
 
 }  // namespace ft

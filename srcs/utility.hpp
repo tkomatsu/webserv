@@ -32,6 +32,7 @@ std::string ltoa(long num);
 std::string trim(std::string s, std::string delim = " \t\v");
 std::vector<std::string> vsplit(std::string s, char delim);
 std::pair<std::string, std::string> div(std::string s, char delim);
+std::string AutoIndexNow(time_t time);
 
 }  // namespace ft
 
