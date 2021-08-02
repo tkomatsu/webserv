@@ -19,7 +19,7 @@ class ClientTest : public testing::Test {
 TEST_F(ClientTest, SetSocket) {
   Server server(4200, "127.0.0.1");
   Client client;
-  int tmp_fd = server.SetSocket(42);
+  int tmp_fd = server.SetSocket();
 
   try {
     int res = client.SetSocket(tmp_fd);
