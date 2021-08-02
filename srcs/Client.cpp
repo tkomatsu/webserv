@@ -130,22 +130,17 @@ int Client::recv(int client_fd) {
 
   ret = ::recv(client_fd, buf, Client::buf_max_ - 1, 0);
 
+  if (ret == -1) return ret;  // recv error
+  if (ret == 0) return ret;   // closed by client
+
   request_.AppendRawData(buf);
 
-  if (ret >= 0) {
-    size_t i = std::string(buf).find("\r\n\r\n");
-    if (i != std::string::npos) {
-      std::cout << "\nrecv from " + host_ip_ << ":" << port_ << std::endl;
-    }
+  if (request_.GetStatus() == HttpMessage::DONE) {
+    std::cout << "\nrecv from " + host_ip_ << ":" << port_ << std::endl;
+    return 1;  // read complete
   }
-  // if (request_.GetStatus() == HttpMessage::DONE)
-  //} else {
-  // TODO: if size of data exceed WebServ::buf_max_,
-  // we need to stock them.
-  //  }
-  //}
 
-  return ret;
+  return 2; // need to read more
 }
 
 int Client::send(int client_fd) {

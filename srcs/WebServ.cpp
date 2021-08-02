@@ -62,21 +62,24 @@ int WebServ::ReadClient(socket_iter it) {
   int ret = client->recv(client_fd);
 
   switch (ret) {
-    case -1:
+    case -1: // recv error
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
       throw std::runtime_error("recv error\n");
       break;
 
-    case 0:
+    case 0: // closed by client
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
       break;
 
-    default:
+    case 1: // read complete
       client->Prepare();
+      break;
+    
+    case 2: // need to read more
       break;
   }
 
