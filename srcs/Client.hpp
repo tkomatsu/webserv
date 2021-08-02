@@ -33,7 +33,7 @@ class Client : public Socket {
   int GetWriteFd() { return write_fd_; };
   int GetReadFd() { return read_fd_; };
 
-  void SetResponseBody(std::string buf) { response_.SetBody(buf); };
+  void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
   void AppendResponseHeader(std::string key, std::string val) {response_.AppendHeader(key, val); };
 
   std::string MakeAutoIndexContent(std::string dir_path);

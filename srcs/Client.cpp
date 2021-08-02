@@ -81,9 +81,9 @@ void Client::Prepare(void) {
 
   int ret;
   ret = READ_FILE;
-  ret = WRITE_FILE;
+  // ret = WRITE_FILE;
   // ret = WRITE_CGI;
-  ret = WRITE_CLIENT;
+  // ret = WRITE_CLIENT;
   SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;

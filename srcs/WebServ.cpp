@@ -92,14 +92,26 @@ int WebServ::ReadFile(socket_iter it) {
   int ret = 1;
   char buf[WebServ::buf_max_] = {0};
 
-  // std::cout << client->GetReadFd() << std::endl;
+  ret = read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
 
-  read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
+  switch (ret) {
+    case -1: // read error
+      close(client->GetReadFd());
+      close(client_fd);
+      delete it->second;
+      sockets_.erase(it);
+      throw std::runtime_error("read error\n");
+      break;
 
-  close(client->GetReadFd());
+    case 0: // read complete
+      close(client->GetReadFd());
+      client->SetStatus(WRITE_CLIENT);
+      break;
 
-  client->SetResponseBody(buf);
-  client->SetStatus(WRITE_CLIENT);
+    default: // just read
+      client->AppendResponseBody(buf);
+      break;
+  }
 
   return ret;
 }
@@ -127,7 +139,7 @@ int WebServ::ReadCGI(socket_iter it) {
 
   close(client->GetReadFd());
 
-  client->SetResponseBody(buf);
+  // client->SetResponseBody(buf);
   client->SetStatus(WRITE_CLIENT);
 
   return ret;
