@@ -40,6 +40,8 @@ class WebServ {
   struct timeval timeout_;
 
   std::map<int, Socket*> sockets_;
+
+  std::map<int, std::string> cgi_outputs_;
 };
 
 #endif

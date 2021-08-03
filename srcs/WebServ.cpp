@@ -62,24 +62,24 @@ int WebServ::ReadClient(socket_iter it) {
   int ret = client->recv(client_fd);
 
   switch (ret) {
-    case -1: // recv error
+    case -1:  // recv error
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
       throw std::runtime_error("recv error\n");
       break;
 
-    case 0: // closed by client
+    case 0:  // closed by client
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
       break;
 
-    case 1: // read complete
+    case 1:  // read complete
       client->Prepare();
       break;
-    
-    case 2: // need to read more
+
+    case 2:  // need to read more
       break;
   }
 
@@ -95,7 +95,7 @@ int WebServ::ReadFile(socket_iter it) {
   ret = read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
 
   switch (ret) {
-    case -1: // read error
+    case -1:  // read error
       close(client->GetReadFd());
       close(client_fd);
       delete it->second;
@@ -103,12 +103,12 @@ int WebServ::ReadFile(socket_iter it) {
       throw std::runtime_error("read error\n");
       break;
 
-    case 0: // read complete
+    case 0:  // read complete
       close(client->GetReadFd());
       client->SetStatus(WRITE_CLIENT);
       break;
 
-    default: // just read
+    default:  // just read
       client->AppendResponseBody(buf);
       break;
   }
@@ -133,12 +133,14 @@ int WebServ::ReadCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = 1;
-  char buf[WebServ::buf_max_] = {0};
+  char buf[10] = {0};
+  std::string headers;
+  std::string body;
 
-  ret = read(client->GetReadFd(), buf, Client::buf_max_ - 1);
+  ret = read(client->GetReadFd(), buf, 10 - 1);
 
   switch (ret) {
-    case -1: // read error
+    case -1:  // read error
       close(client->GetReadFd());
       close(client_fd);
       delete it->second;
@@ -146,14 +148,25 @@ int WebServ::ReadCGI(socket_iter it) {
       throw std::runtime_error("read error\n");
       break;
 
-    case 0: // read complete
+    case 0:  // read complete
       close(client->GetReadFd());
+      if (cgi_outputs_[client->GetReadFd()].find("\n\n") == std::string::npos)
+        throw std::runtime_error("incomplete header\n");
+      headers = cgi_outputs_[client->GetReadFd()].substr(
+          0, cgi_outputs_[client->GetReadFd()].find("\n\n"));
+      body = cgi_outputs_[client->GetReadFd()].substr(
+          cgi_outputs_[client->GetReadFd()].find("\n\n") + 2);
+
+      std::cout << headers << std::endl;
+      std::cout << "==========" << std::endl;
+      std::cout << body << std::endl;
+      
       client->SetStatus(WRITE_CLIENT);
+      cgi_outputs_.erase(client->GetReadFd());
       break;
 
-    default: // just read
-      std::cout << buf << std::endl;
-      client->AppendResponseRawData(buf);
+    default:  // just read
+      cgi_outputs_[client->GetReadFd()].append(buf);
       break;
   }
   // client->SetStatus(WRITE_CLIENT);
