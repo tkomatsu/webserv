@@ -28,9 +28,10 @@ DEBUG_FLAGS = -g3
 # Source files
 # ****************************************************************************
 
+SRC_DIR = srcs/
 OBJ_DIR = objs/
 
-SRCS = $(shell find srcs -name '*.cpp' | sed 's!^.*/!!')
+SRCS = $(shell find $(SRC_DIR) -name '*.cpp' | sed 's!^.*/!!')
 OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))
 DEPENDS = $(OBJS:.o=.d)
 
