@@ -11,7 +11,7 @@ class CGITest : public testing::Test {
   virtual void TearDown() {}
 
   void ExpectArgs(CGI& res) {
-    EXPECT_STREQ(res.GetArgs()[0], "./docs/perl.cgi");
+    EXPECT_STREQ(res.GetArgs()[0], "./docs/chunked.cgi");
     EXPECT_STREQ(res.GetArgs()[1], "mcgee");
     EXPECT_STREQ(res.GetArgs()[2], "mine");
   }

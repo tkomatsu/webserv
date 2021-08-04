@@ -5,7 +5,7 @@
 const int CGI::num_envs_ = 18;
 
 CGI::CGI(const Request &request) {
-  args_ = ft::split("./docs/perl.cgi+mcgee+mine", '+');
+  args_ = ft::split("./docs/chunked.cgi+mcgee+mine", '+');
 
   envs_map_["AUTH_TYPE"] = "";
   envs_map_["CONTENT_LENGTH"] = "";
@@ -84,4 +84,3 @@ CGI::~CGI() {
   }
   free(envs_);
 }
-
