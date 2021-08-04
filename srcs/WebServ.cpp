@@ -33,7 +33,7 @@ void WebServ::ParseConig(const std::string &path) {
   // コンフィグをパースした結果分かる、最初に立てるべきサーバーたちをつくる
   for (int i = 0; i < 3; ++i) {
     Server *server = new Server(4200 + i, "127.0.0.1");
-    long fd = server->SetSocket(42);  // 42 is meanless
+    long fd = server->SetSocket();  // 42 is meanless
 
     sockets_[fd] = server;
   }

@@ -24,6 +24,8 @@ int Client::SetSocket(int _fd) {
   return fd;
 }
 
+void Client::SetStatus(enum SocketStatus status) { socket_status_ = status; }
+
 std::string Client::MakeAutoIndexContent(std::string dir_path) {
   DIR *dirp = opendir(dir_path.c_str());
   if (dirp == NULL) return "";
