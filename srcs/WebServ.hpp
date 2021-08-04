@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-#include "Socket.hpp"
+#include "ISocket.hpp"
 
 class Client;
 

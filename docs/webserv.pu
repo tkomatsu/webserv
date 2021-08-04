@@ -18,19 +18,15 @@ class Webserv {
   - WriteCGI(map<int, Socket>::iterator) : void
 }
 
-class Socket {
+interface ISocket {
   # address : struct sockaddr_in
   # port : int
   # host : char*
-  # status : enum ClientStatus
   # config : struct Config
-  + Socket(int, string)
-  + SetSocket() : void
-  + GetStatus() const : enum ClientStatus
 }
 
 class Server {
-  + Server()
+  + SetSocket() : int
   + Accept() : int
 }
 
@@ -39,7 +35,10 @@ class Client {
   - response : Response
   - write_fd : int
   - read_fd : int
-  + HandleRequest(int) : bool
+  - status : enum ClientStatus
+  + SetSocket(int) : int
+  + SetStatus(enum ClientStatus) : void
+  + BranchRequest(int) : enum SocketStatus
   + ReadFile(int) : bool
   + WriteFile(int) : bool
   + WriteCGI(int) : bool
@@ -47,6 +46,7 @@ class Client {
   + HandleResponse(int) : bool
   + GetWriteFd() const : int
   + GetReadFd() const : int
+  + GetStatus() const : enum ClientStatus
 }
 
 class HttpMessage {
@@ -109,9 +109,18 @@ enum Method {
   INVALID
 }
 
-Webserv *--> Socket
-Socket <|-- Client
-Socket <|-- Server
+enum SocketStatus {
+  READ_CLIENT
+  READ_FILE
+  READ_CGI
+  WRITE_CGI
+  WRITE_FILE
+  WRITE_CLIENT
+}
+
+Webserv *--> ISocket
+ISocket <|-- Client
+ISocket <|-- Server
 Client *--> Request
 Client *--> Response
 HttpMessage <|-- Request
