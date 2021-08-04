@@ -145,7 +145,7 @@ void WebServ::ParseCGIOutput(std::string headers, std::string body,
       content_length_exist = 1;
       continue;  // content-length is set in WriteClient()
     } else if (ft::strcasecmp(header.first, "Transfer-Encoding") == 0) {
-      if (strcmp(ft::trim(header.second).c_str(), "chunked") != 0)
+      if (strcmp(header.second.c_str(), "chunked") != 0)
         throw std::runtime_error("invalid transfer-encoding\n");
       else {
         chunked_exist = 1;
@@ -165,7 +165,6 @@ void WebServ::ParseCGIOutput(std::string headers, std::string body,
       std::string::size_type len = strtoul(body.c_str(), NULL, 16);
       std::string data = body.substr(body.find("\r\n") + 2);
       if (data.size() >= len) {
-
         client->AppendResponseBody(data.substr(0, len));
         body = body.substr(body.find("\r\n") + 2 + len + 2);
       }
