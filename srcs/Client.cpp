@@ -32,7 +32,7 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
 
   while ((dp = readdir(dirp)) != NULL) {
     fileinfo info;
-    
+
     info.dirent_ = dp;
     stat((dir_path + std::string(dp->d_name)).c_str(), &info.stat_);
     index.push_back(info);
@@ -141,7 +141,7 @@ int Client::recv(int client_fd) {
     return 1;  // read complete
   }
 
-  return 2; // need to read more
+  return 2;  // need to read more
 }
 
 int Client::send(int client_fd) {
@@ -173,7 +173,7 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, char **args,
   close(pipe_read[0]);
   close(pipe_read[1]);
 
-  execve("./docs/perl.cgi", args, envs);
+  execve("./docs/chunked.cgi", args, envs);
   exit(EXIT_FAILURE);
 }
 
