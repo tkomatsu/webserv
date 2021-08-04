@@ -35,7 +35,7 @@ class Client : public Socket {
 
   void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
   void AppendResponseHeader(std::string key, std::string val) {response_.AppendHeader(key, val); };
-  void AppendResponseRawData(std::string buf) { response_.AppendRawData(buf); };
+  void AppendResponseHeader(std::pair<std::string, std::string> header) {response_.AppendHeader(header); };
 
   std::string MakeAutoIndexContent(std::string dir_path);
 

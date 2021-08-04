@@ -20,6 +20,7 @@ sub html {
 #
 print <<EOF;
 Content-Type: text/html
+Content-Type: text/html
 
 <!doctype html>
 <html>
