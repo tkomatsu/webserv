@@ -80,6 +80,7 @@ class Config {
  private:
   bool print_config_;
   std::string filename_;
+  struct Main main_;
   std::vector<struct Server> servers_;
 
   void ValidateLineSyntax(const LineComponent& line); // TODO: remove dep
