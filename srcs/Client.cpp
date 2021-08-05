@@ -138,12 +138,7 @@ int Client::recv(int client_fd) {
 
   request_.AppendRawData(buf);
 
-  if (request_.GetStatus() == HttpMessage::DONE) {
-    std::cout << "\nrecv from " + host_ip_ << ":" << port_ << std::endl;
-    return 1;  // read complete
-  }
-
-  return 2;  // need to read more
+  return 1;
 }
 
 int Client::send(int client_fd) {

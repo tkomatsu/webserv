@@ -29,10 +29,12 @@ class Client : public Socket {
   static const int buf_max_;
 
   const Response &GetResponse() { return response_; };
+  const Request &GetRequest() { return request_; };
   int GetStatus() { return socket_status_; };
   int GetWriteFd() { return write_fd_; };
   int GetReadFd() { return read_fd_; };
-
+  int GetPort() { return port_; };
+  std::string GetHostIp() { return host_ip_; };
 
   void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
   void AppendResponseHeader(std::string key, std::string val) {response_.AppendHeader(key, val); };

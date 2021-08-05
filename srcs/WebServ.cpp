@@ -74,17 +74,19 @@ int WebServ::ReadClient(socket_iter it) {
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
+      // throw std::runtime_error("closed by client\n");
       break;
 
-    case 1:  // read complete
-      client->Prepare();
-      break;
-
-    case 2:  // need to read more
+    default:
       break;
   }
 
-  return ret;
+  if (client->GetRequest().GetStatus() == HttpMessage::DONE) {
+    std::cout << "\nrecv from " + client->GetHostIp() << ":" << client->GetPort() << std::endl;
+    client->Prepare();
+  }
+
+  return 0;
 }
 
 int WebServ::ReadFile(socket_iter it) {
