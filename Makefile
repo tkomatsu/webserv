@@ -17,7 +17,10 @@ NAME = webserv
 
 # Config
 # ****************************************************************************
-VPATH = srcs/core:srcs/http:srcs/socket
+SRC_DIR = srcs/
+OBJ_DIR = objs/
+
+VPATH = $(SRC_DIR):$(SRC_DIR)core:$(SRC_DIR)http:$(SRC_DIR)socket
 
 INCLUDE_FLAGS = -I $(shell echo $(VPATH) | awk '{gsub(":", " -I ");print $$0}')
 SHELL = /bin/bash
@@ -27,9 +30,6 @@ DEBUG_FLAGS = -g3
 
 # Source files
 # ****************************************************************************
-
-SRC_DIR = srcs/
-OBJ_DIR = objs/
 
 SRCS = $(shell find $(SRC_DIR) -name '*.cpp' | sed 's!^.*/!!')
 OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))
