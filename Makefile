@@ -20,7 +20,9 @@ NAME = webserv
 SRC_DIR = srcs/
 OBJ_DIR = objs/
 
-VPATH = $(SRC_DIR):$(SRC_DIR)core:$(SRC_DIR)http:$(SRC_DIR)socket
+space :=
+space +=
+VPATH := $(subst $(space),:,$(shell find $(SRC_DIR) -type d))
 
 INCLUDE_FLAGS = -I $(shell echo $(VPATH) | awk '{gsub(":", " -I ");print $$0}')
 SHELL = /bin/bash
