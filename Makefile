@@ -17,20 +17,25 @@ NAME = webserv
 
 # Config
 # ****************************************************************************
+SRC_DIR = srcs/
+OBJ_DIR = objs/
 
+space :=
+space +=
+VPATH := $(subst $(space),:,$(shell find $(SRC_DIR) -type d))
+
+INCLUDE_FLAGS = -I $(shell echo $(VPATH) | awk '{gsub(":", " -I ");print $$0}')
 SHELL = /bin/bash
 CXX = clang++
-CXXFLAGS = -Wall -Werror -Wextra -std=c++98 -I $(SRC_DIR)
+CXXFLAGS = -Wall -Werror -Wextra -std=c++98 $(INCLUDE_FLAGS) -MMD -MP
 DEBUG_FLAGS = -g3
 
 # Source files
 # ****************************************************************************
 
-SRC_DIR = srcs/
-OBJ_DIR = objs/
-
-SRCS = $(shell find srcs -name '*.cpp' | sed 's!^.*/!!')
+SRCS = $(shell find $(SRC_DIR) -name '*.cpp' | sed 's!^.*/!!')
 OBJS = $(addprefix $(OBJ_DIR), $(SRCS:.cpp=.o))
+DEPENDS = $(OBJS:.o=.d)
 
 # Recipe
 # ****************************************************************************
@@ -43,7 +48,7 @@ $(NAME): $(OBJS)
 	@printf "$(_GREEN)Finish compiling $@!\n"
 	@printf "Try \"./$@\" to use$(_END)\n"
 
-$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
+$(OBJ_DIR)%.o: %.cpp
 	@if [ ! -d $(OBJ_DIR) ];then mkdir $(OBJ_DIR); fi
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 	@printf "$(_GREEN)█"
@@ -67,7 +72,8 @@ leak: re
 	@printf "$(_BLUE)Leak check build done$(_END)\n"
 
 check:
-	
 	cd test && ./test.sh
+
+-include $(DEPENDS)
 
 PHONY: all clean fclean re debug leak check
