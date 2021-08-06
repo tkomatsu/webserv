@@ -29,17 +29,28 @@ class Client : public Socket {
   static const int buf_max_;
 
   const Response &GetResponse() { return response_; };
+  const Request &GetRequest() { return request_; };
   int GetStatus() { return socket_status_; };
   int GetWriteFd() { return write_fd_; };
   int GetReadFd() { return read_fd_; };
+  int GetPort() { return port_; };
+  std::string GetHostIp() { return host_ip_; };
+
+  void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
+  void AppendResponseHeader(std::string key, std::string val) {
+    response_.AppendHeader(key, val);
+  };
+  void AppendResponseHeader(std::pair<std::string, std::string> header) {
+    response_.AppendHeader(header);
+  };
+  void AppendResponseRawData(std::string data, bool is_continue) {
+    response_.AppendRawData(data);
+    if (!is_continue) response_.EndCGI();
+  };
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
 
   void SetStatus(enum SocketStatus status);
-
-  void AppendResponseHeader(std::string key, std::string val) {
-    response_.AppendHeader(key, val);
-  };
 
   std::string MakeAutoIndexContent(std::string dir_path);
 
@@ -54,4 +65,4 @@ class Client : public Socket {
   int read_fd_;
 };
 
-#endif
+#endif /* CLIENT_HPP */

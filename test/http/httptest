@@ -61,9 +61,8 @@ class Case():
 	
 	# headersに期待のkeyと同じ かつ 期待のvalueが同じものがあるか
 	def header(self, expected_key, expected_val):
-		if expected_key in self.r.headers:
-			if self.r.headers[expected_key] == expected_val:
-				print(Color.GREEN + "header OK!" + Color.END)
+		if expected_key in self.r.headers and self.r.headers[expected_key] == expected_val:
+			print(Color.GREEN + "header OK!" + Color.END)
 		else:
 			print(Color.RED + "header KO!" + Color.END)
 			exit(1)
@@ -82,7 +81,6 @@ case = Case("get", "http://localhost:4200")
 case.status_code(200)
 case.body_has("mcgee")
 case.header_has("Content-Length")
-case.header("Content-Type", "text/html")
 
 ################################################################
 
@@ -91,7 +89,6 @@ case = Case("get", "http://localhost:4200", params=payload)
 case.status_code(200)
 case.body_has("mcgee")
 case.header_has("Content-Length")
-case.header("Content-Type", "text/html")
 
 
 ################################################################
@@ -101,7 +98,6 @@ case = Case("get", "http://localhost:4200", headers=payload)
 case.status_code(200)
 case.body_has("mcgee")
 case.header_has("Content-Length")
-case.header("Content-Type", "text/html")
 
 
 ################################################################
@@ -111,4 +107,3 @@ case = Case("post", "http://localhost:4200", data=payload)
 case.status_code(200)
 case.body_has("mcgee")
 case.header_has("Content-Length")
-case.header("Content-Type", "text/html")

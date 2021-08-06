@@ -2,7 +2,7 @@
 
 #include "utility.hpp"
 
-HttpMessage::HttpMessage() : status_(STARTLINE) {}
+HttpMessage::HttpMessage() : status_(STARTLINE), delim_("\r\n") {}
 
 HttpMessage::~HttpMessage() {}
 
@@ -84,18 +84,20 @@ void HttpMessage::ParseMessage() {
 
 void HttpMessage::ParseHeader() {
   if (status_ == HEADER) {
-    if (raw_.find("\r\n\r\n") == std::string::npos)
+    if (raw_.find(delim_ + delim_) == std::string::npos)
       throw ParseHeaderException("Incomplete header");
-    std::string flat = raw_.substr(0, raw_.find("\r\n\r\n"));
-    std::vector<std::string> all = ft::vsplit(flat, '\r');
-    for (std::string::size_type i = 0; i < all.size(); i++) {
-      all[i] = ft::trim(all[i], "\n");
+    std::string flat = raw_.substr(0, raw_.find(delim_ + delim_));
+    std::vector<std::string> all = ft::vsplit(flat, '\n');
+    if (delim_ == "\r\n") {
+      for (std::string::size_type i = 0; i < all.size(); i++) {
+        all[i] = ft::trim(all[i], "\r");
+      }
     }
     for (std::string::size_type i = 0; i < all.size(); i++) {
       std::pair<std::string, std::string> header = ft::div(all[i], ':');
       AppendHeader(header);
     }
-    raw_ = raw_.substr(raw_.find("\r\n\r\n") + 4);
+    raw_ = raw_.substr(raw_.find(delim_ + delim_) + delim_.size() * 2);
     status_ = BODY;
   }
 }

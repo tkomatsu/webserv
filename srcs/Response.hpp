@@ -30,6 +30,7 @@ class Response : public HttpMessage {
   int GetStatusCode() const;
   const std::string& GetStatusMessage() const;
 
+  void EndCGI();
   std::string Str() const;
   void Clear();
 

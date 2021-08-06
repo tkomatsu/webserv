@@ -51,6 +51,7 @@ class Client {
 
 class HttpMessage {
   - status : enum ParseStatus
+  - delim : string
   - raw : string
   - http_version : string
   - headers : map<string, string>
@@ -93,6 +94,7 @@ class Response {
   + SetStatusCode(int) : void
   + GetStatusCode() const : int
   + GetStautsMessage() const : const string&
+  + EndCGI() : void
   + Str() : string
   + Clear() : void
   - SetStatusMessage(const string&) : void

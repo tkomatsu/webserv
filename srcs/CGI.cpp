@@ -84,4 +84,3 @@ CGI::~CGI() {
   }
   free(envs_);
 }
-

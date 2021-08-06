@@ -6,6 +6,8 @@
 
 #include "ISocket.hpp"
 
+class Client;
+
 class WebServ {
  public:
   typedef std::map<int, Socket*>::iterator socket_iter;
@@ -40,6 +42,8 @@ class WebServ {
   struct timeval timeout_;
 
   std::map<int, Socket*> sockets_;
+
+  std::map<int, std::string> cgi_outputs_;
 };
 
 #endif
