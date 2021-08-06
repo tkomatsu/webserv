@@ -20,14 +20,11 @@ NAME = webserv
 SRC_DIR = srcs/
 OBJ_DIR = objs/
 
-space :=
-space +=
-VPATH := $(subst $(space),:,$(shell find $(SRC_DIR) -type d))
+VPATH = $(SRC_DIR)
 
-INCLUDE_FLAGS = -I $(shell echo $(VPATH) | awk '{gsub(":", " -I ");print $$0}')
 SHELL = /bin/bash
 CXX = clang++
-CXXFLAGS = -Wall -Werror -Wextra -std=c++98 $(INCLUDE_FLAGS) -MMD -MP
+CXXFLAGS = -Wall -Werror -Wextra -std=c++98 -I $(SRC_DIR) -MMD -MP
 DEBUG_FLAGS = -g3
 
 # Source files
