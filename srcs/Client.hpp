@@ -37,13 +37,20 @@ class Client : public Socket {
   std::string GetHostIp() { return host_ip_; };
 
   void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
-  void AppendResponseHeader(std::string key, std::string val) {response_.AppendHeader(key, val); };
-  void AppendResponseHeader(std::pair<std::string, std::string> header) {response_.AppendHeader(header); };
+  void AppendResponseHeader(std::string key, std::string val) {
+    response_.AppendHeader(key, val);
+  };
+  void AppendResponseHeader(std::pair<std::string, std::string> header) {
+    response_.AppendHeader(header);
+  };
+  void AppendResponseRawData(std::string data, bool is_continue) {
+    response_.AppendRawData(data);
+    if (!is_continue) response_.EndCGI();
+  };
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
 
   void SetStatus(enum SocketStatus status);
-
 
   std::string MakeAutoIndexContent(std::string dir_path);
 
@@ -58,4 +65,4 @@ class Client : public Socket {
   int read_fd_;
 };
 
-#endif
+#endif /* CLIENT_HPP */

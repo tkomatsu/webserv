@@ -79,6 +79,8 @@ void Response::SetBody(std::string body) { body_ = body; }
 
 int Response::GetStatusCode() const { return status_code_; }
 
+void Response::EndCGI() { status_ = DONE; }
+
 const std::string& Response::GetStatusMessage() const {
   return status_message_;
 }
@@ -110,15 +112,18 @@ void Response::SetStatusMessage(const std::string& msg) {
   status_message_ = msg;
 }
 
+void Response::ParseMessage() {
+  delim_ = "\n";
+  HttpMessage::ParseMessage();
+}
+
 void Response::ParseStartline() { HttpMessage::ParseStartline(); }
 
 void Response::ParseHeader() { HttpMessage::ParseHeader(); }
 
-void Response::ParseMessage() { HttpMessage::ParseMessage(); }
-
 void Response::ParseBody() {
   if (status_ == BODY) {
     AppendBody(raw_);
-    status_ = DONE;
+    raw_ = "";
   }
 }

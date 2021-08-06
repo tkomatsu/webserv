@@ -13,11 +13,9 @@ sub html {
     $str =~ s/"/&quot;/g;
     $str =~ s/'/&#x27;/g;
     return $str;
-}    
+}
 
 #
 # ヘッダ部を書き出します
 #
-print <<EOF;
-Content-Type: text/html\nTransfer-Encoding: chunked\n\nB\r\nmcgee mine\n\r\n0\r\n\r\n
-EOF
+print "Content-Type: text/html\nTransfer-Encoding: chunked\n\nB\r\nmcgee mine\n\r\n0\r\n\r\n"

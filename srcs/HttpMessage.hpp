@@ -1,5 +1,5 @@
-#ifndef HTTPMESSAGE_H
-#define HTTPMESSAGE_H
+#ifndef HTTPMESSAGE_HPP
+#define HTTPMESSAGE_HPP
 
 #include <ctime>
 #include <map>
@@ -22,9 +22,8 @@ class HttpMessage {
   typedef std::map<std::string, std::string> http_header;
 
   enum ParseStatus status_;
-
+  std::string delim_;
   std::string raw_;
-
   std::string http_version_;
   http_header headers_;
   std::string body_;
@@ -78,4 +77,4 @@ class HttpMessage {
   };
 };
 
-#endif /* HTTPMESSAGE_H */
+#endif /* HTTPMESSAGE_HPP */

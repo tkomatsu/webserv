@@ -170,7 +170,7 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, char **args,
   close(pipe_read[0]);
   close(pipe_read[1]);
 
-  execve("./docs/chunked.cgi", args, envs);
+  execve("./docs/perl.cgi", args, envs);
   exit(EXIT_FAILURE);
 }
 
