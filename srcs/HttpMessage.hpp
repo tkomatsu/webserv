@@ -1,5 +1,5 @@
-#ifndef HTTPMESSAGE_H
-#define HTTPMESSAGE_H
+#ifndef HTTPMESSAGE_HPP
+#define HTTPMESSAGE_HPP
 
 #include <ctime>
 #include <map>
@@ -77,4 +77,4 @@ class HttpMessage {
   };
 };
 
-#endif /* HTTPMESSAGE_H */
+#endif /* HTTPMESSAGE_HPP */

@@ -36,7 +36,6 @@ class WebServ {
   int ExecClientEvent(socket_iter it);
 
   void ParseConig(const std::string& path);
-  void ParseCGIOutput(std::string headers, std::string body, Client* client);
 
   int max_fd_;
   fd_set rfd_set_, wfd_set_;

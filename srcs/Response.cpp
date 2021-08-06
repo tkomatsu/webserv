@@ -124,5 +124,6 @@ void Response::ParseHeader() { HttpMessage::ParseHeader(); }
 void Response::ParseBody() {
   if (status_ == BODY) {
     AppendBody(raw_);
+    raw_ = "";
   }
 }

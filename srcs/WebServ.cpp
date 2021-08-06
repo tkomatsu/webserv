@@ -82,7 +82,8 @@ int WebServ::ReadClient(socket_iter it) {
   }
 
   if (client->GetRequest().GetStatus() == HttpMessage::DONE) {
-    std::cout << "\nrecv from " + client->GetHostIp() << ":" << client->GetPort() << std::endl;
+    std::cout << "\nrecv from " + client->GetHostIp() << ":"
+              << client->GetPort() << std::endl;
     client->Prepare();
   }
 
@@ -132,91 +133,27 @@ int WebServ::WriteFile(socket_iter it) {
   return ret;
 }
 
-// parse CGI output i.e. set body in response_ properly
-void WebServ::ParseCGIOutput(std::string headers, std::string body,
-                             Client *client) {
-  std::vector<std::string> all = ft::vsplit(headers, '\n');
-  int content_length_exist = 0;
-  int chunked_exist = 0;
-
-  // append headers, checking if content-length exist and chunked exist
-  for (std::string::size_type i = 0; i < all.size(); i++) {
-    std::pair<std::string, std::string> header = ft::div(all[i], ':');
-
-    if (ft::strcasecmp(header.first, "Content-Length") == 0) {
-      content_length_exist = 1;
-      continue;  // content-length is set in WriteClient()
-    } else if (ft::strcasecmp(header.first, "Transfer-Encoding") == 0) {
-      if (strcmp(ft::trim(header.second).c_str(), "chunked") != 0)
-        throw std::runtime_error("invalid transfer-encoding\n");
-      else {
-        chunked_exist = 1;
-        continue;  // content-length is set in WriteClient()
-      }
-    }
-    client->AppendResponseHeader(header);
-  }
-
-  if (content_length_exist) {
-    client->AppendResponseBody(body);
-  } else if (!chunked_exist) {
-    client->AppendResponseBody(body);
-  } else {  // chunked
-    std::string::size_type length = 0;
-    while (body.find("\r\n") != std::string::npos) {
-      std::string::size_type len = strtoul(body.c_str(), NULL, 16);
-      std::string data = body.substr(body.find("\r\n") + 2);
-      if (data.size() >= len) {
-        client->AppendResponseBody(data.substr(0, len));
-        body = body.substr(body.find("\r\n") + 2 + len + 2);
-      }
-      if (len == 0) break;
-      length += len;
-    }
-  }
-}
-
 int WebServ::ReadCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = 1;
-  char buf[10] = {0};
+  char buf[WebServ::buf_max_] = {0};
   std::string headers;
   std::string body;
 
-  ret = read(client->GetReadFd(), buf, 10 - 1);
-
-  switch (ret) {
-    case -1:  // read error
-      close(client->GetReadFd());
-      close(client_fd);
-      delete it->second;
-      sockets_.erase(it);
-      throw std::runtime_error("read error\n");
-      break;
-
-    case 0:  // read complete
-      close(client->GetReadFd());
-      if (cgi_outputs_[client->GetReadFd()].find("\n\n") == std::string::npos)
-        throw std::runtime_error("incomplete header\n");
-
-      headers = cgi_outputs_[client->GetReadFd()].substr(
-          0, cgi_outputs_[client->GetReadFd()].find("\n\n"));
-      body = cgi_outputs_[client->GetReadFd()].substr(
-          cgi_outputs_[client->GetReadFd()].find("\n\n") + 2);
-
-      ParseCGIOutput(headers, body, client);
-
-      client->SetStatus(WRITE_CLIENT);
-      cgi_outputs_.erase(client->GetReadFd());
-      break;
-
-    default:  // just read
-      cgi_outputs_[client->GetReadFd()].append(buf);
-      break;
+  ret = read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
+  if (ret < 0) {
+    close(client->GetReadFd());
+    close(client_fd);
+    delete it->second;
+    sockets_.erase(it);
+    throw std::runtime_error("read error\n");
   }
-  // client->SetStatus(WRITE_CLIENT);
-
+  client->AppendResponseRawData(buf, ret);
+  if (ret == 0) {
+    close(client->GetReadFd());
+    client->SetStatus(WRITE_CLIENT);
+  }
   return ret;
 }
 

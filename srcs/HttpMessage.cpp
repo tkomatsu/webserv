@@ -97,7 +97,7 @@ void HttpMessage::ParseHeader() {
       std::pair<std::string, std::string> header = ft::div(all[i], ':');
       AppendHeader(header);
     }
-    raw_ = raw_.substr(raw_.find(delim_ + delim_) + 4);
+    raw_ = raw_.substr(raw_.find(delim_ + delim_) + delim_.size() * 2);
     status_ = BODY;
   }
 }
