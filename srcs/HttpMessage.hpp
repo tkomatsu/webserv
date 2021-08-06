@@ -22,7 +22,7 @@ class HttpMessage {
   typedef std::map<std::string, std::string> http_header;
 
   enum ParseStatus status_;
-  std::string delm_;
+  std::string delim_;
   std::string raw_;
   std::string http_version_;
   http_header headers_;
