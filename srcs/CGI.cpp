@@ -5,15 +5,40 @@
 const int CGI::num_envs_ = 18;
 
 CGI::CGI(const Request &request) {
+  // std::string splited = alias + (request-path - location) + "+"
+  // request.GetQueryString()　(「http://サーバー名/CGIスクリプト名?データ」というURLを要求した場合のデータ部分)
+  // if ('=' not in query_string)
+  //     splited += query_string
+  // args_ = ft::split(splited, '+');
+
   args_ = ft::split("./docs/perl.cgi+mcgee+mine", '+');
+
+  // set envs according to request
+  (void)request;
 
   envs_map_["AUTH_TYPE"] = "";
   envs_map_["CONTENT_LENGTH"] = "";
+  // if method == POST
+  // envs_map_["CONTENT_LENGTH"] = ltoa(request.GetBody().size())
   envs_map_["CONTENT_TYPE"] = "";
+  // if method == POST
+  // envs_map_["CONTENT_TYPE"] = application/x-www-form-urlencoded
   envs_map_["GATEWAY_INTERFACE"] = "CGI/1.1";
   envs_map_["PATH_INFO"] = "";
+  //    [設定]
+  //      root /var/www/html
+  //    [置いてあるファイル]
+  //      /var/www/html/dir1/index.php
+
+  //    http://127.0.0.1/dir1/index.php
+  //    にアクセスしたら、PATH_INFOは
+  //    /dir1/index.php  (== SCRIPT_NAME)
+  //    PATH_TRANSLATEDは
+  //    /var/www/html/dir1/index.php
   envs_map_["PATH_TRANSLATED"] = "";
   envs_map_["QUERY_STRING"] = "";
+  // request.GetQueryString()
+  //「http://サーバー名/CGIスクリプト名?データ」というURLを要求した場合のデータ部分
   envs_map_["REMOTE_ADDR"] = "";
   envs_map_["REMOTE_IDENT"] = "";
   envs_map_["REMOTE_USER"] = "";
@@ -24,9 +49,6 @@ CGI::CGI(const Request &request) {
   envs_map_["SERVER_PORT"] = "";
   envs_map_["SERVER_PROTOCOL"] = "HTTP/1.1";
   envs_map_["SERVER_SOFTWARE"] = "WEBSERV/0.4.2";
-
-  // set envs according to request
-  (void)request;
 
   std::string tmp;
   int i = 0;

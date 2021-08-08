@@ -162,7 +162,8 @@ int WebServ::WriteCGI(socket_iter it) {
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = 1;
 
-  write(client->GetWriteFd(), "", 0);
+  // if method == POST
+  write(client->GetWriteFd(), client->GetResponseBody().c_str(), client->GetResponseBody().size());
 
   close(client->GetWriteFd());
   client->SetStatus(READ_CGI);

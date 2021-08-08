@@ -92,13 +92,19 @@ void Client::Prepare(void) {
 
   switch (ret) {
     case READ_FILE:
+      // alias: ./docs/html/
+      // location: /
+      // request: /abc
+
+      // open(alias + (request-path - location))
       read_fd_ = open("./docs/html/index.html", O_RDONLY);
       fcntl(read_fd_, F_SETFL, O_NONBLOCK);
-
+      response_.SetStatusCode(200);
       response_.AppendHeader("Content-Type", "text/html");
       break;
 
     case WRITE_FILE:
+      // open(upload_store)
       write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644);
       fcntl(write_fd_, F_SETFL, O_NONBLOCK);
 
@@ -107,6 +113,8 @@ void Client::Prepare(void) {
       response_.AppendHeader("Content-Location", "/post.html");
       break;
 
+    // if executable file's extension in config's extensions
+    // come here
     case WRITE_CGI:
       GenProcessForCGI();
 
@@ -119,6 +127,7 @@ void Client::Prepare(void) {
         response_.SetStatusCode(200);
         response_.AppendHeader("Content-Type", "text/html");
 
+        // MakeAutoIndexContent(request-path)
         std::string tmp = MakeAutoIndexContent("./docs/");
 
         response_.SetBody(tmp);
@@ -170,6 +179,7 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, char **args,
   close(pipe_read[0]);
   close(pipe_read[1]);
 
+  // execve(alias + (request-path - location), args, envs)
   execve("./docs/perl.cgi", args, envs);
   exit(EXIT_FAILURE);
 }

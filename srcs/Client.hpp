@@ -48,6 +48,8 @@ class Client : public Socket {
     if (!is_continue) response_.EndCGI();
   };
 
+  const std::string& GetResponseBody() const { return response_.GetBody(); };
+
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
 
   void SetStatus(enum SocketStatus status);
