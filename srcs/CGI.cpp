@@ -5,6 +5,11 @@
 const int CGI::num_envs_ = 18;
 
 CGI::CGI(const Request &request) {
+  std::vector<std::string> request_uri = ft::vsplit(request.GetURI(), '?'); // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
+  // alias: ./docs/html/  config.GetAlias(request_uri[0])
+  // location: /  config.GetLocation(request_uri[0])
+  // request: /abc  request_uri[0]
+
   // std::string splited = alias + (request-path - location) + "+"
   // request.GetQueryString()　(「http://サーバー名/CGIスクリプト名?データ」というURLを要求した場合のデータ部分)
   // if ('=' not in query_string)

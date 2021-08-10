@@ -90,11 +90,15 @@ void Client::Prepare(void) {
 
   bool is_autoindex = true;
 
+  // std::cout << request_.GetMethod() << std::endl;
+  // std::cout << request_.GetURI() << std::endl;
+  std::vector<std::string> request_uri = ft::vsplit(request_.GetURI(), '?'); // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
+
   switch (ret) {
     case READ_FILE:
-      // alias: ./docs/html/
-      // location: /
-      // request: /abc
+      // alias: ./docs/html/  config.GetAlias(request_uri[0])
+      // location: /  config.GetLocation(request_uri[0])
+      // request: /abc  request_uri[0]
 
       // open(alias + (request-path - location))
       read_fd_ = open("./docs/html/index.html", O_RDONLY);
