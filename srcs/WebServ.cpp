@@ -74,7 +74,7 @@ int WebServ::ReadClient(socket_iter it) {
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
-      // throw std::runtime_error("closed by client\n");
+      throw std::runtime_error("closed by client\n");
       break;
 
     default:
@@ -163,7 +163,8 @@ int WebServ::WriteCGI(socket_iter it) {
   int ret = 1;
 
   // if method == POST
-  write(client->GetWriteFd(), client->GetResponseBody().c_str(), client->GetResponseBody().size());
+  write(client->GetWriteFd(), client->GetResponseBody().c_str(),
+        client->GetResponseBody().size());
 
   close(client->GetWriteFd());
   client->SetStatus(READ_CGI);
@@ -313,10 +314,15 @@ void WebServ::Activate(void) {
     if (n > 0) {
       for (std::map<int, Socket *>::iterator it = sockets_.begin();
            n && it != sockets_.end(); ++it) {
-        if (dynamic_cast<Server *>(it->second)) {
-          if (AcceptSession(it) == 1) --n;
-        } else {
-          if (ExecClientEvent(it) == 1) --n;
+        try {
+          if (dynamic_cast<Server *>(it->second)) {
+            if (AcceptSession(it) == 1) --n;
+          } else {
+            if (ExecClientEvent(it) == 1) --n;
+          }
+        } catch (const std::exception &e) {
+          std::cout << e.what() << std::endl;
+          break;
         }
       }
     } else {
