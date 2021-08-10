@@ -1,6 +1,7 @@
 .*
 !.clang-format
 !.github
+!.gitkeep
 
 *.o
 test/build
