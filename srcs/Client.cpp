@@ -84,16 +84,18 @@ void Client::Prepare(void) {
   int ret;
   ret = READ_FILE;
   // ret = WRITE_FILE;
-  ret = WRITE_CGI;
+  // ret = WRITE_CGI;
   // ret = WRITE_CLIENT;
   SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
 
-  // std::cout << request_.GetMethod() << std::endl;
-  // std::cout << request_.GetURI() << std::endl;
-  std::vector<std::string> request_uri = ft::vsplit(request_.GetURI(), '?'); // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
+  std::vector<std::string> request_uri = ft::vsplit(
+      request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
 
+  std::cout << request_uri[0] << std::endl;
+  // if (request_uri.size() >= 1)
+  // std::cout << request_uri[1] << std::endl;
   switch (ret) {
     case READ_FILE:
       // alias: ./docs/html/  config.GetAlias(request_uri[0])

@@ -79,7 +79,7 @@ class Case():
 
 case = Case("get", "http://localhost:4200")
 case.status_code(200)
-case.body_has("mcgee")
+case.body_has("html")
 case.header_has("Content-Length")
 
 ################################################################
@@ -87,7 +87,7 @@ case.header_has("Content-Length")
 payload = {"key1": "val1", "key2": "val2"}
 case = Case("get", "http://localhost:4200", params=payload)
 case.status_code(200)
-case.body_has("mcgee")
+case.body_has("html")
 case.header_has("Content-Length")
 
 
@@ -96,7 +96,7 @@ case.header_has("Content-Length")
 payload = {"key1": "val1", "key2": "val2"}
 case = Case("get", "http://localhost:4200", headers=payload)
 case.status_code(200)
-case.body_has("mcgee")
+case.body_has("html")
 case.header_has("Content-Length")
 
 
@@ -105,5 +105,5 @@ case.header_has("Content-Length")
 payload = {"key1": "val1", "key2": "val2"}
 case = Case("post", "http://localhost:4200", data=payload)
 case.status_code(200)
-case.body_has("mcgee")
+case.body_has("html")
 case.header_has("Content-Length")
