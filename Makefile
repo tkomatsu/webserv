@@ -71,6 +71,12 @@ leak: re
 check:
 	cd test && ./test.sh
 
+unittest:
+	cd test && ./test.sh unit
+
+httptest:
+	cd test && ./test.sh http
+
 -include $(DEPENDS)
 
 PHONY: all clean fclean re debug leak check
