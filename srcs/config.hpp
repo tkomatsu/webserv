@@ -16,8 +16,6 @@
 
 namespace config {
 
-static std::string default_path = "./default.conf";
-
 enum Context {
   MAIN = 0,
   SERVER,
@@ -66,7 +64,7 @@ struct Location {
   std::vector<std::string> extensions;
   std::vector<std::string> indexes;
   std::map<int, std::string> error_pages;
-  std::vector<std::string> allowed_methods; // to enum
+  std::vector<std::string> allowed_methods;
   std::pair<int, std::string> redirect;
 };
 
@@ -83,10 +81,9 @@ class Config {
   typedef std::map<std::string, AddDirective> Directives;
 
  public:
-  explicit Config(const std::string& filename); // TODO: remove
+  explicit Config(const std::string& filename);
   ~Config();
 
-  void Load(); // or call on constructor
   void Print() const;
 
  private:
@@ -95,7 +92,13 @@ class Config {
   struct Main main_;
   std::vector<struct Server> servers_;
 
-  void ValidateLineSyntax(const LineComponent& line); // TODO: remove dep
+  void Load();
+
+  void ValidateLineSyntax(const LineComponent& line);
+
+  void PushContext(enum Context& current);
+
+  void PopContext(enum Context& current);
 
   void AddPrintConfig(enum Context context, const std::string& name,
                       const std::vector<std::string>& params);
@@ -184,7 +187,6 @@ class LineBuilder {
  private:
   std::ifstream& file_;
   std::string current_;
-  std::string::size_type line_num_;
 
   void Extract(LineComponent& line);
 

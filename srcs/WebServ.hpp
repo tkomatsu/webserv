@@ -33,7 +33,7 @@ class WebServ {
 
   int ExecClientEvent(socket_iter it);
 
-  void ParseConig(const std::string& path);
+  void ParseConfig(const std::string& path);
 
   int max_fd_;
   fd_set rfd_set_, wfd_set_;

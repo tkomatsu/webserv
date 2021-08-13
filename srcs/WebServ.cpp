@@ -6,6 +6,7 @@
 
 #include "Client.hpp"
 #include "Server.hpp"
+#include "config.hpp"
 
 const std::string WebServ::default_path_ = "./conf/default.conf";
 const int WebServ::buf_max_ = 8192;
@@ -13,7 +14,7 @@ const int WebServ::buf_max_ = 8192;
 WebServ::WebServ(const std::string &path) {
   timeout_ = (struct timeval){1, 0};
 
-  ParseConig(path);
+  ParseConfig(path);
 }
 
 WebServ::~WebServ() {
@@ -25,9 +26,9 @@ WebServ::~WebServ() {
   sockets_.clear();
 }
 
-void WebServ::ParseConig(const std::string &path) {
-  // TODO: parse config fully
-  (void)path;
+void WebServ::ParseConfig(const std::string &path) {
+  config::Config config(path);
+  exit(0);
 
   // コンフィグをパースした結果分かる、最初に立てるべきサーバーたちをつくる
   for (int i = 0; i < 3; ++i) {

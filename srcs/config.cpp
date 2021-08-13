@@ -31,6 +31,13 @@ std::string MapToString(const std::map<FirstType, SecondType>& map) {
   return oss.str();
 }
 
+template <typename FirstType, typename SecondType>
+std::string PairToString(const std::pair<FirstType, SecondType>& pair) {
+  std::ostringstream oss;
+  oss << "<" << pair.first << ", " << pair.second << ">";
+  return oss.str();
+}
+
 template <typename T>
 std::string VectorToString(const std::vector<T> &vector) {
   std::ostringstream oss;
@@ -53,26 +60,6 @@ void PrintKeyValue(const std::string& key, const T& value, bool indent = false) 
   std::cerr << std::setw(22) << std::left << key << ": " << value << std::endl;
 }
 
-void PrintType(enum config::LineType type) {
-  std::cerr << "Line type: ";
-  if (type == config::SIMPLE) std::cerr << "SIMPLE" << std::endl;
-  if (type == config::BLOCK_START) std::cerr << "BLOCK_START" << std::endl;
-  if (type == config::BLOCK_END) std::cerr << "BLOCK_END" << std::endl;
-  if (type == config::NONE) std::cerr << "NONE" << std::endl;
-}
-
-void PrintLineComponent(const config::LineComponent& line) {
-  std::cerr << "Line name: " << line.name << std::endl;
-  std::cerr << "Line params: ";
-  for (std::vector<std::string>::const_iterator itr = line.params.begin();
-       itr != line.params.end(); ++itr) {
-    std::cerr << *itr << " ";
-  }
-  std::cerr << std::endl;
-  PrintType(line.type);
-  std::cerr << std::endl;
-}
-
 }  // namespace
 
 namespace config {
@@ -87,8 +74,6 @@ bool isSimple(const std::string& directive_name) {
 
 Config::Config(const std::string& filename) : filename_(filename) {
   Load();
-
-  // defalts for main
 }
 
 Config::~Config() {}
@@ -120,70 +105,6 @@ Location::Location(const std::string& path, const struct Server& server) : path(
   redirect = server.redirect;
 }
 
-void Config::Print() const {
-  std::cerr << std::endl << "Print config      : on" << std::endl;
-  std::cerr << "Number of servers : " << servers_.size() << std::endl;
-  for (std::vector<struct Server>::const_iterator itr = servers_.begin();
-       itr != servers_.end(); ++itr) {
-    const Server& server = *itr;
-    std::cerr << "------------------------------------------------------------------------------" << std::endl;
-    std::cerr << "                                ~ Server " << server.id << " ~"<< std::endl;
-    std::cerr << "------------------------------------------------------------------------------";
-    std::cerr << std::endl;
-    PrintKeyValue("autoindex", server.autoindex);
-    PrintKeyValue("port", server.port);
-    PrintKeyValue("client_max_body_size", server.client_max_body_size);
-    PrintKeyValue("host", server.host);
-    PrintKeyValue("server_name", server.server_name);
-    PrintKeyValue("index", VectorToString(server.indexes));
-    PrintKeyValue("error_page", MapToString(server.error_pages));
-    PrintKeyValue("redirect", "NOT IMPLEMENTED");
-    PrintKeyValue("upload_pass", "NOT IMPLEMENTED");
-    PrintKeyValue("upload_store", "NOT IMPLEMENTED");
-    PrintKeyValue("extensions", "NOT IMPLEMENTED");
-    for (std::vector<struct config::Location>::const_iterator itr =
-             server.locations.begin();
-         itr != server.locations.end(); ++itr) {
-      std::cerr << "------------------------------------------------------------------------------" << std::endl;
-      const struct config::Location& location = *itr;
-      std::cerr << "Location: " << location.path << std::endl;
-      PrintKeyValue("autoindex", location.autoindex, true);
-      PrintKeyValue("client_max_body_size", location.client_max_body_size, true);
-      PrintKeyValue("index", VectorToString(location.indexes), true);
-      PrintKeyValue("alias", location.alias, true);
-      PrintKeyValue("error_page", MapToString(location.error_pages), true);
-      PrintKeyValue("allowed_methods", VectorToString(location.allowed_methods),
-                    true);
-      PrintKeyValue("redirect", "NOT IMPLEMENTED", true);
-      PrintKeyValue("upload_pass", "NOT IMPLEMENTED");
-      PrintKeyValue("upload_store", "NOT IMPLEMENTED");
-      PrintKeyValue("extensions", "NOT IMPLEMENTED");
-    }
-  }
-}
-
-void Config::ValidateLineSyntax(const LineComponent& line) {
-  if (line.type == NONE) {
-    throw SyntaxError("directive should not be none");
-  }
-  if (line.type == BLOCK_START) {
-    if (isSimple(line.name))
-      throw SyntaxError("directive does not have correct type");
-    if (line.name.empty() && line.params.empty())
-      throw SyntaxError("block start empty");
-  }
-  if (line.type == BLOCK_END) {
-    if (!(line.name.empty() && line.params.empty()))
-      throw SyntaxError("directives does not have correct type");
-  }
-  if (line.type == SIMPLE) {
-    if (isBlock(line.name))
-      throw SyntaxError("directive does not have correct type");
-    if (line.name.empty() && line.params.empty())
-      throw SyntaxError("simple empty");
-  }
-}
-
 void Config::Load() {
   std::ifstream file(filename_);
   if (!file.is_open()) {
@@ -212,7 +133,6 @@ void Config::Load() {
   LineComponent line;
 
   while (builder.GetNext(line)) {
-    PrintLineComponent(line);
     ValidateLineSyntax(line);
 
     Directives::iterator itr = mapping.find(line.name);
@@ -224,24 +144,49 @@ void Config::Load() {
       (this->*(f))(context, line.name, line.params);
     }
 
-    enum Context current = context;
-    if (line.type == BLOCK_START) {
-      // context = PushContext(current);
-      if (context == MAIN)
-        context = SERVER;
-      else if (context == SERVER)
-        context = LOCATION;
-    }
-    if (line.type == BLOCK_END) {
-      // context = PopContext(current);
-      if (context == LOCATION)
-        context = SERVER;
-      else if (context == SERVER)
-        context = MAIN;
-    }
+    if (line.type == BLOCK_START)
+      PushContext(context);
+    if (line.type == BLOCK_END)
+      PopContext(context);
   }
 
   if (print_config_) Print();
+}
+
+void Config::ValidateLineSyntax(const LineComponent& line) {
+  if (line.type == NONE) {
+    throw SyntaxError("directive should not be none");
+  }
+  if (line.type == BLOCK_START) {
+    if (isSimple(line.name))
+      throw SyntaxError("directive does not have correct type");
+    if (line.name.empty() && line.params.empty())
+      throw SyntaxError("block start empty");
+  }
+  if (line.type == BLOCK_END) {
+    if (!(line.name.empty() && line.params.empty()))
+      throw SyntaxError("directives does not have correct type");
+  }
+  if (line.type == SIMPLE) {
+    if (isBlock(line.name))
+      throw SyntaxError("directive does not have correct type");
+    if (line.name.empty() && line.params.empty())
+      throw SyntaxError("simple empty");
+  }
+}
+
+void Config::PushContext(enum Context& current) {
+  if (current == MAIN)
+    current = SERVER;
+  else if (current == SERVER)
+    current = LOCATION;
+}
+
+void Config::PopContext(enum Context& current) {
+  if (current == LOCATION)
+    current = SERVER;
+  else if (current == SERVER)
+    current = MAIN;
 }
 
 void Config::AddPrintConfig(enum Context context, const std::string& name,
@@ -250,13 +195,10 @@ void Config::AddPrintConfig(enum Context context, const std::string& name,
     throw ContextError(BuildError(name, "is not allowed here"));
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameter"));
+  if (!(params.front() == "on" || params.front() == "off"))
+    throw ParameterError(BuildError(name, "with invalid parameters"));
 
-  if (params.front() == "on")
-    print_config_ = true;
-  else if (params.front() == "off")
-    print_config_ = false;
-  else
-    throw ParameterError(BuildError(name, "with invalid parameter"));
+  print_config_ = params.front() == "on" ? true : false;
 }
 
 void Config::AddServer(enum Context context, const std::string& name,
@@ -280,7 +222,7 @@ void Config::AddLocation(enum Context context, const std::string& name,
   const std::string& path = params.front();
   struct Server& server = servers_.back();
   struct Location location(path, server);
-  assert(!servers_.empty()); // assert
+  assert(!servers_.empty()); // remove
   server.locations.push_back(location);
 }
 
@@ -362,8 +304,8 @@ void Config::AddListen(enum Context context, const std::string& name,
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
   // TODO: it only works as "listen num;"
-  servers_.back().host = "127.0.0.1";
-  servers_.back().port = 42; // std::atoi(params.front().c_str());
+  servers_.back().host = "localhost";
+  servers_.back().port = std::atoi(params.front().c_str());
 }
 
 void Config::AddServerName(enum Context context, const std::string& name,
@@ -381,10 +323,16 @@ void Config::AddRedirect(enum Context context, const std::string& name,
                          const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
-  (void)name;
-  (void)params;
-  // TODO: implement
-  // throw std::runtime_error("redirect is not implemented yet");
+  if (params.size() != 2)
+    throw ParameterError(BuildError(name, "with wrong number of parameters"));
+
+  int code = std::atoi(params.front().c_str());
+  std::string uri = params.back();
+  if (context == SERVER) {
+    servers_.back().redirect = std::make_pair(code, uri);
+  } else if (context == LOCATION) {
+    servers_.back().locations.back().redirect = std::make_pair(code, uri);
+  }
 }
 
 void Config::AddAllowedMethods(enum Context context, const std::string& name,
@@ -415,32 +363,85 @@ void Config::AddUploadPass(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
-  (void)name;
-  (void)params;
-  // TODO: implement
+  if (params.size() != 1)
+    throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
+  if (context == SERVER)
+    servers_.back().upload_pass = params.front();
+  else if (context == LOCATION)
+    servers_.back().locations.back().upload_pass = params.front();
 }
 
 void Config::AddUploadStore(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
-  (void)name;
-  (void)params;
-  // TODO: implement
+  if (params.size() != 1)
+    throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
+  if (context == SERVER)
+    servers_.back().upload_store = params.front();
+  else if (context == LOCATION)
+    servers_.back().locations.back().upload_store = params.front();
 }
 
 void Config::AddExtensions(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
-  (void)name;
-  (void)params;
-  // TODO: implement
+  if (params.empty())
+    throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
+  for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
+    // TODO: check string, empty, append if exist
+    if (context == SERVER)
+      servers_.back().extensions.push_back(*itr);
+    else if (context == LOCATION)
+      servers_.back().locations.back().extensions.push_back(*itr);
+  }
 }
 
+void Config::Print() const {
+  std::cerr << std::endl << "Print config      : on" << std::endl;
+  std::cerr << "Number of servers : " << servers_.size() << std::endl;
+  for (std::vector<struct Server>::const_iterator itr = servers_.begin();
+       itr != servers_.end(); ++itr) {
+    const Server& server = *itr;
+    std::cerr << "------------------------------------------------------------------------------" << std::endl;
+    std::cerr << "                                ~ Server " << server.id << " ~"<< std::endl;
+    std::cerr << "------------------------------------------------------------------------------";
+    std::cerr << std::endl;
+    PrintKeyValue("autoindex", server.autoindex);
+    PrintKeyValue("port", server.port);
+    PrintKeyValue("client_max_body_size", server.client_max_body_size);
+    PrintKeyValue("host", server.host);
+    PrintKeyValue("server_name", server.server_name);
+    PrintKeyValue("index", VectorToString(server.indexes));
+    PrintKeyValue("error_page", MapToString(server.error_pages));
+    PrintKeyValue("redirect", PairToString(server.redirect));
+    PrintKeyValue("upload_pass", server.upload_pass);
+    PrintKeyValue("upload_store", server.upload_store);
+    PrintKeyValue("extensions", VectorToString(server.extensions));
+    for (std::vector<struct config::Location>::const_iterator itr =
+             server.locations.begin();
+         itr != server.locations.end(); ++itr) {
+      std::cerr << "------------------------------------------------------------------------------" << std::endl;
+      const struct config::Location& location = *itr;
+      std::cerr << "Location: " << location.path << std::endl;
+      PrintKeyValue("autoindex", location.autoindex, true);
+      PrintKeyValue("client_max_body_size", location.client_max_body_size, true);
+      PrintKeyValue("index", VectorToString(location.indexes), true);
+      PrintKeyValue("alias", location.alias, true);
+      PrintKeyValue("error_page", MapToString(location.error_pages), true);
+      PrintKeyValue("allowed_methods", VectorToString(location.allowed_methods),
+                    true);
+      PrintKeyValue("redirect", PairToString(location.redirect), true);
+      PrintKeyValue("upload_pass", location.upload_pass);
+      PrintKeyValue("upload_store", location.upload_store);
+      PrintKeyValue("extensions", VectorToString(location.extensions));
+    }
+  }
+}
 
 LineBuilder::LineBuilder(std::ifstream& file) : file_(file) {};
 
