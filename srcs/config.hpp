@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <list>
 #include <map>
@@ -13,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iomanip>
 
 namespace config {
 
@@ -25,7 +25,9 @@ enum Context {
 };
 
 struct Main {
-  bool print_confg;
+  Main();
+
+  bool print_config;
   bool autoindex;
   int client_max_body_size;
   std::vector<std::string> indexes;
@@ -35,43 +37,53 @@ struct Main {
 struct Location;
 
 struct Server {
+  Server(int id, const struct Main& main);
+
   bool autoindex;
   int id;
   int port;
   int client_max_body_size;
   std::string host;
   std::string server_name;
+  std::string upload_pass;
+  std::string upload_store;
+  std::vector<std::string> extensions;
   std::vector<std::string> indexes;
   std::map<int, std::string> error_pages;
-  std::map<int, std::string> redirects;
+  std::pair<int, std::string> redirect;
   std::vector<struct Location> locations;
 };
 
 struct Location {
+  Location(const std::string& path, const struct Server& server);
+
   bool autoindex;
   int client_max_body_size;
   std::string path;
   std::string alias;
+  std::string upload_pass;
+  std::string upload_store;
+  std::vector<std::string> extensions;
   std::vector<std::string> indexes;
   std::map<int, std::string> error_pages;
-  std::vector<std::string> allowed_methods; // TODO: to enum
-  std::map<int, std::string> redirects;
+  std::vector<std::string> allowed_methods; // to enum
+  std::pair<int, std::string> redirect;
 };
 
 struct LineComponent;
 
 class Config {
  private:
-  typedef void (Config::*AddDirectiveFunc)(
-      enum Context,
-      const std::string& name,
-      const std::vector<std::string>& params
+  typedef void (Config::*AddDirective)(
+    enum Context,
+    const std::string& name,
+    const std::vector<std::string>& params
   );
 
-  typedef std::map<std::string, AddDirectiveFunc> Directives;
+  typedef std::map<std::string, AddDirective> Directives;
 
  public:
-  explicit Config(const std::string& filename); // TODO: move to webserv
+  explicit Config(const std::string& filename); // TODO: remove
   ~Config();
 
   void Load(); // or call on constructor
@@ -109,9 +121,14 @@ class Config {
                          const std::vector<std::string>& params);
   void AddAlias(enum Context context, const std::string& name,
                 const std::vector<std::string>& params);
+  void AddUploadPass(enum Context context, const std::string& name,
+                     const std::vector<std::string>& params);
+  void AddUploadStore(enum Context context, const std::string& name,
+                      const std::vector<std::string>& params);
+  void AddExtensions(enum Context context, const std::string& name,
+                     const std::vector<std::string>& params);
 
  public:
-  // temporary
   static std::string BuildError(const std::string& directive_name,
                                 const std::string& message, size_t line = 0) {
     (void)line;
@@ -160,10 +177,9 @@ struct LineComponent {
 class LineBuilder {
  public:
   explicit LineBuilder(std::ifstream& file);
-  virtual ~LineBuilder();
+  ~LineBuilder();
 
   bool GetNext(LineComponent& line);
-  bool GetNext(LineComponent& line, std::ifstream& file);
 
  private:
   std::ifstream& file_;
@@ -182,6 +198,10 @@ class LineBuilder {
                                           std::string::const_iterator begin,
                                           std::string::const_iterator end);
 };
+
+bool isLineZeroWord(const LineComponent& line);
+bool isLineEmpty(const LineComponent& line);
+bool isLineFilled(const LineComponent& line);
 
 }  // namespace config
 

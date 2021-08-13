@@ -7,7 +7,7 @@
 #define CONFIG_DEBUG_PRINT(x)
 #endif
 
-
+// Utility
 namespace {
 
 std::string::const_iterator skip_leading_whitespace(
@@ -47,34 +47,78 @@ std::string VectorToString(const std::vector<T> &vector) {
   return oss.str();
 }
 
-}
-
-
-namespace config {
-
 template <typename T>
 void PrintKeyValue(const std::string& key, const T& value, bool indent = false) {
   if (indent) std::cerr << "          ";
   std::cerr << std::setw(22) << std::left << key << ": " << value << std::endl;
 }
 
+void PrintType(enum config::LineType type) {
+  std::cerr << "Line type: ";
+  if (type == config::SIMPLE) std::cerr << "SIMPLE" << std::endl;
+  if (type == config::BLOCK_START) std::cerr << "BLOCK_START" << std::endl;
+  if (type == config::BLOCK_END) std::cerr << "BLOCK_END" << std::endl;
+  if (type == config::NONE) std::cerr << "NONE" << std::endl;
+}
+
+void PrintLineComponent(const config::LineComponent& line) {
+  std::cerr << "Line name: " << line.name << std::endl;
+  std::cerr << "Line params: ";
+  for (std::vector<std::string>::const_iterator itr = line.params.begin();
+       itr != line.params.end(); ++itr) {
+    std::cerr << *itr << " ";
+  }
+  std::cerr << std::endl;
+  PrintType(line.type);
+  std::cerr << std::endl;
+}
+
+}  // namespace
+
+namespace config {
+
 bool isBlock(const std::string& directive_name) {
-  // or check map
-  if (directive_name == "server" || directive_name == "location")
-    return true;
-  return false;
+  return directive_name == "server" || directive_name == "location";
 }
 
 bool isSimple(const std::string& directive_name) {
-  // or check map
   return !isBlock(directive_name);
 }
 
 Config::Config(const std::string& filename) : filename_(filename) {
   Load();
+
+  // defalts for main
 }
 
 Config::~Config() {}
+
+Main::Main() {
+  print_config = false;
+  autoindex = false;
+  client_max_body_size = 1000000;
+}
+
+Server::Server(int id, const struct Main& main) : id(id) {
+  autoindex = main.autoindex;
+  port = 0;
+  client_max_body_size = main.client_max_body_size;
+  host = "localhost";
+  server_name = "";
+  indexes = main.indexes;
+  error_pages = main.error_pages;
+}
+
+Location::Location(const std::string& path, const struct Server& server) : path(path) {
+  autoindex = server.autoindex;
+  client_max_body_size = server.client_max_body_size;
+  upload_pass = server.upload_pass;
+  upload_store = server.upload_store;
+  extensions = server.extensions;
+  indexes = server.indexes;
+  error_pages = server.error_pages;
+  redirect = server.redirect;
+}
 
 void Config::Print() const {
   std::cerr << std::endl << "Print config      : on" << std::endl;
@@ -94,6 +138,9 @@ void Config::Print() const {
     PrintKeyValue("index", VectorToString(server.indexes));
     PrintKeyValue("error_page", MapToString(server.error_pages));
     PrintKeyValue("redirect", "NOT IMPLEMENTED");
+    PrintKeyValue("upload_pass", "NOT IMPLEMENTED");
+    PrintKeyValue("upload_store", "NOT IMPLEMENTED");
+    PrintKeyValue("extensions", "NOT IMPLEMENTED");
     for (std::vector<struct config::Location>::const_iterator itr =
              server.locations.begin();
          itr != server.locations.end(); ++itr) {
@@ -108,6 +155,9 @@ void Config::Print() const {
       PrintKeyValue("allowed_methods", VectorToString(location.allowed_methods),
                     true);
       PrintKeyValue("redirect", "NOT IMPLEMENTED", true);
+      PrintKeyValue("upload_pass", "NOT IMPLEMENTED");
+      PrintKeyValue("upload_store", "NOT IMPLEMENTED");
+      PrintKeyValue("extensions", "NOT IMPLEMENTED");
     }
   }
 }
@@ -150,42 +200,46 @@ void Config::Load() {
   mapping["index"] = &Config::AddIndex;
   mapping["listen"] = &Config::AddListen;
   mapping["server_name"] = &Config::AddServerName;
-  mapping["redirect"] = &Config::AddRedirect;
+  mapping["return"] = &Config::AddRedirect;
   mapping["allowed_methods"] = &Config::AddAllowedMethods;
   mapping["alias"] = &Config::AddAlias;
+  mapping["upload_pass"] = &Config::AddUploadPass;
+  mapping["upload_store"] = &Config::AddUploadStore;
+  mapping["ext"] = &Config::AddExtensions;
 
   enum Context context = MAIN;
   LineBuilder builder(file);
   LineComponent line;
 
   while (builder.GetNext(line)) {
+    PrintLineComponent(line);
     ValidateLineSyntax(line);
 
-    const std::string& function = line.name;
-    Directives::iterator itr = mapping.find(function);
+    Directives::iterator itr = mapping.find(line.name);
     if (itr == mapping.end()) {
       if (line.type != BLOCK_END)
         throw UnknownError(BuildError(line.name, "is not found"));
     } else {
-      AddDirectiveFunc f = itr->second;
+      AddDirective f = itr->second;
       (this->*(f))(context, line.name, line.params);
     }
 
-    // bad
+    enum Context current = context;
     if (line.type == BLOCK_START) {
+      // context = PushContext(current);
       if (context == MAIN)
         context = SERVER;
       else if (context == SERVER)
         context = LOCATION;
-    } else if (line.type == BLOCK_END) {
+    }
+    if (line.type == BLOCK_END) {
+      // context = PopContext(current);
       if (context == LOCATION)
         context = SERVER;
       else if (context == SERVER)
         context = MAIN;
     }
   }
-
-  // TODO: set defaults
 
   if (print_config_) Print();
 }
@@ -212,8 +266,7 @@ void Config::AddServer(enum Context context, const std::string& name,
   if (!params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameter"));
 
-  struct Server server;
-  server.id = servers_.size();
+  struct Server server(servers_.size(), main_);
   servers_.push_back(server);
 }
 
@@ -224,10 +277,11 @@ void Config::AddLocation(enum Context context, const std::string& name,
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameter"));
 
-  struct Location location;
-  location.path = params.front();
+  const std::string& path = params.front();
+  struct Server& server = servers_.back();
+  struct Location location(path, server);
   assert(!servers_.empty()); // assert
-  servers_.back().locations.push_back(location);
+  server.locations.push_back(location);
 }
 
 void Config::AddErrorPage(enum Context context, const std::string& name,
@@ -307,9 +361,9 @@ void Config::AddListen(enum Context context, const std::string& name,
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  // TODO: implement
+  // TODO: it only works as "listen num;"
   servers_.back().host = "127.0.0.1";
-  servers_.back().port = std::atoi(params.front().c_str());
+  servers_.back().port = 42; // std::atoi(params.front().c_str());
 }
 
 void Config::AddServerName(enum Context context, const std::string& name,
@@ -325,7 +379,8 @@ void Config::AddServerName(enum Context context, const std::string& name,
 
 void Config::AddRedirect(enum Context context, const std::string& name,
                          const std::vector<std::string>& params) {
-  (void)context;
+  if (context == MAIN)
+    throw ContextError(BuildError(name, "is not allowed here"));
   (void)name;
   (void)params;
   // TODO: implement
@@ -356,21 +411,34 @@ void Config::AddAlias(enum Context context, const std::string& name,
   servers_.back().locations.back().alias = params.front();
 }
 
-}  // namespace config
+void Config::AddUploadPass(enum Context context, const std::string& name,
+    const std::vector<std::string>& params) {
+  if (context == MAIN)
+    throw ContextError(BuildError(name, "is not allowed here"));
+  (void)name;
+  (void)params;
+  // TODO: implement
 
-
-namespace config {
-
-bool isLineZeroWord(const LineComponent& line) {
-  return line.name.empty() && line.params.empty();
 }
 
-bool isLineEmpty(const LineComponent& line) {
-  return line.name.empty() && line.params.empty() && line.type == NONE;
+void Config::AddUploadStore(enum Context context, const std::string& name,
+    const std::vector<std::string>& params) {
+  if (context == MAIN)
+    throw ContextError(BuildError(name, "is not allowed here"));
+  (void)name;
+  (void)params;
+  // TODO: implement
+
 }
 
-bool isLineFilled(const LineComponent& line) {
-  return !isLineEmpty(line);
+void Config::AddExtensions(enum Context context, const std::string& name,
+    const std::vector<std::string>& params) {
+  if (context == MAIN)
+    throw ContextError(BuildError(name, "is not allowed here"));
+  (void)name;
+  (void)params;
+  // TODO: implement
+
 }
 
 
@@ -379,36 +447,30 @@ LineBuilder::LineBuilder(std::ifstream& file) : file_(file) {};
 LineBuilder::~LineBuilder() {};
 
 bool LineBuilder::GetNext(LineComponent& line) {
-  // should not be here
+  // bad
   line.name.clear();
   line.params.clear();
   line.type = NONE;
 
   do {
-    // if (current_.empty() && !std::getline(file_, current_))
-    if (current_.empty()) {
-      if (std::getline(file_, current_)) {
-        ++line_num_;
-      } else {
-        break;
-      }
-    }
+    if (current_.empty() && !std::getline(file_, current_))
+      break;
     Extract(line);
   } while (line.type == NONE);
 
   return isLineFilled(line);
 }
 
-// TODO: document/comment on line structure
 void LineBuilder::Extract(LineComponent& line) {
   std::string::const_iterator curr = current_.begin();
   std::string::const_iterator end = current_.end();
 
-  if (line.name.empty()) // unclear
+  if (line.name.empty()) // bad
     curr = ExtractName(line.name, curr, end);
   curr = ExtractParams(line.params, curr, end);
   curr = ExtractType(line.type, curr, end);
 
+  // ExtractComment
   // [ \t]*(#(.*))?
   curr = skip_leading_whitespace(curr, end);
   if (curr == end || *curr == '#') {
@@ -483,6 +545,18 @@ std::string::const_iterator LineBuilder::ExtractType(
   } else {
     return begin;
   }
+}
+
+bool isLineZeroWord(const LineComponent& line) {
+  return line.name.empty() && line.params.empty();
+}
+
+bool isLineEmpty(const LineComponent& line) {
+  return line.name.empty() && line.params.empty() && line.type == NONE;
+}
+
+bool isLineFilled(const LineComponent& line) {
+  return !isLineEmpty(line);
 }
 
 }  // namespace config
