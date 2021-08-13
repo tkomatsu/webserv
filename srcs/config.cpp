@@ -1,13 +1,5 @@
 #include "config.hpp"
 
-#if CONFIG_DEBUG
-#include <iostream>
-#define CONFIG_DEBUG_PRINT(x) std::cerr << x << std::endl;
-#else
-#define CONFIG_DEBUG_PRINT(x)
-#endif
-
-// Utility
 namespace {
 
 std::string::const_iterator skip_leading_whitespace(
@@ -63,14 +55,6 @@ void PrintKeyValue(const std::string& key, const T& value, bool indent = false) 
 }  // namespace
 
 namespace config {
-
-bool isBlock(const std::string& directive_name) {
-  return directive_name == "server" || directive_name == "location";
-}
-
-bool isSimple(const std::string& directive_name) {
-  return !isBlock(directive_name);
-}
 
 Config::Config(const std::string& filename) : filename_(filename) {
   Load();
@@ -158,7 +142,7 @@ void Config::ValidateLineSyntax(const LineComponent& line) {
     throw SyntaxError("directive should not be none");
   }
   if (line.type == BLOCK_START) {
-    if (isSimple(line.name))
+    if (IsSimple(line.name))
       throw SyntaxError("directive does not have correct type");
     if (line.name.empty() && line.params.empty())
       throw SyntaxError("block start empty");
@@ -168,7 +152,7 @@ void Config::ValidateLineSyntax(const LineComponent& line) {
       throw SyntaxError("directives does not have correct type");
   }
   if (line.type == SIMPLE) {
-    if (isBlock(line.name))
+    if (IsBlock(line.name))
       throw SyntaxError("directive does not have correct type");
     if (line.name.empty() && line.params.empty())
       throw SyntaxError("simple empty");
@@ -187,6 +171,14 @@ void Config::PopContext(enum Context& current) {
     current = SERVER;
   else if (current == SERVER)
     current = MAIN;
+}
+
+bool Config::IsBlock(const std::string& directive_name) {
+  return directive_name == "server" || directive_name == "location";
+}
+
+bool Config::IsSimple(const std::string& directive_name) {
+  return !IsBlock(directive_name);
 }
 
 void Config::AddPrintConfig(enum Context context, const std::string& name,
@@ -459,7 +451,7 @@ bool LineBuilder::GetNext(LineComponent& line) {
     Extract(line);
   } while (line.type == NONE);
 
-  return isLineFilled(line);
+  return IsLineFilled(line);
 }
 
 void LineBuilder::Extract(LineComponent& line) {
@@ -548,16 +540,16 @@ std::string::const_iterator LineBuilder::ExtractType(
   }
 }
 
-bool isLineZeroWord(const LineComponent& line) {
+bool LineBuilder::IsLineZeroWord(const LineComponent& line) {
   return line.name.empty() && line.params.empty();
 }
 
-bool isLineEmpty(const LineComponent& line) {
+bool LineBuilder::IsLineEmpty(const LineComponent& line) {
   return line.name.empty() && line.params.empty() && line.type == NONE;
 }
 
-bool isLineFilled(const LineComponent& line) {
-  return !isLineEmpty(line);
+bool LineBuilder::IsLineFilled(const LineComponent& line) {
+  return !IsLineEmpty(line);
 }
 
 }  // namespace config

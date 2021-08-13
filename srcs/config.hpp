@@ -100,6 +100,10 @@ class Config {
 
   void PopContext(enum Context& current);
 
+  bool IsBlock(const std::string& directive_name);
+
+  bool IsSimple(const std::string& directive_name);
+
   void AddPrintConfig(enum Context context, const std::string& name,
                       const std::vector<std::string>& params);
   void AddServer(enum Context context, const std::string& name,
@@ -199,11 +203,11 @@ class LineBuilder {
   std::string::const_iterator ExtractType(LineType& type,
                                           std::string::const_iterator begin,
                                           std::string::const_iterator end);
-};
 
-bool isLineZeroWord(const LineComponent& line);
-bool isLineEmpty(const LineComponent& line);
-bool isLineFilled(const LineComponent& line);
+  bool IsLineZeroWord(const LineComponent& line);
+  bool IsLineEmpty(const LineComponent& line);
+  bool IsLineFilled(const LineComponent& line);
+};
 
 }  // namespace config
 
