@@ -321,6 +321,14 @@ void WebServ::Activate(void) {
             if (ExecClientEvent(it) == 1) --n;
           }
         } catch (const std::exception &e) {
+          // resposne_.Clear()
+          // if e == 404
+          //    create 404 Response
+          // else if e == 405
+          //    create 405 Response
+          // else if e == 500
+          //    create 500 Response
+
           std::cout << e.what() << std::endl;
           break;
         }

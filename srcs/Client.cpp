@@ -77,15 +77,59 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
   return tmp;
 }
 
+int Client::GetNextStatus() {
+  int ret;
+
+  ret = READ_FILE;
+
+  switch (request_.GetMethod()) {
+    case GET:
+      // if (config.GetAllowedMethods(request_.GetURI()).find(GET) == false)
+      //   throw 405
+
+      // ret = READ_FILE;
+      // ret = WRITE_CLIENT;
+      // ret = WRITE_CGI;
+    case POST:
+      // if (config.GetAllowedMethods(request_.GetURI()).find(POST) == false)
+      //   throw 405
+
+      // std::vector<std::string> request_uri = ft::vsplit(
+      //     request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
+
+      // std::cout << request_uri[0] << std::endl;
+
+      // exts = config.GetCGIExtensions()
+      // request_uri[0].find()
+      // ret = WRITE_CGI;
+      
+      // if upload_store & upload_pass:
+      //   if request_.GetURI() == upload_pass
+      //      ret = WRITE_FILE;
+      //   else
+      //      405
+      // else
+      //   405     
+      // ret = WRITE_FILE;
+    case DELETE:
+      // if (config.GetAllowedMethods(request_.GetURI()).find(DELETE) == false)
+      //   throw 405
+
+      // ret = WRITE_CLIENT;
+    case INVALID:
+      // throw 405
+    default:
+      break;
+  }
+
+  return ret;
+}
+
 // TODO: make good response_ content
 void Client::Prepare(void) {
-  // parse
-
   int ret;
-  ret = READ_FILE;
-  // ret = WRITE_FILE;
-  // ret = WRITE_CGI;
-  // ret = WRITE_CLIENT;
+
+  ret = GetNextStatus();
   SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
