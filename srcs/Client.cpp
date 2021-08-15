@@ -77,8 +77,8 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
   return tmp;
 }
 
-int Client::GetNextStatus() {
-  int ret;
+enum SocketStatus Client::GetNextOfReadClient() {
+  enum SocketStatus ret;
 
   ret = READ_FILE;
 
@@ -87,35 +87,61 @@ int Client::GetNextStatus() {
       // if (config.GetAllowedMethods(request_.GetURI()).find(GET) == false)
       //   throw 405
 
-      // ret = READ_FILE;
-      // ret = WRITE_CLIENT;
-      // ret = WRITE_CGI;
+      // (CGI)
+      // std::vector<std::string> request_uri = ft::vsplit(
+      //     request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
+      // path = alias + (request_uri[0] - location)
+      // if path's extension in config.GetExtensions():
+      //   ret = WRITE_CGI;
+      //   break;
+
+      // (SIMPLE GET)
+      // struct stat buffer;
+      // if (stat (name.c_str(), &buffer) == -1)
+      //   throw 404;
+      // if (S_ISREG(buffer.st_mode))
+      //   ret = READ_FILE;
+      //   break;
+      // else if (S_ISDIR(buffer.st_mode)) {
+      //    (GET INDEX)
+      //    if (files in dir) in config.GetIndexes()
+      //       modify path to the index file
+      //       ret = READ_FILE; (read index file)
+      //       break;
+      //    (AUTOINDEX)
+      //    else if (config.GetAutoIndex() == true)
+      //       ret = WRITE_CLIENT;
+      //       break;
+      // }
+      // throw 404
+
     case POST:
       // if (config.GetAllowedMethods(request_.GetURI()).find(POST) == false)
       //   throw 405
 
+      // (CGI)
       // std::vector<std::string> request_uri = ft::vsplit(
       //     request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
+      // path = alias + (request_uri[0] - location)
+      // if path's extension in config.GetExtensions():
+      //   ret = WRITE_CGI;
+      //   break;
 
-      // std::cout << request_uri[0] << std::endl;
-
-      // exts = config.GetCGIExtensions()
-      // request_uri[0].find()
-      // ret = WRITE_CGI;
-      
+      // (upload)
       // if upload_store & upload_pass:
       //   if request_.GetURI() == upload_pass
       //      ret = WRITE_FILE;
-      //   else
-      //      405
-      // else
-      //   405     
-      // ret = WRITE_FILE;
+      //      break;
+
+      //  throw 405
+
     case DELETE:
       // if (config.GetAllowedMethods(request_.GetURI()).find(DELETE) == false)
       //   throw 405
 
+      // remove(filepath);
       // ret = WRITE_CLIENT;
+
     case INVALID:
       // throw 405
     default:
@@ -127,21 +153,22 @@ int Client::GetNextStatus() {
 
 // TODO: make good response_ content
 void Client::Prepare(void) {
-  int ret;
+  enum SocketStatus ret;
 
-  ret = GetNextStatus();
-  SetStatus((enum SocketStatus)ret);
+  ret = GetNextOfReadClient();
+  SetStatus(ret);
 
-  bool is_autoindex = true;
+  // bool is_autoindex = true;
 
-  std::vector<std::string> request_uri = ft::vsplit(
-      request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
+  // std::vector<std::string> request_uri = ft::vsplit(
+  //   request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
 
-  std::cout << request_uri[0] << std::endl;
+  // std::cout << request_uri[0] << std::endl;
   // if (request_uri.size() >= 1)
   // std::cout << request_uri[1] << std::endl;
-  switch (ret) {
-    case READ_FILE:
+
+
+  if (ret == READ_FILE) {
       // alias: ./docs/html/  config.GetAlias(request_uri[0])
       // location: /  config.GetLocation(request_uri[0])
       // request: /abc  request_uri[0]
@@ -151,38 +178,29 @@ void Client::Prepare(void) {
       fcntl(read_fd_, F_SETFL, O_NONBLOCK);
       response_.SetStatusCode(200);
       response_.AppendHeader("Content-Type", "text/html");
-      break;
+  } else if (ret == WRITE_FILE) {
+    // open(upload_store)
+    write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644);
+    fcntl(write_fd_, F_SETFL, O_NONBLOCK);
 
-    case WRITE_FILE:
-      // open(upload_store)
-      write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644);
-      fcntl(write_fd_, F_SETFL, O_NONBLOCK);
+    response_.SetStatusCode(201);
+    response_.AppendHeader("Content-Type", "text/html");
+    response_.AppendHeader("Content-Location", "/post.html");
+  } else if (ret == WRITE_CGI) {
+    GenProcessForCGI();
 
-      response_.SetStatusCode(201);
-      response_.AppendHeader("Content-Type", "text/html");
-      response_.AppendHeader("Content-Location", "/post.html");
-      break;
-
-    // if executable file's extension in config's extensions
-    // come here
-    case WRITE_CGI:
-      GenProcessForCGI();
-
+    response_.SetStatusCode(200);
+    response_.AppendHeader("Content-Type", "text/html");
+  } else if (ret == WRITE_CLIENT) {
+    if (1/* is_autoindex */) {
       response_.SetStatusCode(200);
       response_.AppendHeader("Content-Type", "text/html");
-      break;
 
-    case WRITE_CLIENT:
-      if (is_autoindex) {
-        response_.SetStatusCode(200);
-        response_.AppendHeader("Content-Type", "text/html");
+      // MakeAutoIndexContent(request-path)
+      std::string tmp = MakeAutoIndexContent("./docs/");
 
-        // MakeAutoIndexContent(request-path)
-        std::string tmp = MakeAutoIndexContent("./docs/");
-
-        response_.SetBody(tmp);
-      }
-      break;
+      response_.SetBody(tmp);
+    }
   }
 }
 
@@ -255,3 +273,5 @@ void Client::GenProcessForCGI(void) {
   fcntl(read_fd_, F_SETFL, O_NONBLOCK);
   close(pipe_read[1]);
 }
+
+// connection: keep-aliveはつけっぱでいい
