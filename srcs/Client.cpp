@@ -158,8 +158,6 @@ void Client::Prepare(void) {
   ret = GetNextOfReadClient();
   SetStatus(ret);
 
-  // bool is_autoindex = true;
-
   // std::vector<std::string> request_uri = ft::vsplit(
   //   request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
 
@@ -192,7 +190,7 @@ void Client::Prepare(void) {
     response_.SetStatusCode(200);
     response_.AppendHeader("Content-Type", "text/html");
   } else if (ret == WRITE_CLIENT) {
-    if (1/* is_autoindex */) {
+    if (1 /* is autoindex */) {
       response_.SetStatusCode(200);
       response_.AppendHeader("Content-Type", "text/html");
 
