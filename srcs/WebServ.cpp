@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 
+#include <cstring>
 #include <iostream>
 
 #include "Client.hpp"
@@ -36,7 +37,7 @@ void WebServ::ParseConfig(const std::string &path) {
   std::vector<struct config::Config>::const_iterator itr;
   for (itr = configs.begin(); itr != configs.end(); ++itr) {
     Server *server = new Server(*itr);
-    long fd = server->SetSocket(42); // 42 is meaningless
+    long fd = server->SetSocket(); // 42 is meaningless
     sockets_[fd] = server;
   }
 }
@@ -65,25 +66,31 @@ int WebServ::ReadClient(socket_iter it) {
   int ret = client->recv(client_fd);
 
   switch (ret) {
-    case -1:
+    case -1:  // recv error
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
       throw std::runtime_error("recv error\n");
       break;
 
-    case 0:
+    case 0:  // closed by client
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
+      // throw std::runtime_error("closed by client\n");
       break;
 
     default:
-      client->Prepare();
       break;
   }
 
-  return ret;
+  if (client->GetRequest().GetStatus() == HttpMessage::DONE) {
+    std::cout << "\nrecv from " + client->GetHostIp() << ":"
+              << client->GetPort() << std::endl;
+    client->Prepare();
+  }
+
+  return 0;
 }
 
 int WebServ::ReadFile(socket_iter it) {
@@ -92,14 +99,26 @@ int WebServ::ReadFile(socket_iter it) {
   int ret = 1;
   char buf[WebServ::buf_max_] = {0};
 
-  // std::cout << client->GetReadFd() << std::endl;
+  ret = read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
 
-  read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
+  switch (ret) {
+    case -1:  // read error
+      close(client->GetReadFd());
+      close(client_fd);
+      delete it->second;
+      sockets_.erase(it);
+      throw std::runtime_error("read error\n");
+      break;
 
-  close(client->GetReadFd());
+    case 0:  // read complete
+      close(client->GetReadFd());
+      client->SetStatus(WRITE_CLIENT);
+      break;
 
-  client->SetResponseBody(buf);
-  client->SetStatus(WRITE_CLIENT);
+    default:  // just read
+      client->AppendResponseBody(buf);
+      break;
+  }
 
   return ret;
 }
@@ -122,14 +141,22 @@ int WebServ::ReadCGI(socket_iter it) {
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = 1;
   char buf[WebServ::buf_max_] = {0};
+  std::string headers;
+  std::string body;
 
-  read(client->GetReadFd(), buf, Client::buf_max_ - 1);
-
-  close(client->GetReadFd());
-
-  client->SetResponseBody(buf);
-  client->SetStatus(WRITE_CLIENT);
-
+  ret = read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
+  if (ret < 0) {
+    close(client->GetReadFd());
+    close(client_fd);
+    delete it->second;
+    sockets_.erase(it);
+    throw std::runtime_error("read error\n");
+  }
+  client->AppendResponseRawData(buf, ret);
+  if (ret == 0) {
+    close(client->GetReadFd());
+    client->SetStatus(WRITE_CLIENT);
+  }
   return ret;
 }
 

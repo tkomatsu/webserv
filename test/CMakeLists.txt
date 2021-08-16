@@ -31,7 +31,6 @@ set(WEBSERV_SRC
   ${SRC_DIR}/utility.cpp
   ${SRC_DIR}/CGI.cpp
   ${SRC_DIR}/Client.cpp
-  ${SRC_DIR}/Socket.cpp
   ${SRC_DIR}/Server.cpp
 )
 

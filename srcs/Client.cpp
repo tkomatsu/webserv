@@ -24,14 +24,17 @@ int Client::SetSocket(int _fd) {
   return fd;
 }
 
+void Client::SetStatus(enum SocketStatus status) { socket_status_ = status; }
+
 std::string Client::MakeAutoIndexContent(std::string dir_path) {
   DIR *dirp = opendir(dir_path.c_str());
   if (dirp == NULL) return "";
   struct dirent *dp;
-  fileinfo info;
   std::vector<fileinfo> index;
 
   while ((dp = readdir(dirp)) != NULL) {
+    fileinfo info;
+
     info.dirent_ = dp;
     stat((dir_path + std::string(dp->d_name)).c_str(), &info.stat_);
     index.push_back(info);
@@ -62,7 +65,7 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
                                   std::string(info.dirent_->d_name).length()),
                     ' ');
     if (!S_ISDIR(info.stat_.st_mode)) tmp += " ";
-    tmp += response_.Now(info.stat_.st_mtimespec.tv_sec);
+    tmp += ft::AutoIndexNow(info.stat_.st_mtimespec.tv_sec);
     tmp += std::string(19, ' ');
     if (S_ISREG(info.stat_.st_mode))
       tmp += ft::ltoa(info.stat_.st_size) + "\n";
@@ -80,7 +83,7 @@ void Client::Prepare(void) {
 
   int ret;
   ret = READ_FILE;
-  ret = WRITE_FILE;
+  // ret = WRITE_FILE;
   ret = WRITE_CGI;
   // ret = WRITE_CLIENT;
   SetStatus((enum SocketStatus)ret);
@@ -116,7 +119,7 @@ void Client::Prepare(void) {
         response_.SetStatusCode(200);
         response_.AppendHeader("Content-Type", "text/html");
 
-        std::string tmp = MakeAutoIndexContent("./docs");
+        std::string tmp = MakeAutoIndexContent("./docs/");
 
         response_.SetBody(tmp);
       }
@@ -130,22 +133,12 @@ int Client::recv(int client_fd) {
 
   ret = ::recv(client_fd, buf, Client::buf_max_ - 1, 0);
 
+  if (ret == -1) return ret;  // recv error
+  if (ret == 0) return ret;   // closed by client
+
   request_.AppendRawData(buf);
 
-  if (ret >= 0) {
-    size_t i = std::string(buf).find("\r\n\r\n");
-    if (i != std::string::npos) {
-      std::cout << "\nrecv from " + host_ip_ << ":" << port_ << std::endl;
-    }
-  }
-  // if (request_.GetStatus() == HttpMessage::DONE)
-  //} else {
-  // TODO: if size of data exceed WebServ::buf_max_,
-  // we need to stock them.
-  //  }
-  //}
-
-  return ret;
+  return 1;
 }
 
 int Client::send(int client_fd) {

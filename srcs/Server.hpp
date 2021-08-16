@@ -4,13 +4,16 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 
-#include "Socket.hpp"
+#include "ISocket.hpp"
 #include "config.hpp"
 
 class Server : public Socket {
  public:
-  Server(config::Config config) : Socket(config.port, config.host), config_(config) {};
-  int GetStatus() { return socket_status_; };
+  Server(config::Config config)
+      : Socket(config.port, config.host), config_(config){};
+
+  int SetSocket();
+
  private:
   config::Config config_;
 };

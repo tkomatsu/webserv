@@ -4,5 +4,6 @@
 
 *.o
 test/build
+objs
 
 webserv
