@@ -80,7 +80,7 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
 enum SocketStatus Client::GetNextOfReadClient() {
   enum SocketStatus ret;
 
-  ret = READ_FILE;
+  ret = WRITE_CGI;
 
   switch (request_.GetMethod()) {
     case GET:
@@ -185,7 +185,7 @@ void Client::Prepare(void) {
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Location", "/post.html");
   } else if (ret == WRITE_CGI) {
-    GenProcessForCGI();
+    GenProcessForCGI(this->port_, this->host_ip_);
 
     response_.SetStatusCode(200);
     response_.AppendHeader("Content-Type", "text/html");
@@ -250,8 +250,8 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, char **args,
   exit(EXIT_FAILURE);
 }
 
-void Client::GenProcessForCGI(void) {
-  CGI cgi_vals = CGI(request_);
+void Client::GenProcessForCGI(int port, std::string host) {
+  CGI cgi_vals = CGI(request_, port, host);
 
   int pipe_write[2];
   int pipe_read[2];

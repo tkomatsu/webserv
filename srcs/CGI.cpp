@@ -2,9 +2,9 @@
 
 #include <string.h>
 
-const int CGI::num_envs_ = 18;
+const int CGI::num_envs_ = 19;
 
-CGI::CGI(const Request &request) {
+CGI::CGI(const Request &request, int port, std::string host) {
   std::vector<std::string> request_uri = ft::vsplit(request.GetURI(), '?'); // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
   // alias: ./docs/html/  config.GetAlias(request_uri[0])
   // location: /  config.GetLocation(request_uri[0])
@@ -22,12 +22,16 @@ CGI::CGI(const Request &request) {
   (void)request;
 
   envs_map_["AUTH_TYPE"] = "";
+  // try {
+  //   std::string auth = request.GetHeader("Authorization");
+  //   envs_map_["AUTH_TYPE"] = ft::vsplit(auth, ' ')[0];
+  // } catch (std::exception &e) {}
   envs_map_["CONTENT_LENGTH"] = "";
-  // if method == POST
   // envs_map_["CONTENT_LENGTH"] = ltoa(request.GetBody().size())
   envs_map_["CONTENT_TYPE"] = "";
-  // if method == POST
-  // envs_map_["CONTENT_TYPE"] = application/x-www-form-urlencoded
+  // try {
+  //   std::string auth = request.GetHeader("Content-type");
+  // } catch (std::exception &e) {}
   envs_map_["GATEWAY_INTERFACE"] = "CGI/1.1";
   envs_map_["PATH_INFO"] = "";
   //    [設定]
@@ -40,11 +44,14 @@ CGI::CGI(const Request &request) {
   //    /dir1/index.php  (== SCRIPT_NAME)
   //    PATH_TRANSLATEDは
   //    /var/www/html/dir1/index.php
+
+  // ∴　envs_map_["PATH_INFO"] = ft::vsplit(request_.GetURI(), '?')[0];
   envs_map_["PATH_TRANSLATED"] = "";
+  // envs_map_["PATH_TRANSLATED"] = alias + (request_uri[0] - location);
   envs_map_["QUERY_STRING"] = "";
-  // request.GetQueryString()
-  //「http://サーバー名/CGIスクリプト名?データ」というURLを要求した場合のデータ部分
-  envs_map_["REMOTE_ADDR"] = "";
+  // if request_uri.size() >= 2 : envs_map_["QUERY_STRING"] = request_uri[1]
+  envs_map_["REMOTE_ADDR"] = host;
+  envs_map_["REMOTE_PORT"] = ft::ltoa(port);
   envs_map_["REMOTE_IDENT"] = "";
   envs_map_["REMOTE_USER"] = "";
   envs_map_["REQUEST_METHOD"] = "";
@@ -74,6 +81,8 @@ CGI::CGI(const Request &request) {
   tmp = "QUERY_STRING=" + envs_map_["QUERY_STRING"];
   envs_[i++] = strdup(tmp.c_str());
   tmp = "REMOTE_ADDR=" + envs_map_["REMOTE_ADDR"];
+  envs_[i++] = strdup(tmp.c_str());
+  tmp = "REMOTE_PORT=" + envs_map_["REMOTE_PORT"];
   envs_[i++] = strdup(tmp.c_str());
   tmp = "REMOTE_IDENT=" + envs_map_["REMOTE_IDENT"];
   envs_[i++] = strdup(tmp.c_str());

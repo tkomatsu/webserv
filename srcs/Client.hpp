@@ -21,7 +21,7 @@ class Client : public Socket {
   int SetSocket(int _fd);
   void Prepare(void);
   bool ParseRequest(void);
-  void GenProcessForCGI(void);
+  void GenProcessForCGI(int port, std::string host);
 
   int recv(int client_fd);
   int send(int client_fd);
