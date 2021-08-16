@@ -80,7 +80,7 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
 enum SocketStatus Client::GetNextOfReadClient() {
   enum SocketStatus ret;
 
-  ret = WRITE_FILE;
+  ret = WRITE_CGI;
 
   switch (request_.GetMethod()) {
     case GET:
