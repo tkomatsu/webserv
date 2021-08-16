@@ -14,6 +14,8 @@
 #include <vector>
 #include <iomanip>
 
+#include "utility.hpp"
+
 namespace config {
 
 enum Context {
@@ -64,7 +66,7 @@ struct Location {
   std::vector<std::string> extensions;
   std::vector<std::string> indexes;
   std::map<int, std::string> error_pages;
-  std::vector<std::string> allowed_methods;
+  std::vector<enum Method> allowed_methods;
   std::pair<int, std::string> redirect;
 };
 

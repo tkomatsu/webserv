@@ -70,7 +70,7 @@ Main::Main() {
 
 Server::Server(int id, const struct Main& main) : id(id) {
   autoindex = main.autoindex;
-  port = 0;
+  port = 80;
   client_max_body_size = main.client_max_body_size;
   host = "localhost";
   server_name = "";
@@ -227,8 +227,8 @@ void Config::AddErrorPage(enum Context context, const std::string& name,
   std::vector<std::string>::const_iterator itr = params.begin();
   do {
     // TODO: check string
-    int code = std::atoi((*itr).c_str());
-    if (code < 400 || code > 599)
+    int code = std::stoi(*itr);
+    if (code < 300 || code > 599)
       throw std::domain_error("error_page code error");
     if (context == MAIN)
       main_.error_pages[code] = uri;
@@ -318,7 +318,9 @@ void Config::AddRedirect(enum Context context, const std::string& name,
   if (params.size() != 2)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  int code = std::atoi(params.front().c_str());
+  int code = std::stoi(params.front());
+  if (code < 300 || code > 599)
+    throw std::domain_error("error_page code error");
   std::string uri = params.back();
   if (context == SERVER) {
     servers_.back().redirect = std::make_pair(code, uri);
@@ -335,8 +337,14 @@ void Config::AddAllowedMethods(enum Context context, const std::string& name,
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
   for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
-    // TODO: check string
-    servers_.back().locations.back().allowed_methods.push_back(*itr);
+    if (*itr == "GET")
+      servers_.back().locations.back().allowed_methods.push_back(GET);
+    else if (*itr == "POST")
+      servers_.back().locations.back().allowed_methods.push_back(POST);
+    else if (*itr == "DELETE")
+      servers_.back().locations.back().allowed_methods.push_back(POST);
+    else
+      throw ParameterError(BuildError(name, "invalid method name"));
   }
 }
 
