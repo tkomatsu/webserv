@@ -21,12 +21,10 @@ class Client : public Socket {
   int SetSocket(int _fd);
   void Prepare(void);
   bool ParseRequest(void);
-  void GenProcessForCGI(int port, std::string host);
+  void GenProcessForCGI(int client_port, std::string client_host, int server_port, std::string server_host);
 
   int recv(int client_fd);
   int send(int client_fd);
-
-  static const int buf_max_;
 
   const Response &GetResponse() { return response_; };
   const Request &GetRequest() { return request_; };
@@ -35,6 +33,7 @@ class Client : public Socket {
   int GetReadFd() { return read_fd_; };
   int GetPort() { return port_; };
   std::string GetHostIp() { return host_ip_; };
+  const std::string& GetResponseBody() const { return response_.GetBody(); };
 
   void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
   void AppendResponseHeader(std::string key, std::string val) {
@@ -48,25 +47,28 @@ class Client : public Socket {
     if (!is_continue) response_.EndCGI();
   };
 
-  const std::string& GetResponseBody() const { return response_.GetBody(); };
-
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
-
   void SetStatus(enum SocketStatus status);
+  void SetServerPort(int port) {server_port_ = port;};
+  void SetServerHost(std::string server_host_ip) {server_host_ip_ = server_host_ip;};
 
-  std::string MakeAutoIndexContent(std::string dir_path);
-
+  static const int buf_max_;
  private:
   void SetPipe(int *pipe_write, int *pipe_read);
   void ExecCGI(int *pipe_write, int *pipe_read, char **args, char **envs);
 
   enum SocketStatus GetNextOfReadClient();
 
+  std::string MakeAutoIndexContent(std::string dir_path);
+
   Request request_;
   Response response_;
 
   int write_fd_;
   int read_fd_;
+
+  int server_port_;
+  std::string server_host_ip_;
 };
 
 #endif /* CLIENT_HPP */

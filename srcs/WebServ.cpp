@@ -42,11 +42,14 @@ void WebServ::ParseConig(const std::string &path) {
 int WebServ::AcceptSession(socket_iter it) {
   int accepted = -1;
   int server_fd = it->first;
+  Server *server = dynamic_cast<Server *>(sockets_[server_fd]);
 
   if (FD_ISSET(server_fd, &rfd_set_)) {
     Client *client = new Client();
 
     int client_fd = client->SetSocket(server_fd);
+    client->SetServerPort(server->GetPort());
+    client->SetServerHost(server->GetHost());
 
     if (client_fd > max_fd_) max_fd_ = client_fd;
     sockets_[client_fd] = client;

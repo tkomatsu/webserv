@@ -24,3 +24,8 @@ int Server::SetSocket() {
 
   return fd;
 }
+
+int Server::GetPort(void) {return this->port_;}
+
+std::string Server::GetHost(void) {return this->host_ip_;}
+

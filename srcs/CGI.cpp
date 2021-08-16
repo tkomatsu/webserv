@@ -4,7 +4,13 @@
 
 const int CGI::num_envs_ = 19;
 
-CGI::CGI(const Request &request, int port, std::string host) {
+CGI::CGI(const Request &request, int client_port, std::string client_host, int server_port, std::string server_host) {
+  std::vector<std::string> methods;
+  methods.push_back("GET");
+  methods.push_back("POST");
+  methods.push_back("DELETE");
+  methods.push_back("INVALID");
+
   std::vector<std::string> request_uri = ft::vsplit(request.GetURI(), '?'); // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
   // alias: ./docs/html/  config.GetAlias(request_uri[0])
   // location: /  config.GetLocation(request_uri[0])
@@ -50,17 +56,17 @@ CGI::CGI(const Request &request, int port, std::string host) {
   // envs_map_["PATH_TRANSLATED"] = alias + (request_uri[0] - location);
   envs_map_["QUERY_STRING"] = "";
   // if request_uri.size() >= 2 : envs_map_["QUERY_STRING"] = request_uri[1]
-  envs_map_["REMOTE_ADDR"] = host;
-  envs_map_["REMOTE_PORT"] = ft::ltoa(port);
+  envs_map_["REMOTE_ADDR"] = client_host;
+  envs_map_["REMOTE_PORT"] = ft::ltoa(client_port);
   envs_map_["REMOTE_IDENT"] = "";
   envs_map_["REMOTE_USER"] = "";
-  envs_map_["REQUEST_METHOD"] = "";
-  envs_map_["REQUEST_URI"] = "";
-  envs_map_["SCRIPT_NAME"] = "";
-  envs_map_["SERVER_NAME"] = "";
-  envs_map_["SERVER_PORT"] = "";
+  envs_map_["REQUEST_METHOD"] = methods[request.GetMethod()];
+  envs_map_["REQUEST_URI"] = request.GetURI();
+  envs_map_["SCRIPT_NAME"] = envs_map_["PATH_INFO"];
+  envs_map_["SERVER_NAME"] = server_host;
+  envs_map_["SERVER_PORT"] = ft::ltoa(server_port);;
   envs_map_["SERVER_PROTOCOL"] = "HTTP/1.1";
-  envs_map_["SERVER_SOFTWARE"] = "WEBSERV/0.4.2";
+  envs_map_["SERVER_SOFTWARE"] = "Webserv/0.4.2";
 
   std::string tmp;
   int i = 0;
