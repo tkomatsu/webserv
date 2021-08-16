@@ -241,11 +241,17 @@ void Parser::AddLocation(enum Context context, const std::string& name,
     throw ContextError(BuildError(name, "is not allowed here"));
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameter"));
+  assert(!servers_.empty());
 
   const std::string& path = params.front();
   struct Server& server = servers_.back();
+  std::vector<struct Location>::const_iterator itr;
+  for (itr = server.locations.begin(); itr != server.locations.end(); ++itr) {
+    if (itr->path == path)
+      throw ParameterError(BuildError(name, "duplicated"));
+  }
+
   struct Location location(path, server);
-  assert(!servers_.empty()); // remove
   server.locations.push_back(location);
 }
 
