@@ -61,7 +61,7 @@ class CGITest : public testing::Test {
 TEST_F(CGITest, Args) {
   Request req;
   req.AppendRawData(requests["get"]);
-  CGI cgi(req);
+  CGI cgi(req, 42, "a", 42, "a");
 
   ExpectArgs(cgi);
 }
@@ -69,7 +69,7 @@ TEST_F(CGITest, Args) {
 TEST_F(CGITest, Envs) {
   Request req;
   req.AppendRawData(requests["get"]);
-  CGI cgi(req);
+  CGI cgi(req, 42, "a", 42, "a");
 
   ExpectArgs(cgi);
 }
