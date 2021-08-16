@@ -72,11 +72,11 @@ void PrintKeyValue(const std::string& key, const T& value, bool indent = false) 
 
 namespace config {
 
-Config::Config(const std::string& filename) : filename_(filename) {
+Parser::Parser(const std::string& filename) : filename_(filename) {
   Load();
 }
 
-Config::~Config() {}
+Parser::~Parser() {}
 
 Main::Main() {
   print_config = false;
@@ -88,7 +88,7 @@ Server::Server(int id, const struct Main& main) : id(id) {
   autoindex = main.autoindex;
   port = 80;
   client_max_body_size = main.client_max_body_size;
-  host = "localhost";
+  host = "127.0.0.1";
   server_name = "";
   indexes = main.indexes;
   error_pages = main.error_pages;
@@ -105,28 +105,43 @@ Location::Location(const std::string& path, const struct Server& server) : path(
   redirect = server.redirect;
 }
 
-void Config::Load() {
+std::vector<struct Config> Parser::GetConfigs() {
+  std::vector<struct Config> configs;
+
+  if (servers_.empty())
+    return configs;
+
+  std::vector<struct Server>::const_iterator itr;
+  for (itr = servers_.begin(); itr != servers_.end(); ++itr) {
+    struct Config config = *itr;
+    configs.push_back(*itr);
+  }
+
+  return configs;
+}
+
+void Parser::Load() {
   std::ifstream file(filename_);
   if (!file.is_open()) {
     throw std::runtime_error("file could not be opened");
   }
 
   Directives mapping;
-  mapping["print_config"] = &Config::AddPrintConfig;
-  mapping["server"] = &Config::AddServer;
-  mapping["location"] = &Config::AddLocation;
-  mapping["error_page"] = &Config::AddErrorPage;
-  mapping["client_max_body_size"] = &Config::AddClientMaxBodySize;
-  mapping["autoindex"] = &Config::AddAutoindex;
-  mapping["index"] = &Config::AddIndex;
-  mapping["listen"] = &Config::AddListen;
-  mapping["server_name"] = &Config::AddServerName;
-  mapping["return"] = &Config::AddRedirect;
-  mapping["allowed_methods"] = &Config::AddAllowedMethods;
-  mapping["alias"] = &Config::AddAlias;
-  mapping["upload_pass"] = &Config::AddUploadPass;
-  mapping["upload_store"] = &Config::AddUploadStore;
-  mapping["ext"] = &Config::AddExtensions;
+  mapping["print_config"] = &Parser::AddPrintConfig;
+  mapping["server"] = &Parser::AddServer;
+  mapping["location"] = &Parser::AddLocation;
+  mapping["error_page"] = &Parser::AddErrorPage;
+  mapping["client_max_body_size"] = &Parser::AddClientMaxBodySize;
+  mapping["autoindex"] = &Parser::AddAutoindex;
+  mapping["index"] = &Parser::AddIndex;
+  mapping["listen"] = &Parser::AddListen;
+  mapping["server_name"] = &Parser::AddServerName;
+  mapping["return"] = &Parser::AddRedirect;
+  mapping["allowed_methods"] = &Parser::AddAllowedMethods;
+  mapping["alias"] = &Parser::AddAlias;
+  mapping["upload_pass"] = &Parser::AddUploadPass;
+  mapping["upload_store"] = &Parser::AddUploadStore;
+  mapping["ext"] = &Parser::AddExtensions;
 
   enum Context context = MAIN;
   LineBuilder builder(file);
@@ -153,7 +168,7 @@ void Config::Load() {
   if (print_config_) Print();
 }
 
-void Config::ValidateLineSyntax(const LineComponent& line) {
+void Parser::ValidateLineSyntax(const LineComponent& line) {
   if (line.type == NONE) {
     throw SyntaxError("directive should not be none");
   }
@@ -175,29 +190,29 @@ void Config::ValidateLineSyntax(const LineComponent& line) {
   }
 }
 
-void Config::PushContext(enum Context& current) {
+void Parser::PushContext(enum Context& current) {
   if (current == MAIN)
     current = SERVER;
   else if (current == SERVER)
     current = LOCATION;
 }
 
-void Config::PopContext(enum Context& current) {
+void Parser::PopContext(enum Context& current) {
   if (current == LOCATION)
     current = SERVER;
   else if (current == SERVER)
     current = MAIN;
 }
 
-bool Config::IsBlock(const std::string& directive_name) {
+bool Parser::IsBlock(const std::string& directive_name) {
   return directive_name == "server" || directive_name == "location";
 }
 
-bool Config::IsSimple(const std::string& directive_name) {
+bool Parser::IsSimple(const std::string& directive_name) {
   return !IsBlock(directive_name);
 }
 
-void Config::AddPrintConfig(enum Context context, const std::string& name,
+void Parser::AddPrintConfig(enum Context context, const std::string& name,
                             const std::vector<std::string>& params) {
   if (context != MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -209,7 +224,7 @@ void Config::AddPrintConfig(enum Context context, const std::string& name,
   print_config_ = params.front() == "on" ? true : false;
 }
 
-void Config::AddServer(enum Context context, const std::string& name,
+void Parser::AddServer(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context != MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -220,7 +235,7 @@ void Config::AddServer(enum Context context, const std::string& name,
   servers_.push_back(server);
 }
 
-void Config::AddLocation(enum Context context, const std::string& name,
+void Parser::AddLocation(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context != SERVER)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -234,7 +249,7 @@ void Config::AddLocation(enum Context context, const std::string& name,
   server.locations.push_back(location);
 }
 
-void Config::AddErrorPage(enum Context context, const std::string& name,
+void Parser::AddErrorPage(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (params.size() < 2 || params.size() > 200)
     throw ParameterError(BuildError(name, "with wrong number of parameter"));
@@ -256,7 +271,7 @@ void Config::AddErrorPage(enum Context context, const std::string& name,
   } while (itr + 1 != params.end());
 }
 
-void Config::AddClientMaxBodySize(enum Context context, const std::string& name,
+void Parser::AddClientMaxBodySize(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
@@ -272,7 +287,7 @@ void Config::AddClientMaxBodySize(enum Context context, const std::string& name,
 }
 
 
-void Config::AddAutoindex(enum Context context, const std::string& name,
+void Parser::AddAutoindex(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
@@ -288,7 +303,7 @@ void Config::AddAutoindex(enum Context context, const std::string& name,
     servers_.back().locations.back().autoindex = autoindex;
 }
 
-void Config::AddIndex(enum Context context, const std::string& name,
+void Parser::AddIndex(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
@@ -304,19 +319,18 @@ void Config::AddIndex(enum Context context, const std::string& name,
   }
 }
 
-void Config::AddListen(enum Context context, const std::string& name,
+void Parser::AddListen(enum Context context, const std::string& name,
                        const std::vector<std::string>& params) {
   if (context != SERVER)
     throw ContextError(BuildError(name, "is not allowed here"));
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  // TODO: it only works as "listen num;"
-  servers_.back().host = "localhost";
+  servers_.back().host = "127.0.0.1";
   servers_.back().port = std::atoi(params.front().c_str());
 }
 
-void Config::AddServerName(enum Context context, const std::string& name,
+void Parser::AddServerName(enum Context context, const std::string& name,
                            const std::vector<std::string>& params) {
   if (context != SERVER)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -327,7 +341,7 @@ void Config::AddServerName(enum Context context, const std::string& name,
   servers_.back().server_name = params.front();
 }
 
-void Config::AddRedirect(enum Context context, const std::string& name,
+void Parser::AddRedirect(enum Context context, const std::string& name,
                          const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -345,7 +359,7 @@ void Config::AddRedirect(enum Context context, const std::string& name,
   }
 }
 
-void Config::AddAllowedMethods(enum Context context, const std::string& name,
+void Parser::AddAllowedMethods(enum Context context, const std::string& name,
                                const std::vector<std::string>& params) {
   if (context != LOCATION)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -364,7 +378,7 @@ void Config::AddAllowedMethods(enum Context context, const std::string& name,
   }
 }
 
-void Config::AddAlias(enum Context context, const std::string& name,
+void Parser::AddAlias(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context != LOCATION)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -375,7 +389,7 @@ void Config::AddAlias(enum Context context, const std::string& name,
   servers_.back().locations.back().alias = params.front();
 }
 
-void Config::AddUploadPass(enum Context context, const std::string& name,
+void Parser::AddUploadPass(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -388,7 +402,7 @@ void Config::AddUploadPass(enum Context context, const std::string& name,
     servers_.back().locations.back().upload_pass = params.front();
 }
 
-void Config::AddUploadStore(enum Context context, const std::string& name,
+void Parser::AddUploadStore(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -401,7 +415,7 @@ void Config::AddUploadStore(enum Context context, const std::string& name,
     servers_.back().locations.back().upload_store = params.front();
 }
 
-void Config::AddExtensions(enum Context context, const std::string& name,
+void Parser::AddExtensions(enum Context context, const std::string& name,
     const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
@@ -417,7 +431,7 @@ void Config::AddExtensions(enum Context context, const std::string& name,
   }
 }
 
-void Config::Print() const {
+void Parser::Print() const {
   std::cerr << std::endl << "Print config      : on" << std::endl;
   std::cerr << "Number of servers : " << servers_.size() << std::endl;
   for (std::vector<struct Server>::const_iterator itr = servers_.begin();

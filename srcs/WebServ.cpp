@@ -27,14 +27,16 @@ WebServ::~WebServ() {
 }
 
 void WebServ::ParseConfig(const std::string &path) {
-  config::Config config(path);
-  exit(0);
+  config::Parser parser(path);
 
-  // コンフィグをパースした結果分かる、最初に立てるべきサーバーたちをつくる
-  for (int i = 0; i < 3; ++i) {
-    Server *server = new Server(4200 + i, "127.0.0.1");
-    long fd = server->SetSocket(42);  // 42 is meanless
+  std::vector<struct config::Config> configs = parser.GetConfigs();
+  if (configs.empty())
+    return;
 
+  std::vector<struct config::Config>::const_iterator itr;
+  for (itr = configs.begin(); itr != configs.end(); ++itr) {
+    Server *server = new Server(*itr);
+    long fd = server->SetSocket(42); // 42 is meaningless
     sockets_[fd] = server;
   }
 }

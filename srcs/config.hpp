@@ -70,11 +70,15 @@ struct Location {
   std::pair<int, std::string> redirect;
 };
 
+struct Config : Server {
+  Config(const struct Server& server) : Server(server) {};
+};
+
 struct LineComponent;
 
-class Config {
+class Parser {
  private:
-  typedef void (Config::*AddDirective)(
+  typedef void (Parser::*AddDirective)(
     enum Context,
     const std::string& name,
     const std::vector<std::string>& params
@@ -83,9 +87,10 @@ class Config {
   typedef std::map<std::string, AddDirective> Directives;
 
  public:
-  explicit Config(const std::string& filename);
-  ~Config();
+  explicit Parser(const std::string& filename);
+  ~Parser();
 
+  std::vector<struct Config> GetConfigs();
   void Print() const;
 
  private:

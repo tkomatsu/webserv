@@ -5,11 +5,14 @@
 #include <fcntl.h>
 
 #include "Socket.hpp"
+#include "config.hpp"
 
 class Server : public Socket {
  public:
-  Server(int port, std::string host_ip) : Socket(port, host_ip){};
+  Server(config::Config config) : Socket(config.port, config.host), config_(config) {};
   int GetStatus() { return socket_status_; };
+ private:
+  config::Config config_;
 };
 
 #endif
