@@ -120,6 +120,44 @@ enum SocketStatus {
   WRITE_CLIENT
 }
 
+class config::Parser {
+  + GetConfigs() : vector<struct config::Config>
+  + Print() : void
+  - servers_ : vector<struct config::Server>
+}
+
+class config::Config {}
+
+class config::Server {
+  + autoindex : bool
+  + id : int
+  + port : int
+  + client_max_body_size : int
+  + host : string
+  + server_name : string
+  + upload_pass : string
+  + upload_store : string
+  + extensions : set<string>
+  + indexes : set<string>
+  + error_pages : map<int, string>
+  + redirect : pair<int, string>
+  + locations : vector<struct config::Location>
+}
+
+class config::Location {
+  + autoindex : bool
+  + client_max_body_size : int
+  + path : string
+  + alias : string
+  + upload_pass : string
+  + upload_store : string
+  + extensions : set<string>
+  + indexes : set<string>
+  + error_pages : map<int, string>
+  + allowed_methods : set<enum Method>
+  + redirect : pair<int, string>
+}
+
 Webserv *--> ISocket
 ISocket <|-- Client
 ISocket <|-- Server
@@ -127,5 +165,8 @@ Client *--> Request
 Client *--> Response
 HttpMessage <|-- Request
 HttpMessage <|-- Response
+config::Server *-- config::Location
+config::Config <|-- config::Server
+Server *-- config::Config
 
 @enduml
