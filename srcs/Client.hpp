@@ -52,14 +52,14 @@ class Client : public Socket {
   void SetServerPort(int port) {server_port_ = port;};
   void SetServerHost(std::string server_host_ip) {server_host_ip_ = server_host_ip;};
 
+  std::string MakeAutoIndexContent(std::string dir_path);
+
   static const int buf_max_;
  private:
   void SetPipe(int *pipe_write, int *pipe_read);
   void ExecCGI(int *pipe_write, int *pipe_read, char **args, char **envs);
 
   enum SocketStatus GetNextOfReadClient();
-
-  std::string MakeAutoIndexContent(std::string dir_path);
 
   Request request_;
   Response response_;
