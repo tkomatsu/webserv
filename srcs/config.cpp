@@ -31,7 +31,7 @@ std::string PairToString(const std::pair<FirstType, SecondType>& pair) {
 }
 
 template <typename T>
-std::string VectorToString(const std::vector<T> &vector) {
+std::string VectorToString(const std::vector<T>& vector) {
   std::ostringstream oss;
   oss << "[";
   if (vector.empty()) {
@@ -41,6 +41,22 @@ std::string VectorToString(const std::vector<T> &vector) {
   typename std::vector<T>::const_iterator itr = vector.begin();
   oss << *itr;
   while (++itr != vector.end())
+    oss << ", " << *itr;
+  oss << "]";
+  return oss.str();
+}
+
+template <typename T>
+std::string SetToString(const std::set<T>& set) {
+  std::ostringstream oss;
+  oss << "[";
+  if (set.empty()) {
+      oss << "]";
+      return oss.str();
+  }
+  typename std::set<T>::const_iterator itr = set.begin();
+  oss << *itr;
+  while (++itr != set.end())
     oss << ", " << *itr;
   oss << "]";
   return oss.str();
@@ -280,11 +296,11 @@ void Config::AddIndex(enum Context context, const std::string& name,
   for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
     // TODO: check string, empty, append if exist
     if (context == MAIN)
-      main_.indexes.push_back(*itr);
+      main_.indexes.insert(*itr);
     else if (context == SERVER)
-      servers_.back().indexes.push_back(*itr);
+      servers_.back().indexes.insert(*itr);
     else if (context == LOCATION)
-      servers_.back().locations.back().indexes.push_back(*itr);
+      servers_.back().locations.back().indexes.insert(*itr);
   }
 }
 
@@ -338,11 +354,11 @@ void Config::AddAllowedMethods(enum Context context, const std::string& name,
 
   for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
     if (*itr == "GET")
-      servers_.back().locations.back().allowed_methods.push_back(GET);
+      servers_.back().locations.back().allowed_methods.insert(GET);
     else if (*itr == "POST")
-      servers_.back().locations.back().allowed_methods.push_back(POST);
+      servers_.back().locations.back().allowed_methods.insert(POST);
     else if (*itr == "DELETE")
-      servers_.back().locations.back().allowed_methods.push_back(POST);
+      servers_.back().locations.back().allowed_methods.insert(DELETE);
     else
       throw ParameterError(BuildError(name, "invalid method name"));
   }
@@ -395,9 +411,9 @@ void Config::AddExtensions(enum Context context, const std::string& name,
   for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
     // TODO: check string, empty, append if exist
     if (context == SERVER)
-      servers_.back().extensions.push_back(*itr);
+      servers_.back().extensions.insert(*itr);
     else if (context == LOCATION)
-      servers_.back().locations.back().extensions.push_back(*itr);
+      servers_.back().locations.back().extensions.insert(*itr);
   }
 }
 
@@ -416,12 +432,12 @@ void Config::Print() const {
     PrintKeyValue("client_max_body_size", server.client_max_body_size);
     PrintKeyValue("host", server.host);
     PrintKeyValue("server_name", server.server_name);
-    PrintKeyValue("index", VectorToString(server.indexes));
+    PrintKeyValue("index", SetToString(server.indexes));
     PrintKeyValue("error_page", MapToString(server.error_pages));
     PrintKeyValue("redirect", PairToString(server.redirect));
     PrintKeyValue("upload_pass", server.upload_pass);
     PrintKeyValue("upload_store", server.upload_store);
-    PrintKeyValue("extensions", VectorToString(server.extensions));
+    PrintKeyValue("extensions", SetToString(server.extensions));
     for (std::vector<struct config::Location>::const_iterator itr =
              server.locations.begin();
          itr != server.locations.end(); ++itr) {
@@ -430,15 +446,15 @@ void Config::Print() const {
       std::cerr << "Location: " << location.path << std::endl;
       PrintKeyValue("autoindex", location.autoindex, true);
       PrintKeyValue("client_max_body_size", location.client_max_body_size, true);
-      PrintKeyValue("index", VectorToString(location.indexes), true);
+      PrintKeyValue("index", SetToString(location.indexes), true);
       PrintKeyValue("alias", location.alias, true);
       PrintKeyValue("error_page", MapToString(location.error_pages), true);
-      PrintKeyValue("allowed_methods", VectorToString(location.allowed_methods),
+      PrintKeyValue("allowed_methods", SetToString(location.allowed_methods),
                     true);
       PrintKeyValue("redirect", PairToString(location.redirect), true);
       PrintKeyValue("upload_pass", location.upload_pass);
       PrintKeyValue("upload_store", location.upload_store);
-      PrintKeyValue("extensions", VectorToString(location.extensions));
+      PrintKeyValue("extensions", SetToString(location.extensions));
     }
   }
 }
@@ -448,7 +464,6 @@ LineBuilder::LineBuilder(std::ifstream& file) : file_(file) {};
 LineBuilder::~LineBuilder() {};
 
 bool LineBuilder::GetNext(LineComponent& line) {
-  // bad
   line.name.clear();
   line.params.clear();
   line.type = NONE;

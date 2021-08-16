@@ -30,7 +30,7 @@ struct Main {
   bool print_config;
   bool autoindex;
   int client_max_body_size;
-  std::vector<std::string> indexes;
+  std::set<std::string> indexes;
   std::map<int, std::string> error_pages;
 };
 
@@ -47,8 +47,8 @@ struct Server {
   std::string server_name;
   std::string upload_pass;
   std::string upload_store;
-  std::vector<std::string> extensions;
-  std::vector<std::string> indexes;
+  std::set<std::string> extensions;
+  std::set<std::string> indexes;
   std::map<int, std::string> error_pages;
   std::pair<int, std::string> redirect;
   std::vector<struct Location> locations;
@@ -63,10 +63,10 @@ struct Location {
   std::string alias;
   std::string upload_pass;
   std::string upload_store;
-  std::vector<std::string> extensions;
-  std::vector<std::string> indexes;
+  std::set<std::string> extensions;
+  std::set<std::string> indexes;
   std::map<int, std::string> error_pages;
-  std::vector<enum Method> allowed_methods;
+  std::set<enum Method> allowed_methods;
   std::pair<int, std::string> redirect;
 };
 
