@@ -47,7 +47,8 @@ int WebServ::AcceptSession(socket_iter it) {
   int server_fd = it->first;
 
   if (FD_ISSET(server_fd, &rfd_set_)) {
-    Client *client = new Client();
+    Server* server = dynamic_cast<Server *>(it->second);
+    Client *client = new Client(server->GetConfig());
 
     int client_fd = client->SetSocket(server_fd);
 

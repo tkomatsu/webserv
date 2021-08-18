@@ -24,3 +24,7 @@ int Server::SetSocket() {
 
   return fd;
 }
+
+const config::Config Server::GetConfig() {
+  return config_;
+}

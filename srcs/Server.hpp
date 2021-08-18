@@ -13,6 +13,7 @@ class Server : public Socket {
       : Socket(config.port, config.host), config_(config){};
 
   int SetSocket();
+  const config::Config GetConfig();
 
  private:
   config::Config config_;
