@@ -7,6 +7,7 @@
 
 #include "Client.hpp"
 #include "Server.hpp"
+#include "config.hpp"
 
 const std::string WebServ::default_path_ = "./conf/default.conf";
 const int WebServ::buf_max_ = 8192;
@@ -14,7 +15,7 @@ const int WebServ::buf_max_ = 8192;
 WebServ::WebServ(const std::string &path) {
   timeout_ = (struct timeval){1, 0};
 
-  ParseConig(path);
+  ParseConfig(path);
 }
 
 WebServ::~WebServ() {
@@ -26,15 +27,17 @@ WebServ::~WebServ() {
   sockets_.clear();
 }
 
-void WebServ::ParseConig(const std::string &path) {
-  // TODO: parse config fully
-  (void)path;
+void WebServ::ParseConfig(const std::string &path) {
+  config::Parser parser(path);
 
-  // コンフィグをパースした結果分かる、最初に立てるべきサーバーたちをつくる
-  for (int i = 0; i < 3; ++i) {
-    Server *server = new Server(4200 + i, "127.0.0.1");
-    long fd = server->SetSocket();  // 42 is meanless
+  std::vector<struct config::Config> configs = parser.GetConfigs();
+  if (configs.empty())
+    return;
 
+  std::vector<struct config::Config>::const_iterator itr;
+  for (itr = configs.begin(); itr != configs.end(); ++itr) {
+    Server *server = new Server(*itr);
+    long fd = server->SetSocket();
     sockets_[fd] = server;
   }
 }
@@ -42,14 +45,14 @@ void WebServ::ParseConig(const std::string &path) {
 int WebServ::AcceptSession(socket_iter it) {
   int accepted = -1;
   int server_fd = it->first;
-  Server *server = dynamic_cast<Server *>(sockets_[server_fd]);
 
   if (FD_ISSET(server_fd, &rfd_set_)) {
-    Client *client = new Client();
+    Server* server = dynamic_cast<Server *>(it->second);
+    Client *client = new Client(server->GetConfig());
 
     int client_fd = client->SetSocket(server_fd);
-    client->SetServerPort(server->GetPort());
-    client->SetServerHost(server->GetHost());
+    /* client->SetServerPort(server->GetPort());
+    client->SetServerHost(server->GetHost()); */
 
     if (client_fd > max_fd_) max_fd_ = client_fd;
     sockets_[client_fd] = client;

@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-int Server::SetSocket() {
+int Server::SetSocket(void) {
   long fd;
 
   if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -25,7 +25,12 @@ int Server::SetSocket() {
   return fd;
 }
 
+/* <<<<<<< HEAD
 int Server::GetPort(void) {return this->port_;}
 
 std::string Server::GetHost(void) {return this->host_ip_;}
 
+======= */
+const config::Config Server::GetConfig() {
+  return config_;
+}

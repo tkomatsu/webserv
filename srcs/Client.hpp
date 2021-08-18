@@ -8,6 +8,7 @@
 #include "ISocket.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include "config.hpp"
 
 typedef struct fileinfo {
   struct dirent *dirent_;
@@ -16,12 +17,13 @@ typedef struct fileinfo {
 
 class Client : public Socket {
  public:
-  Client() { socket_status_ = READ_CLIENT; };
+  Client(const struct config::Config config);
 
   int SetSocket(int _fd);
   void Prepare(void);
   bool ParseRequest(void);
-  void GenProcessForCGI(int client_port, std::string client_host, int server_port, std::string server_host);
+  void GenProcessForCGI(int client_port, std::string client_host,
+                        int server_port, std::string server_host);
 
   int recv(int client_fd);
   int send(int client_fd);
@@ -33,7 +35,7 @@ class Client : public Socket {
   int GetReadFd() { return read_fd_; };
   int GetPort() { return port_; };
   std::string GetHostIp() { return host_ip_; };
-  const std::string& GetResponseBody() const { return response_.GetBody(); };
+  const std::string &GetResponseBody() const { return response_.GetBody(); };
 
   void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
   void AppendResponseHeader(std::string key, std::string val) {
@@ -49,12 +51,14 @@ class Client : public Socket {
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
   void SetStatus(enum SocketStatus status);
-  void SetServerPort(int port) {server_port_ = port;};
-  void SetServerHost(std::string server_host_ip) {server_host_ip_ = server_host_ip;};
+  /* void SetServerPort(int port) {server_port_ = port;};
+  void SetServerHost(std::string server_host_ip) {server_host_ip_ =
+  server_host_ip;}; */
 
   std::string MakeAutoIndexContent(std::string dir_path);
 
   static const int buf_max_;
+
  private:
   void SetPipe(int *pipe_write, int *pipe_read);
   void ExecCGI(int *pipe_write, int *pipe_read, char **args, char **envs);
@@ -66,9 +70,12 @@ class Client : public Socket {
 
   int write_fd_;
   int read_fd_;
+  /* <<<<<<< HEAD
 
-  int server_port_;
-  std::string server_host_ip_;
+    int server_port_;
+    std::string server_host_ip_;
+  ======= */
+  const config::Config config_;
 };
 
 #endif /* CLIENT_HPP */

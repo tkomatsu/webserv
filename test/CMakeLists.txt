@@ -32,6 +32,7 @@ set(WEBSERV_SRC
   ${SRC_DIR}/CGI.cpp
   ${SRC_DIR}/Client.cpp
   ${SRC_DIR}/Server.cpp
+  ${SRC_DIR}/config.cpp
 )
 
 add_executable(

@@ -11,6 +11,11 @@
 
 const int Client::buf_max_ = 8192;
 
+Client::Client(const struct config::Config config) : config_(config) {
+  socket_status_ = READ_CLIENT;
+  
+}
+
 int Client::SetSocket(int _fd) {
   socklen_t len = sizeof(addr_);
   int fd = accept(_fd, (struct sockaddr *)&addr_, &len);
@@ -165,7 +170,6 @@ void Client::Prepare(void) {
   // if (request_uri.size() >= 1)
   // std::cout << request_uri[1] << std::endl;
 
-
   if (ret == READ_FILE) {
       // alias: ./docs/html/  config.GetAlias(request_uri[0])
       // location: /  config.GetLocation(request_uri[0])
@@ -185,7 +189,7 @@ void Client::Prepare(void) {
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Location", "/post.html");
   } else if (ret == WRITE_CGI) {
-    GenProcessForCGI(this->port_, this->host_ip_, this->server_port_, this->server_host_ip_);
+    GenProcessForCGI(this->port_, this->host_ip_, config_.port, config_.host);
 
     response_.SetStatusCode(200);
     response_.AppendHeader("Content-Type", "text/html");
