@@ -11,7 +11,7 @@ class ServerTest : public testing::Test {
 
 TEST_F(ServerTest, SetStatus) {
   config::Main main_context;
-  config::Server server_context(0, main_context);
+  config::Server server_context(main_context);
   server_context.port = 4200;
   server_context.host = "127.0.0.1";
 
@@ -22,7 +22,7 @@ TEST_F(ServerTest, SetStatus) {
 
 TEST_F(ServerTest, SetSocket) {
   config::Main main_context;
-  config::Server server_context(0, main_context);
+  config::Server server_context(main_context);
   server_context.port = 4200;
   server_context.host = "127.0.0.1";
 

@@ -84,7 +84,7 @@ Main::Main() {
   client_max_body_size = 1000000;
 }
 
-Server::Server(int id, const struct Main& main) : id(id) {
+Server::Server(const struct Main& main) {
   autoindex = main.autoindex;
   port = 80;
   client_max_body_size = main.client_max_body_size;
@@ -231,7 +231,7 @@ void Parser::AddServer(enum Context context, const std::string& name,
   if (!params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameter"));
 
-  struct Server server(servers_.size(), main_);
+  struct Server server(main_);
   servers_.push_back(server);
 }
 
@@ -444,7 +444,7 @@ void Parser::Print() const {
        itr != servers_.end(); ++itr) {
     const Server& server = *itr;
     std::cerr << "------------------------------------------------------------------------------" << std::endl;
-    std::cerr << "                                ~ Server " << server.id << " ~"<< std::endl;
+    std::cerr << "                                 ~ Server ~"<< std::endl;
     std::cerr << "------------------------------------------------------------------------------";
     std::cerr << std::endl;
     PrintKeyValue("autoindex", server.autoindex);

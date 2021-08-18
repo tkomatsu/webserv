@@ -19,7 +19,7 @@ class ClientTest : public testing::Test {
 // accept error回避したいけど…
 TEST_F(ClientTest, SetSocket) {
   config::Main main_context;
-  config::Server server_context(0, main_context);
+  config::Server server_context(main_context);
   server_context.port = 4200;
   server_context.host = "127.0.0.1";
   config::Config config(server_context);
@@ -37,7 +37,7 @@ TEST_F(ClientTest, SetSocket) {
 
 TEST_F(ClientTest, AutoIndex) {
   config::Main main_context;
-  config::Server server_context(0, main_context);
+  config::Server server_context(main_context);
   server_context.port = 4200;
   server_context.host = "127.0.0.1";
   config::Config config(server_context);

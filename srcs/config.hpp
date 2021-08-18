@@ -37,10 +37,9 @@ struct Main {
 struct Location;
 
 struct Server {
-  Server(int id, const struct Main& main);
+  Server(const struct Main& main);
 
   bool autoindex;
-  int id;
   int port;
   int client_max_body_size;
   std::string host;
