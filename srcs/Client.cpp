@@ -11,6 +11,10 @@
 
 const int Client::buf_max_ = 8192;
 
+Client::Client(const struct config::Config& config) : config_(config) {
+  socket_status_ = READ_CLIENT;
+}
+
 int Client::SetSocket(int _fd) {
   socklen_t len = sizeof(addr_);
   int fd = accept(_fd, (struct sockaddr *)&addr_, &len);

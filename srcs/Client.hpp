@@ -8,6 +8,7 @@
 #include "ISocket.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include "config.hpp"
 
 typedef struct fileinfo {
   struct dirent *dirent_;
@@ -16,7 +17,7 @@ typedef struct fileinfo {
 
 class Client : public Socket {
  public:
-  Client() { socket_status_ = READ_CLIENT; };
+  Client(const struct config::Config& config);
 
   int SetSocket(int _fd);
   void Prepare(void);
@@ -63,6 +64,7 @@ class Client : public Socket {
 
   int write_fd_;
   int read_fd_;
+  const config::Config& config_;
 };
 
 #endif /* CLIENT_HPP */
