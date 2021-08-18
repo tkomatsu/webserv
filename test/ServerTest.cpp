@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "Server.hpp"
+#include "config.hpp"
 
 class ServerTest : public testing::Test {
  protected:
@@ -8,10 +9,25 @@ class ServerTest : public testing::Test {
   virtual void TearDown() {}
 };
 
-TEST_F(ServerTest, SetStatus) { Server server(4200, "127.0.0.1"); }
+TEST_F(ServerTest, SetStatus) {
+  config::Main main_context;
+  config::Server server_context(0, main_context);
+  server_context.port = 4200;
+  server_context.host = "127.0.0.1";
+
+  config::Config config(server_context);
+
+  Server server(config);
+}
 
 TEST_F(ServerTest, SetSocket) {
-  Server server(4200, "127.0.0.1");
+  config::Main main_context;
+  config::Server server_context(0, main_context);
+  server_context.port = 4200;
+  server_context.host = "127.0.0.1";
+
+  config::Config config(server_context);
+  Server server(config);
 
   int fd = server.SetSocket();
   EXPECT_GT(fd, 0);
