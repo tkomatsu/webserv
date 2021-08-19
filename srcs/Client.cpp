@@ -94,10 +94,12 @@ enum SocketStatus Client::GetNextOfReadClient() {
 
       // (CGI)
       // std::vector<std::string> request_uri = ft::vsplit(
-      //     request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
+      //     request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc",
+      //     "mcgee=mine"]
       // path = alias + (request_uri[0] - location)
       // if path's extension in config.GetExtensions():
-      //   ret = WRITE_CGI;
+      //   close(write_fd);
+      //   ret = READ_CGI;
       //   break;
 
       // (SIMPLE GET)
@@ -129,7 +131,7 @@ enum SocketStatus Client::GetNextOfReadClient() {
       //     request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
       // path = alias + (request_uri[0] - location)
       // if path's extension in config.GetExtensions():
-      //   ret = WRITE_CGI;
+      //   ret = READ_WRITE_CGI;
       //   break;
 
       // (upload)

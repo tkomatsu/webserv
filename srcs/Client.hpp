@@ -30,12 +30,19 @@ class Client : public Socket {
 
   const Response &GetResponse() { return response_; };
   const Request &GetRequest() { return request_; };
+  const std::string &GetRequestBody() { return request_.GetBody(); };
   int GetStatus() { return socket_status_; };
   int GetWriteFd() { return write_fd_; };
   int GetReadFd() { return read_fd_; };
   int GetPort() { return port_; };
   std::string GetHostIp() { return host_ip_; };
   const std::string &GetResponseBody() const { return response_.GetBody(); };
+
+  void SetResponseBody(std::string buf) { response_.SetBody(buf); };
+  void SetStatus(enum SocketStatus status);
+  /* void SetServerPort(int port) {server_port_ = port;};
+  void SetServerHost(std::string server_host_ip) {server_host_ip_ =
+  server_host_ip;}; */
 
   void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
   void AppendResponseHeader(std::string key, std::string val) {
@@ -49,11 +56,7 @@ class Client : public Socket {
     if (!is_continue) response_.EndCGI();
   };
 
-  void SetResponseBody(std::string buf) { response_.SetBody(buf); };
-  void SetStatus(enum SocketStatus status);
-  /* void SetServerPort(int port) {server_port_ = port;};
-  void SetServerHost(std::string server_host_ip) {server_host_ip_ =
-  server_host_ip;}; */
+  void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
 
   std::string MakeAutoIndexContent(std::string dir_path);
 

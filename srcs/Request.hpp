@@ -19,6 +19,7 @@ class Request : public HttpMessage {
   const std::string& GetURI() const;
   enum ParseStatus GetStatus() const;
 
+  void EraseBody(ssize_t length);
   void Clear();
 
   // Fatal exception

@@ -20,6 +20,7 @@ enum SocketStatus {
   READ_FILE,
   READ_CGI,
   WRITE_CGI,
+  READ_WRITE_CGI,
   WRITE_FILE,
   WRITE_CLIENT,
 };

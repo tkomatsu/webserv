@@ -31,8 +31,7 @@ void WebServ::ParseConfig(const std::string &path) {
   config::Parser parser(path);
 
   std::vector<struct config::Config> configs = parser.GetConfigs();
-  if (configs.empty())
-    return;
+  if (configs.empty()) return;
 
   std::vector<struct config::Config>::const_iterator itr;
   for (itr = configs.begin(); itr != configs.end(); ++itr) {
@@ -47,7 +46,7 @@ int WebServ::AcceptSession(socket_iter it) {
   int server_fd = it->first;
 
   if (FD_ISSET(server_fd, &rfd_set_)) {
-    Server* server = dynamic_cast<Server *>(it->second);
+    Server *server = dynamic_cast<Server *>(it->second);
     Client *client = new Client(server->GetConfig());
 
     int client_fd = client->SetSocket(server_fd);
@@ -168,12 +167,18 @@ int WebServ::WriteCGI(socket_iter it) {
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = 1;
 
-  // if method == POST
-  write(client->GetWriteFd(), client->GetResponseBody().c_str(),
-        client->GetResponseBody().size());
+  if (client->GetRequest().GetMethod() == POST)
+    ret = write(client->GetWriteFd(), client->GetResponseBody().c_str(),
+                client->GetResponseBody().size());
 
-  close(client->GetWriteFd());
-  client->SetStatus(READ_CGI);
+  if (ret == -1) throw std::runtime_error("write error\n");
+
+  client->EraseRequestBody(ret);
+
+  if (client->GetRequestBody().empty()) {
+    close(client->GetWriteFd());
+    client->SetStatus(READ_CGI);
+  }
 
   return ret;
 }
@@ -252,6 +257,13 @@ int WebServ::HasUsableIO() {
             FD_SET(client->GetWriteFd(), &wfd_set_);
             max_fd_ = std::max(max_fd_, client->GetWriteFd());
             break;
+
+          case READ_WRITE_CGI:
+            FD_SET(client->GetReadFd(), &rfd_set_);
+            FD_SET(client->GetWriteFd(), &wfd_set_);
+            max_fd_ = std::max(
+                max_fd_, std::max(client->GetWriteFd(), client->GetReadFd()));
+            break;
         }
       }
     }
@@ -263,57 +275,51 @@ int WebServ::HasUsableIO() {
 }
 
 int WebServ::ExecClientEvent(socket_iter it) {
-  int hit_flag = 0;
+  int hit = 0;
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
 
-  switch (client->GetStatus()) {
-    case READ_CLIENT:
-      if (FD_ISSET(client_fd, &rfd_set_)) {
-        ReadClient(it);
-        hit_flag = 1;
-      }
-      break;
-
-    case READ_FILE:
-      if (FD_ISSET(client->GetReadFd(), &rfd_set_)) {
-        ReadFile(it);
-        hit_flag = 1;
-      }
-      break;
-
-    case WRITE_FILE:
-      if (FD_ISSET(client->GetWriteFd(), &wfd_set_)) {
-        WriteFile(it);
-        hit_flag = 1;
-      }
-      break;
-
-    case WRITE_CGI:
-      if (FD_ISSET(client->GetWriteFd(), &wfd_set_)) {
-        WriteCGI(it);
-        hit_flag = 1;
-      }
-      break;
-
-    case READ_CGI:
-      if (FD_ISSET(client->GetReadFd(), &rfd_set_)) {
-        ReadCGI(it);
-        hit_flag = 1;
-      }
-      break;
-
-    case WRITE_CLIENT:
-      if (FD_ISSET(client_fd, &wfd_set_)) {
-        WriteClient(it);
-        hit_flag = 1;
-      }
-      break;
+  if (client->GetStatus() == READ_CLIENT && FD_ISSET(client_fd, &rfd_set_)) {
+    ReadClient(it);
+    ++hit;
   }
-  return hit_flag;
+
+  if (client->GetStatus() == READ_FILE &&
+      FD_ISSET(client->GetReadFd(), &rfd_set_)) {
+    ReadFile(it);
+    ++hit;
+  }
+
+  if (client->GetStatus() == WRITE_FILE &&
+      FD_ISSET(client->GetWriteFd(), &wfd_set_)) {
+    WriteFile(it);
+    ++hit;
+  }
+
+  if ((client->GetStatus() == WRITE_CGI ||
+       client->GetStatus() == READ_WRITE_CGI) &&
+      FD_ISSET(client->GetWriteFd(), &wfd_set_)) {
+    WriteCGI(it);
+    ++hit;
+  }
+
+  if ((client->GetStatus() == READ_CGI ||
+       client->GetStatus() == READ_WRITE_CGI) &&
+      FD_ISSET(client->GetReadFd(), &rfd_set_)) {
+    ReadCGI(it);
+    ++hit;
+  }
+
+  if (client->GetStatus() == WRITE_CLIENT && FD_ISSET(client_fd, &wfd_set_)) {
+    WriteClient(it);
+    ++hit;
+  }
+
+  return hit;
 }
 
 void WebServ::Activate(void) {
+  int hit = 0;
   while (true) {
     int n = HasUsableIO();
 
@@ -322,9 +328,9 @@ void WebServ::Activate(void) {
            n && it != sockets_.end(); ++it) {
         try {
           if (dynamic_cast<Server *>(it->second)) {
-            if (AcceptSession(it) == 1) --n;
+            if (AcceptSession(it) == 1) n -= 1;
           } else {
-            if (ExecClientEvent(it) == 1) --n;
+            if ((hit = ExecClientEvent(it)) > 0) n -= hit;
           }
         } catch (const std::exception &e) {
           // resposne_.Clear()
