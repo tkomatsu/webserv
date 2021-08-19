@@ -121,6 +121,7 @@ enum SocketStatus Client::GetNextOfReadClient() {
       //       break;
       // }
       // throw 404
+      break;
 
     case POST:
       // if (config.GetAllowedMethods(request_.GetURI()).find(POST) == false)
@@ -131,7 +132,7 @@ enum SocketStatus Client::GetNextOfReadClient() {
       //     request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
       // path = alias + (request_uri[0] - location)
       // if path's extension in config.GetExtensions():
-      //   ret = READ_WRITE_CGI;
+      ret = READ_WRITE_CGI;
       //   break;
 
       // (upload)
@@ -141,17 +142,16 @@ enum SocketStatus Client::GetNextOfReadClient() {
       //      break;
 
       //  throw 405
-
+      break;
     case DELETE:
       // if (config.GetAllowedMethods(request_.GetURI()).find(DELETE) == false)
       //   throw 405
 
       // remove(filepath);
       // ret = WRITE_CLIENT;
-
+      break;
     case INVALID:
       // throw 405
-    default:
       break;
   }
 
