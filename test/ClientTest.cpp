@@ -31,7 +31,7 @@ TEST_F(ClientTest, SetSocket) {
   try {
     int res = client.SetSocket(tmp_fd);
   } catch (std::runtime_error const& err) {
-    EXPECT_EQ(err.what(), std::string("accept error\n"));
+    EXPECT_EQ(err.what(), std::string("500"));
   }
 }
 

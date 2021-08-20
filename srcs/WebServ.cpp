@@ -50,8 +50,6 @@ int WebServ::AcceptSession(socket_iter it) {
     Client *client = new Client(server->GetConfig());
 
     int client_fd = client->SetSocket(server_fd);
-    /* client->SetServerPort(server->GetPort());
-    client->SetServerHost(server->GetHost()); */
 
     if (client_fd > max_fd_) max_fd_ = client_fd;
     sockets_[client_fd] = client;
@@ -67,19 +65,20 @@ int WebServ::ReadClient(socket_iter it) {
 
   int ret = client->recv(client_fd);
 
+  ret = 0;
+
   switch (ret) {
     case -1:  // recv error
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
-      throw std::runtime_error("recv error\n");
+      throw Exception500("500");
       break;
 
     case 0:  // closed by client
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
-      throw std::runtime_error("closed by client\n");
       break;
 
     default:
@@ -109,7 +108,7 @@ int WebServ::ReadFile(socket_iter it) {
       close(client_fd);
       delete it->second;
       sockets_.erase(it);
-      throw std::runtime_error("read error\n");
+      throw Exception500("500");
       break;
 
     case 0:  // read complete
@@ -130,7 +129,9 @@ int WebServ::WriteFile(socket_iter it) {
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = 1;
 
-  write(client->GetWriteFd(), "<p>This is post.</p>", 20);
+  ret = write(client->GetWriteFd(), "<p>This is post.</p>", 20);
+
+  if (ret == -1) throw Exception500("500");
 
   close(client->GetWriteFd());
   client->SetStatus(WRITE_CLIENT);
@@ -152,7 +153,7 @@ int WebServ::ReadCGI(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    throw std::runtime_error("read error\n");
+    throw Exception500("500");
   }
   client->AppendResponseRawData(buf, ret);
   if (ret == 0) {
@@ -171,7 +172,7 @@ int WebServ::WriteCGI(socket_iter it) {
     ret = write(client->GetWriteFd(), client->GetResponseBody().c_str(),
                 client->GetResponseBody().size());
 
-  if (ret == -1) throw std::runtime_error("write error\n");
+  if (ret == -1) throw Exception500("500");
 
   client->EraseRequestBody(ret);
 
@@ -197,7 +198,7 @@ int WebServ::WriteClient(socket_iter it) {
   if (ret == -1) {
     close(client_fd);
     sockets_.erase(it);
-    throw std::runtime_error("send error\n");
+    throw Exception500("500");
   }
   // TODO: can we send all data by one send(2)?
   // 次のrequest_を待つ
@@ -269,8 +270,6 @@ int WebServ::HasUsableIO() {
     }
 
     n = select(max_fd_ + 1, &rfd_set_, &wfd_set_, NULL, &timeout_);
-    if (n == -1)
-      std::cout << max_fd_ << std::endl;
   }
 
   return n;
@@ -336,6 +335,7 @@ void WebServ::Activate(void) {
           }
         } catch (const std::exception &e) {
           // resposne_.Clear()
+          std::cout << e.what() << std::endl;
           // if e == 404
           //    create 404 Response
           // else if e == 405
@@ -348,7 +348,7 @@ void WebServ::Activate(void) {
         }
       }
     } else {
-      throw std::runtime_error("select error\n");
+      throw StartingTimeException("SELECT ERROR\n");
     }
   }
 }

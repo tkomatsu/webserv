@@ -1,10 +1,11 @@
 #include "Server.hpp"
+#include "WebServ.hpp"
 
 int Server::SetSocket(void) {
   long fd;
 
   if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    throw std::runtime_error("socket error\n");
+    throw WebServ::StartingTimeException("SOCKET ERROR\n");
 
   memset((char *)&addr_, 0, sizeof(addr_));
   addr_.sin_family = AF_INET;
@@ -12,25 +13,20 @@ int Server::SetSocket(void) {
   addr_.sin_port = htons(port_);
 
   if (fcntl(fd, F_SETFL, O_NONBLOCK) != 0)
-    throw std::runtime_error("fcntl error\n");
+    throw WebServ::StartingTimeException("FCNTL ERROR\n");
 
   int on = 1;
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1)
+    throw WebServ::StartingTimeException("SETSOCKOPT ERROR\n");
 
   if (bind(fd, (struct sockaddr *)&addr_, sizeof(addr_)) == -1)
-    throw std::runtime_error("bind error\n");
+    throw WebServ::StartingTimeException("BIND ERROR\n");
 
-  if (listen(fd, 512) == -1) throw std::runtime_error("listen error\n");
+  if (listen(fd, 512) == -1) throw WebServ::StartingTimeException("LISTEN ERROR\n");
 
   return fd;
 }
 
-/* <<<<<<< HEAD
-int Server::GetPort(void) {return this->port_;}
-
-std::string Server::GetHost(void) {return this->host_ip_;}
-
-======= */
 const config::Config Server::GetConfig() {
   return config_;
 }

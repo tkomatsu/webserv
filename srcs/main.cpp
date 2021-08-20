@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     WebServ webserv(argc == 2 ? argv[1] : WebServ::default_path_);
 
     webserv.Activate();
-  } catch (std::exception &e) {
+  } catch (WebServ::StartingTimeException &e) {
     std::cerr << e.what() << std::endl;
   }
 

@@ -21,6 +21,16 @@ class WebServ {
   static const std::string default_path_;
   static const int buf_max_;
 
+  class StartingTimeException : public std::runtime_error {
+   public:
+    StartingTimeException(const std::string& what) : std::runtime_error(what) {}
+  };
+
+  class Exception500 : public std::runtime_error {
+   public:
+    Exception500(const std::string& what) : std::runtime_error(what) {}
+  };
+
  private:
   int HasUsableIO();
 
