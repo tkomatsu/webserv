@@ -34,7 +34,7 @@ class WebServ {
  private:
   int HasUsableIO();
 
-  int AcceptSession(socket_iter it);
+  int AcceptSession(socket_iter it, Client **client_ptr);
 
   int ReadClient(socket_iter it);
   int ReadFile(socket_iter it);
@@ -43,7 +43,7 @@ class WebServ {
   int WriteFile(socket_iter it);
   int WriteClient(socket_iter it);
 
-  int ExecClientEvent(socket_iter it);
+  int ExecClientEvent(socket_iter it, Client **client_ptr);
 
   void ParseConfig(const std::string& path);
 

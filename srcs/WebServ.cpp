@@ -41,13 +41,14 @@ void WebServ::ParseConfig(const std::string &path) {
   }
 }
 
-int WebServ::AcceptSession(socket_iter it) {
+int WebServ::AcceptSession(socket_iter it, Client **client_ptr) {
   int accepted = -1;
   int server_fd = it->first;
 
   if (FD_ISSET(server_fd, &rfd_set_)) {
     Server *server = dynamic_cast<Server *>(it->second);
     Client *client = new Client(server->GetConfig());
+    *client_ptr = client;
 
     int client_fd = client->SetSocket(server_fd);
 
@@ -65,13 +66,12 @@ int WebServ::ReadClient(socket_iter it) {
 
   int ret = client->recv(client_fd);
 
-  ret = 0;
-
+  ret = -1;
   switch (ret) {
     case -1:  // recv error
-      close(client_fd);
+      /* close(client_fd);
       delete it->second;
-      sockets_.erase(it);
+      sockets_.erase(it); */
       throw Exception500("500");
       break;
 
@@ -275,10 +275,11 @@ int WebServ::HasUsableIO() {
   return n;
 }
 
-int WebServ::ExecClientEvent(socket_iter it) {
+int WebServ::ExecClientEvent(socket_iter it, Client **client_ptr) {
   int hit = 0;
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
+  *client_ptr = client;
 
   if (client->GetStatus() == READ_CLIENT && FD_ISSET(client_fd, &rfd_set_)) {
     ReadClient(it);
@@ -327,23 +328,26 @@ void WebServ::Activate(void) {
     if (n > 0) {
       for (std::map<int, Socket *>::iterator it = sockets_.begin();
            n && it != sockets_.end(); ++it) {
+        Client *client_ptr = NULL;
+
         try {
           if (dynamic_cast<Server *>(it->second)) {
-            if (AcceptSession(it) == 1) n -= 1;
+            if (AcceptSession(it, &client_ptr) == 1) n -= 1;
           } else {
-            if ((hit = ExecClientEvent(it)) > 0) n -= hit;
+            if ((hit = ExecClientEvent(it, &client_ptr)) > 0) n -= hit;
           }
         } catch (const std::exception &e) {
-          // resposne_.Clear()
+          client_ptr->ClearResponse();
+          client_ptr->SetStatus(WRITE_CLIENT);
           std::cout << e.what() << std::endl;
+
           // if e == 404
           //    create 404 Response
           // else if e == 405
           //    create 405 Response
-          // else if e == 500
-          //    create 500 Response
-
-          std::cout << e.what() << std::endl;
+          // if (std::strcmp(e.what(), "500") == 0)
+            //    create 500 Response
+            client_ptr->CreateErrorResponse(e.what());
           break;
         }
       }

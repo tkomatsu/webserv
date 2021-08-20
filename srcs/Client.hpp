@@ -40,25 +40,17 @@ class Client : public Socket {
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
   void SetStatus(enum SocketStatus status);
-  /* void SetServerPort(int port) {server_port_ = port;};
-  void SetServerHost(std::string server_host_ip) {server_host_ip_ =
-  server_host_ip;}; */
 
-  void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
-  void AppendResponseHeader(std::string key, std::string val) {
-    response_.AppendHeader(key, val);
-  };
-  void AppendResponseHeader(std::pair<std::string, std::string> header) {
-    response_.AppendHeader(header);
-  };
-  void AppendResponseRawData(std::string data, bool is_continue) {
-    response_.AppendRawData(data);
-    if (!is_continue) response_.EndCGI();
-  };
+  void AppendResponseBody(std::string buf);
+  void AppendResponseHeader(std::string key, std::string val);
+  void AppendResponseHeader(std::pair<std::string, std::string> header);
+  void AppendResponseRawData(std::string data, bool is_continue);
 
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
+  void ClearResponse(void) { response_.Clear(); }
 
   std::string MakeAutoIndexContent(std::string dir_path);
+  void CreateErrorResponse(const char * status_code);
 
   static const int buf_max_;
 
@@ -73,11 +65,7 @@ class Client : public Socket {
 
   int write_fd_;
   int read_fd_;
-  /* <<<<<<< HEAD
 
-    int server_port_;
-    std::string server_host_ip_;
-  ======= */
   const config::Config config_;
 };
 
