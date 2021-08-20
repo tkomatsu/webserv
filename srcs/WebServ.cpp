@@ -269,6 +269,8 @@ int WebServ::HasUsableIO() {
     }
 
     n = select(max_fd_ + 1, &rfd_set_, &wfd_set_, NULL, &timeout_);
+    if (n == -1)
+      std::cout << max_fd_ << std::endl;
   }
 
   return n;

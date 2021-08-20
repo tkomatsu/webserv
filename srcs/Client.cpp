@@ -98,9 +98,9 @@ enum SocketStatus Client::GetNextOfReadClient() {
       //     "mcgee=mine"]
       // path = alias + (request_uri[0] - location)
       // if path's extension in config.GetExtensions():
-      //   close(write_fd);
-      //   ret = READ_CGI;
-      //   break;
+      std::cout << "come here" << std::endl;
+      ret = WRITE_CGI;
+      break;
 
       // (SIMPLE GET)
       // struct stat buffer;
@@ -190,7 +190,7 @@ void Client::Prepare(void) {
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Location", "/post.html");
-  } else if (ret == WRITE_CGI) {
+  } else if (ret == WRITE_CGI || ret == READ_WRITE_CGI) {
     GenProcessForCGI(this->port_, this->host_ip_, config_.port, config_.host);
 
     response_.SetStatusCode(200);
