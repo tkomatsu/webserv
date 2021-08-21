@@ -68,6 +68,27 @@ void PrintKeyValue(const std::string& key, const T& value, bool indent = false) 
   std::cerr << std::setw(22) << std::left << key << ": " << value << std::endl;
 }
 
+bool IsInteger(const std::string& s) {
+  if (s.empty()) return false;
+  for (std::string::const_iterator itr = s.begin(); itr != s.end(); ++itr) {
+    if (std::isdigit(*itr) == 0) return false;
+  }
+  return true;
+}
+
+bool IsExtension(const std::string& s) {
+  if (s.empty())
+    return false;
+  std::string::const_iterator itr = s.begin();
+  if (*itr != '.')
+    return false;
+  ++itr;
+  for (; itr != s.end(); ++itr)
+    if (!std::isalpha(*itr))
+      return false;
+  return true;
+}
+
 }  // namespace
 
 namespace config {
@@ -263,8 +284,9 @@ void Parser::AddErrorPage(enum Context context, const std::string& name,
   std::string uri = params.back();
   std::vector<std::string>::const_iterator itr = params.begin();
   do {
-    // TODO: check string
-    int code = std::stoi(*itr);
+    if (!IsInteger(*itr))
+      throw ParameterError(BuildError(name, "string is not a number"));
+    int code = std::atoi(itr->c_str());
     if (code < 300 || code > 599)
       throw std::domain_error("error_page code error");
     if (context == MAIN)
@@ -282,8 +304,11 @@ void Parser::AddClientMaxBodySize(enum Context context, const std::string& name,
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
+  if (!IsInteger(params.front()))
+    throw ParameterError(BuildError(name, "string is not a number"));
   int size = std::atoi(params.front().c_str());
-  // TODO: validate
+  if (size < 0)
+    throw ParameterError(BuildError(name, "cannot be negative"));
   if (context == MAIN)
     main_.client_max_body_size = size;
   else if (context == SERVER)
@@ -315,7 +340,8 @@ void Parser::AddIndex(enum Context context, const std::string& name,
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
   for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
-    // TODO: check string, empty, append if exist
+    if (itr->empty())
+      throw ParameterError(BuildError(name, "cannot be empty"));
     if (context == MAIN)
       main_.indexes.insert(*itr);
     else if (context == SERVER)
@@ -343,7 +369,6 @@ void Parser::AddServerName(enum Context context, const std::string& name,
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  // TODO: check string
   servers_.back().server_name = params.front();
 }
 
@@ -354,7 +379,9 @@ void Parser::AddRedirect(enum Context context, const std::string& name,
   if (params.size() != 2)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  int code = std::stoi(params.front());
+  if (!IsInteger(params.front()))
+    throw ParameterError(BuildError(name, "string is not a number"));
+  int code = std::atoi(params.front().c_str());
   if (code < 300 || code > 599)
     throw std::domain_error("error_page code error");
   std::string uri = params.back();
@@ -391,7 +418,6 @@ void Parser::AddAlias(enum Context context, const std::string& name,
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  // TODO: check string
   servers_.back().locations.back().alias = params.front();
 }
 
@@ -429,7 +455,8 @@ void Parser::AddExtensions(enum Context context, const std::string& name,
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
   for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
-    // TODO: check string, empty, append if exist
+    if (!IsExtension(*itr))
+      throw ParameterError(BuildError(name, "is not valid"));
     if (context == SERVER)
       servers_.back().extensions.insert(*itr);
     else if (context == LOCATION)
@@ -501,12 +528,11 @@ void LineBuilder::Extract(LineComponent& line) {
   std::string::const_iterator curr = current_.begin();
   std::string::const_iterator end = current_.end();
 
-  if (line.name.empty()) // bad
+  if (line.name.empty())
     curr = ExtractName(line.name, curr, end);
   curr = ExtractParams(line.params, curr, end);
   curr = ExtractType(line.type, curr, end);
 
-  // ExtractComment
   // [ \t]*(#(.*))?
   curr = skip_leading_whitespace(curr, end);
   if (curr == end || *curr == '#') {
@@ -517,7 +543,6 @@ void LineBuilder::Extract(LineComponent& line) {
 }
 
 // [ \t]*([A-Za-z_][A-Za-z0-9_]*)?
-// TODO: throw if name is not empty?
 std::string::const_iterator LineBuilder::ExtractName(
     std::string& name, std::string::const_iterator begin,
     std::string::const_iterator end) {
