@@ -17,12 +17,13 @@ typedef struct fileinfo {
 
 class Client : public Socket {
  public:
-  Client(const struct config::Config& config);
+  Client(const struct config::Config config);
 
   int SetSocket(int _fd);
   void Prepare(void);
   bool ParseRequest(void);
-  void GenProcessForCGI(void);
+  void GenProcessForCGI(int client_port, std::string client_host,
+                        int server_port, std::string server_host);
 
   int recv(int client_fd);
   int send(int client_fd);
@@ -37,20 +38,18 @@ class Client : public Socket {
   int GetPort() { return port_; };
   std::string GetHostIp() { return host_ip_; };
 
-  void AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
-  void AppendResponseHeader(std::string key, std::string val) {
-    response_.AppendHeader(key, val);
-  };
-  void AppendResponseHeader(std::pair<std::string, std::string> header) {
-    response_.AppendHeader(header);
-  };
-  void AppendResponseRawData(std::string data, bool is_continue) {
-    response_.AppendRawData(data);
-    if (!is_continue) response_.EndCGI();
-  };
+  const std::string &GetResponseBody() const { return response_.GetBody(); };
+  const std::string &GetRequestBody() { return request_.GetBody(); };
+  
+  void AppendResponseBody(std::string buf);
+  void AppendResponseHeader(std::string key, std::string val);
+  void AppendResponseHeader(std::pair<std::string, std::string> header);
+  void AppendResponseRawData(std::string data, bool is_continue);
+
+  void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
+  void ClearResponse(void) { response_.Clear(); }
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
-
   void SetStatus(enum SocketStatus status);
 
   std::string MakeAutoIndexContent(std::string dir_path);
@@ -64,7 +63,7 @@ class Client : public Socket {
 
   int write_fd_;
   int read_fd_;
-  const config::Config& config_;
+  const config::Config config_;
 };
 
 #endif /* CLIENT_HPP */

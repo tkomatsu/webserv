@@ -63,6 +63,7 @@ print "PATH_INFO = [ " . html($ENV{'PATH_INFO'}) . " ]\n";
 print "PATH_TRANSLATED = [ " . html($ENV{'PATH_TRANSLATED'}) . " ]\n";
 print "QUERY_STRING = [ " . html($ENV{'QUERY_STRING'}) . " ]\n";
 print "REMOTE_ADDR = [ " . html($ENV{'REMOTE_ADDR'}) . " ]\n";
+print "REMOTE_PORT = [ " . html($ENV{'REMOTE_PORT'}) . " ]\n";
 print "REMOTE_HOST = [ " . html($ENV{'REMOTE_HOST'}) . " ]\n";
 print "REMOTE_IDENT = [ " . html($ENV{'REMOTE_IDENT'}) . " ]\n";
 print "REMOTE_USER = [ " . html($ENV{'REMOTE_USER'}) . " ]\n";

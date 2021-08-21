@@ -7,7 +7,7 @@
 
 class CGI {
  public:
-  CGI(const Request &request);
+  CGI(const Request &request, int client_port, std::string client_host, int server_port, std::string server_host);
   ~CGI();
 
   static const int num_envs_;

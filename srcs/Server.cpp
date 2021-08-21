@@ -15,7 +15,8 @@ int Server::SetSocket() {
     throw std::runtime_error("fcntl error\n");
 
   int on = 1;
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1)
+    throw std::runtime_error("setsockopt error\n");
 
   if (bind(fd, (struct sockaddr *)&addr_, sizeof(addr_)) == -1)
     throw std::runtime_error("bind error\n");
