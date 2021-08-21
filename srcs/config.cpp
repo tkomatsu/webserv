@@ -77,15 +77,12 @@ bool IsInteger(const std::string& s) {
 }
 
 bool IsExtension(const std::string& s) {
-  if (s.empty())
-    return false;
+  if (s.empty()) return false;
   std::string::const_iterator itr = s.begin();
-  if (*itr != '.')
-    return false;
+  if (*itr != '.') return false;
   ++itr;
   for (; itr != s.end(); ++itr)
-    if (!std::isalpha(*itr))
-      return false;
+    if (!std::isalpha(*itr)) return false;
   return true;
 }
 
