@@ -3,6 +3,7 @@
 
 #include <sys/stat.h>
 
+#include <stdexcept>
 #include <vector>
 
 #include "ISocket.hpp"
@@ -17,7 +18,7 @@ typedef struct fileinfo {
 
 class Client : public Socket {
  public:
-  Client(const struct config::Config& config);
+  Client(const struct config::Config &config);
 
   int SetSocket(int _fd);
   void Prepare(void);
@@ -64,7 +65,14 @@ class Client : public Socket {
 
   int write_fd_;
   int read_fd_;
-  const config::Config& config_;
+
+  const config::Config &config_;
+
+ public:
+  class HttpResponseException : public std::runtime_error {
+   public:
+    HttpResponseException(const std::string &what) : std::runtime_error(what) {}
+  };
 };
 
 #endif /* CLIENT_HPP */
