@@ -142,7 +142,7 @@ int Client::recv(int client_fd) {
 
   request_.AppendRawData(buf);
   if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
-    response_.ErrorResponse(400);
+    response_.ErrorResponse(405);
     SetStatus(WRITE_CLIENT);
   }
 
