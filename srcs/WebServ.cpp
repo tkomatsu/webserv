@@ -31,13 +31,12 @@ void WebServ::ParseConfig(const std::string &path) {
   config::Parser parser(path);
 
   std::vector<struct config::Config> configs = parser.GetConfigs();
-  if (configs.empty())
-    return;
+  if (configs.empty()) return;
 
   std::vector<struct config::Config>::const_iterator itr;
   for (itr = configs.begin(); itr != configs.end(); ++itr) {
     Server *server = new Server(*itr);
-    long fd = server->SetSocket(); // 42 is meaningless
+    int fd = server->SetSocket();
     sockets_[fd] = server;
   }
 }
@@ -47,7 +46,7 @@ int WebServ::AcceptSession(socket_iter it) {
   int server_fd = it->first;
 
   if (FD_ISSET(server_fd, &rfd_set_)) {
-    Server* server = dynamic_cast<Server *>(it->second);
+    Server *server = dynamic_cast<Server *>(it->second);
     Client *client = new Client(server->GetConfig());
 
     int client_fd = client->SetSocket(server_fd);
@@ -113,6 +112,11 @@ int WebServ::ReadFile(socket_iter it) {
 
     case 0:  // read complete
       close(client->GetReadFd());
+
+      // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
+      client->AppendResponseHeader(
+          "Content-Length", ft::ltoa(client->GetResponse().GetBody().length()));
+
       client->SetStatus(WRITE_CLIENT);
       break;
 
@@ -156,6 +160,11 @@ int WebServ::ReadCGI(socket_iter it) {
   client->AppendResponseRawData(buf, ret);
   if (ret == 0) {
     close(client->GetReadFd());
+
+    // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
+    client->AppendResponseHeader(
+        "Content-Length", ft::ltoa(client->GetResponse().GetBody().length()));
+
     client->SetStatus(WRITE_CLIENT);
   }
   return ret;
@@ -178,9 +187,6 @@ int WebServ::WriteClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = -1;
-
-  client->AppendResponseHeader(
-      "Content-Length", ft::ltoa(client->GetResponse().GetBody().length()));
 
   // 完成したレスポンスを送る
   ret = client->send(client_fd);
