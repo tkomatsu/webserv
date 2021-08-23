@@ -111,9 +111,9 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
 void Client::Prepare(void) {
   int ret;
   ret = READ_FILE;
-  ret = WRITE_FILE;
-  ret = WRITE_CLIENT;
-  ret = READ_WRITE_CGI;
+  // ret = WRITE_FILE;
+  // ret = WRITE_CLIENT;
+  // ret = READ_WRITE_CGI;
   SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
