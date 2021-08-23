@@ -46,7 +46,6 @@ class Client : public Socket {
   void AppendResponseRawData(std::string data, bool is_continue);
 
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
-  void EraseResponseBody(ssize_t length) { response_.EraseBody(length); };
   void ClearResponse(void) { response_.Clear(); }
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
