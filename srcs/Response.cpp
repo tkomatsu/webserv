@@ -107,7 +107,7 @@ void Response::Clear() {
   SetStatusCode(200);
   AppendHeader("Content-Type", "");
   AppendHeader("Date", Now());
-  AppendHeader("Server", "webserv");
+  AppendHeader("Server", "webserv/0.4.2");
 }
 
 void Response::SetStatusMessage(const std::string& msg) {
@@ -135,8 +135,6 @@ void Response::ErrorResponse(int status) {
   SetStatusCode(status);
   AppendBody(ErrorHtml(status));
   AppendHeader("Content-Type", "text/html");
-  AppendHeader("Date", Now());
-  AppendHeader("Server", "webserv");
   AppendHeader("Connection", "keep-alive");
   AppendHeader("Content-Length", ft::ltoa(body_.size()));
 }
@@ -146,8 +144,9 @@ std::string Response::ErrorHtml(int status) {
   body += ErrorStatusLine(status);
   body += "</title></head>\n<body>\n<center><h1>";
   body += ErrorStatusLine(status);
-  body +=
-      "</h1></center>\n<hr><center>webserv/0.4.2</center>\n</body>\n</html>\n";
+  body += "</h1></center>\n<hr><center>";
+  body += GetHeader("Server");
+  body += "</center>\n</body>\n</html>\n";
   return body;
 }
 

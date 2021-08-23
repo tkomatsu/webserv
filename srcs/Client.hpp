@@ -60,6 +60,8 @@ class Client : public Socket {
   void SetPipe(int *pipe_write, int *pipe_read);
   void ExecCGI(int *pipe_write, int *pipe_read, char **args, char **envs);
 
+  bool IsValidRequest();
+
   Request request_;
   Response response_;
 

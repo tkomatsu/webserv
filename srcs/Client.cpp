@@ -11,7 +11,7 @@
 
 const int Client::buf_max_ = 8192;
 
-Client::Client(const struct config::Config& config) : config_(config) {
+Client::Client(const struct config::Config &config) : config_(config) {
   socket_status_ = READ_CLIENT;
 }
 
@@ -141,6 +141,10 @@ int Client::recv(int client_fd) {
   if (ret == 0) return ret;   // closed by client
 
   request_.AppendRawData(buf);
+  if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
+    response_.ErrorResponse(400);
+    SetStatus(WRITE_CLIENT);
+  }
 
   return 1;
 }
@@ -198,4 +202,10 @@ void Client::GenProcessForCGI(void) {
   read_fd_ = pipe_read[0];
   fcntl(read_fd_, F_SETFL, O_NONBLOCK);
   close(pipe_read[1]);
+}
+
+// TODO
+bool Client::IsValidRequest(void) {
+  if (request_.GetMethod() != GET) return false;
+  return true;
 }
