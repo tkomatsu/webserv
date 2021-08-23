@@ -22,8 +22,7 @@ class Client : public Socket {
   int SetSocket(int _fd);
   void Prepare(void);
   bool ParseRequest(void);
-  void GenProcessForCGI(int client_port, std::string client_host,
-                        int server_port, std::string server_host);
+  void GenProcessForCGI(void);
 
   int recv(int client_fd);
   int send(int client_fd);
@@ -47,6 +46,7 @@ class Client : public Socket {
   void AppendResponseRawData(std::string data, bool is_continue);
 
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
+  void EraseResponseBody(ssize_t length) { response_.EraseBody(length); };
   void ClearResponse(void) { response_.Clear(); }
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
@@ -60,6 +60,8 @@ class Client : public Socket {
 
   Request request_;
   Response response_;
+
+  size_t sended_; // num of chars sended to client
 
   int write_fd_;
   int read_fd_;

@@ -32,6 +32,7 @@ class Response : public HttpMessage {
 
   void EndCGI();
   std::string Str() const;
+  void EraseBody(ssize_t length);
   void Clear();
 
   class StatusException : public std::domain_error {

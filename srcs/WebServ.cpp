@@ -128,12 +128,20 @@ int WebServ::WriteFile(socket_iter it) {
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret = 1;
 
-  ret = write(client->GetWriteFd(), "<p>This is post.</p>", 20);
+  if (client->GetRequest().GetMethod() == POST) {
+    ret = write(client->GetWriteFd(), client->GetRequestBody().c_str(),
+                std::min((ssize_t)client->GetRequestBody().size(),
+                         (ssize_t)1));
+  }
 
   if (ret == -1) throw std::runtime_error("write error\n");
 
-  close(client->GetWriteFd());
-  client->SetStatus(WRITE_CLIENT);
+  client->EraseRequestBody(ret);
+
+  if (client->GetRequestBody().empty()) {
+    close(client->GetWriteFd());
+    client->SetStatus(WRITE_CLIENT);
+  }
 
   return ret;
 }
@@ -169,7 +177,8 @@ int WebServ::WriteCGI(socket_iter it) {
 
   if (client->GetRequest().GetMethod() == POST) {
     ret = write(client->GetWriteFd(), client->GetRequestBody().c_str(),
-                client->GetRequestBody().size());
+                std::min((ssize_t)client->GetRequestBody().size(),
+                         (ssize_t)WebServ::buf_max_));
   }
 
   if (ret == -1) throw std::runtime_error("write error\n");
@@ -200,10 +209,7 @@ int WebServ::WriteClient(socket_iter it) {
     sockets_.erase(it);
     throw std::runtime_error("send error\n");
   }
-  // TODO: can we send all data by one send(2)?
-  // 次のrequest_を待つ
-  client->SetStatus(READ_CLIENT);
-  ret = 1;
+  if (ret == 1) client->SetStatus(READ_CLIENT);
 
   return ret;
 }
@@ -254,11 +260,6 @@ int WebServ::HasUsableIO() {
             max_fd_ = std::max(max_fd_, client->GetReadFd());
             break;
 
-          case WRITE_CGI:
-            FD_SET(client->GetWriteFd(), &wfd_set_);
-            max_fd_ = std::max(max_fd_, client->GetWriteFd());
-            break;
-
           case READ_WRITE_CGI:
             FD_SET(client->GetReadFd(), &rfd_set_);
             FD_SET(client->GetWriteFd(), &wfd_set_);
@@ -280,6 +281,40 @@ int WebServ::ExecClientEvent(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
 
+  /*　こんな感じにするにはclient_fdかread_fdのやつでわけるか、毎回read_fdとかを-1にしないといけない
+    if (FD_ISSET(client_fd, &rfd_set_) ||
+      FD_ISSET(client->GetReadFd(), &rfd_set_)) {
+    if (client->GetStatus() == READ_CLIENT) {
+      ReadClient(it);
+      ++hit;
+    }
+    if (client->GetStatus() == READ_FILE) {
+      ReadFile(it);
+      ++hit;
+    }
+    if ((client->GetStatus() == READ_CGI ||
+         client->GetStatus() == READ_WRITE_CGI)) {
+      ReadCGI(it);
+      ++hit;
+    }
+  }
+
+  if (FD_ISSET(client_fd, &wfd_set_) ||
+      FD_ISSET(client->GetWriteFd(), &wfd_set_)) {
+    if (client->GetStatus() == WRITE_FILE) {
+      WriteFile(it);
+      ++hit;
+    }
+    if (client->GetStatus() == READ_WRITE_CGI) {
+      WriteCGI(it);
+      ++hit;
+    }
+    if (client->GetStatus() == WRITE_CLIENT) {
+      WriteClient(it);
+      ++hit;
+    }
+  }*/
+
   if (client->GetStatus() == READ_CLIENT && FD_ISSET(client_fd, &rfd_set_)) {
     ReadClient(it);
     ++hit;
@@ -297,8 +332,7 @@ int WebServ::ExecClientEvent(socket_iter it) {
     ++hit;
   }
 
-  if ((client->GetStatus() == WRITE_CGI ||
-       client->GetStatus() == READ_WRITE_CGI) &&
+  if (client->GetStatus() == READ_WRITE_CGI &&
       FD_ISSET(client->GetWriteFd(), &wfd_set_)) {
     WriteCGI(it);
     ++hit;

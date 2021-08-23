@@ -1,9 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "CGI.hpp"
-
-/* #include "gmock.h"
-using ::testing::MatchesRegex; */
+#include "config.hpp"
 
 class CGITest : public testing::Test {
  protected:
@@ -42,6 +40,7 @@ class CGITest : public testing::Test {
         "POST / HTTP/1.1\r\nContent-Type: text/plain\r\nTransfer-Encoding: "
         "chunked\r\n\r\n7\r\nMozilla\r\n9\r\nDeveloper\r\n7\r\nNetwork\r\n0\r\n"
         "\r\n";
+    // config.port = 4200;
   }
   virtual void TearDown() {}
 
@@ -61,7 +60,12 @@ class CGITest : public testing::Test {
 TEST_F(CGITest, Args) {
   Request req;
   req.AppendRawData(requests["get"]);
-  CGI cgi(req, 42, "a", 42, "a");
+  config::Main main_context;
+  config::Server server_context(main_context);
+  server_context.port = 4200;
+  server_context.host = "127.0.0.1";
+  config::Config config(server_context);
+  CGI cgi(req, 42, "a", config);
 
   ExpectArgs(cgi);
 }
@@ -69,7 +73,12 @@ TEST_F(CGITest, Args) {
 TEST_F(CGITest, Envs) {
   Request req;
   req.AppendRawData(requests["get"]);
-  CGI cgi(req, 42, "a", 42, "a");
+  config::Main main_context;
+  config::Server server_context(main_context);
+  server_context.port = 4200;
+  server_context.host = "127.0.0.1";
+  config::Config config(server_context);
+  CGI cgi(req, 42, "a", config);
 
   ExpectArgs(cgi);
 }

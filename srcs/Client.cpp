@@ -13,6 +13,7 @@ const int Client::buf_max_ = 8192;
 
 Client::Client(const struct config::Config config) : config_(config) {
   socket_status_ = READ_CLIENT;
+  sended_ = 0;
 }
 
 int Client::SetSocket(int _fd) {
@@ -31,10 +32,19 @@ int Client::SetSocket(int _fd) {
 void Client::AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
 
 void Client::AppendResponseHeader(std::string key, std::string val) {
-  response_.AppendHeader(key, val);
+  try {
+    response_.GetHeader(key);
+  } catch (const std::exception &) {
+    response_.AppendHeader(key, val);
+  }
 };
 
 void Client::AppendResponseHeader(std::pair<std::string, std::string> header) {
+  try {
+    response_.GetHeader(header.first);
+  } catch (const std::exception &) {
+    response_.AppendHeader(header);
+  }
   response_.AppendHeader(header);
 };
 
@@ -96,24 +106,25 @@ std::string Client::MakeAutoIndexContent(std::string dir_path) {
   return tmp;
 }
 
-// TODO: make good response_ content
+// ここの各準備処理を先々の関数に分けるのはやりづらい…
+// 先々の関数は複数回ループが回るので、一回でいい操作(open)とかはここでやりたい
 void Client::Prepare(void) {
-  // parse
-
   int ret;
-  // ret = READ_FILE;
-  // ret = WRITE_FILE;
-  ret = WRITE_CGI;
-  // ret = WRITE_CLIENT;
+  ret = READ_FILE;
+  ret = WRITE_FILE;
+  ret = WRITE_CLIENT;
+  ret = READ_WRITE_CGI;
   SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
 
   if (ret == READ_FILE) {
     read_fd_ = open("./docs/html/index.html", O_RDONLY);
-    fcntl(read_fd_, F_SETFL, O_NONBLOCK);
-
+    if (read_fd_ == -1) throw std::runtime_error("open error\n");
+    if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
+      throw std::runtime_error("fcntl error\n");
     response_.AppendHeader("Content-Type", "text/html");
+
   } else if (ret == WRITE_FILE) {
     write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644);
     fcntl(write_fd_, F_SETFL, O_NONBLOCK);
@@ -121,8 +132,8 @@ void Client::Prepare(void) {
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Location", "/post.html");
-  } else if (ret == WRITE_CGI || ret == READ_WRITE_CGI) {
-    GenProcessForCGI(this->port_, this->host_ip_, config_.port, config_.host);
+  } else if (ret == READ_WRITE_CGI) {
+    GenProcessForCGI();
 
     response_.SetStatusCode(200);
     response_.AppendHeader("Content-Type", "text/html");
@@ -132,6 +143,9 @@ void Client::Prepare(void) {
       response_.AppendHeader("Content-Type", "text/html");
 
       std::string tmp = MakeAutoIndexContent("./docs/");
+      if (tmp.empty()) {
+        // 404
+      }
 
       response_.SetBody(tmp);
     }
@@ -155,13 +169,22 @@ int Client::recv(int client_fd) {
 int Client::send(int client_fd) {
   int ret;
 
-  ret = ::send(client_fd, response_.Str().c_str(), response_.Str().size(), 0);
-  if (ret > 0) {
+  ret = ::send(
+      client_fd, &((response_.Str().c_str())[sended_]),
+      std::min((size_t)Client::buf_max_, response_.Str().size() - sended_), 0);
+  if (ret == -1) return ret;  // send error
+
+  sended_ += ret;
+
+  if (sended_ >= response_.Str().size()) {
     std::cout << "send to   " + host_ip_ << ":" << port_ << std::endl;
+    response_.Clear();
+    request_.Clear();
+    sended_ = 0;
+    return 1;  // all sended
   }
-  response_.Clear();
-  request_.Clear();
-  return ret;
+
+  return 2;  // continue send
 }
 
 void Client::SetPipe(int *pipe_write, int *pipe_read) {
@@ -185,10 +208,8 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, char **args,
   exit(EXIT_FAILURE);
 }
 
-void Client::GenProcessForCGI(int client_port, std::string client_host,
-                              int server_port, std::string server_host) {
-  CGI cgi_vals =
-      CGI(request_, client_port, client_host, server_port, server_host);
+void Client::GenProcessForCGI() {
+  CGI cgi_vals = CGI(request_, this->port_, this->host_ip_, config_);
 
   int pipe_write[2];
   int pipe_read[2];
