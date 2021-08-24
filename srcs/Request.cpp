@@ -21,6 +21,10 @@ const std::string& Request::GetURI() const {
 
 enum Request::ParseStatus Request::GetStatus() const { return status_; }
 
+void Request::EraseBody(ssize_t length) {
+  body_.erase(body_.begin(), body_.begin() + length);
+}
+
 void Request::Clear() {
   HttpMessage::Clear();
   method_ = INVALID;
