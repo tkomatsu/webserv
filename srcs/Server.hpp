@@ -9,8 +9,8 @@
 
 class Server : public Socket {
  public:
-  Server(config::Config config)
-      : Socket(config.port, config.host), config_(config){};
+  Server(const config::Config& config)
+      : Socket(config.GetPort(), config.GetHost()), config_(config){};
 
   int SetSocket();
   const config::Config GetConfig();

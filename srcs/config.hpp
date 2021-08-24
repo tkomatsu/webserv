@@ -54,7 +54,7 @@ struct Server {
 };
 
 struct Location {
-  Location(const std::string& path, const struct Server& server);
+  Location(const struct Server& server);
 
   bool autoindex;
   int client_max_body_size;
@@ -69,8 +69,18 @@ struct Location {
   std::pair<int, std::string> redirect;
 };
 
-struct Config : Server {
-  Config(const struct Server& server) : Server(server) {};
+class Config {
+ public:
+  Config(const struct Server& server);
+  ~Config();
+  Config(const Config& other);
+  Config& operator=(const Config& other);
+
+  int GetPort() const;
+  std::string GetHost() const;
+
+ private:
+  struct Server server_;
 };
 
 struct LineComponent;
@@ -89,7 +99,7 @@ class Parser {
   explicit Parser(const std::string& filename);
   ~Parser();
 
-  std::vector<struct Config> GetConfigs();
+  std::vector<Config> GetConfigs();
   void Print() const;
 
  private:
