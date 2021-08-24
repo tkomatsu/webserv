@@ -99,6 +99,10 @@ std::string Response::Str() const {
   return s.str();
 }
 
+void Response::EraseBody(ssize_t length) {
+  body_.erase(body_.begin(), body_.begin() + length);
+}
+
 void Response::Clear() {
   HttpMessage::Clear();
   http_version_ = "1.1";

@@ -19,14 +19,14 @@ enum SocketStatus {
   READ_CLIENT,
   READ_FILE,
   READ_CGI,
-  WRITE_CGI,
+  READ_WRITE_CGI,
   WRITE_FILE,
   WRITE_CLIENT,
 };
 
 namespace ft {
 
-char** split(std::string s, char c);
+char **split(std::string s, char c);
 std::string inet_ntoa(struct in_addr in);
 std::string ltoa(long num);
 std::string trim(std::string s, std::string delim = " \t\v");

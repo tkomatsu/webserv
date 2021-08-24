@@ -33,7 +33,14 @@ class Case():
 			self.r = requests.delete(uri, params=params, headers=headers)
 
 		self.r.encoding = self.r.apparent_encoding
-		print("\n" + str(index) + ". " + method, uri, params, headers, data)
+
+		print("\n" + str(index) + ".\n" + method.upper(), self.r.request.path_url, "HTTP/1.1")
+		if self.r.request.headers:
+			for header in self.r.request.headers:
+				print(header + ": " + self.r.request.headers[header])
+		if self.r.request.body:
+			print("\n" + self.r.request.body)
+		print()
 
 	# status_codeが期待と同じか
 	def status_code(self, expected):
@@ -77,33 +84,51 @@ class Case():
 
 ################################################################
 
-case = Case("get", "http://localhost:4200")
+#1
+case = Case("get", "http://localhost:4200/abc")
+
 case.status_code(200)
-case.body_has("mcgee")
+case.body_has("html")
 case.header_has("Content-Length")
 
 ################################################################
 
-payload = {"key1": "val1", "key2": "val2"}
+#2
+payload = {"key1": "val1", "key2": "val2"} # CGIのクエリ(urlに入る)
 case = Case("get", "http://localhost:4200", params=payload)
+
 case.status_code(200)
-case.body_has("mcgee")
+case.body_has("html")
 case.header_has("Content-Length")
 
 
 ################################################################
 
-payload = {"key1": "val1", "key2": "val2"}
+#3
+payload = {"key1": "val1", "key2": "val2"} # リクエストヘッダ
 case = Case("get", "http://localhost:4200", headers=payload)
+
 case.status_code(200)
-case.body_has("mcgee")
+case.body_has("html")
 case.header_has("Content-Length")
 
 
 ################################################################
 
-payload = {"key1": "val1", "key2": "val2"}
+#4
+payload = {"key1": "val1", "key2": "val2"} # CGIのクエリ(bodyに入る)
 case = Case("post", "http://localhost:4200", data=payload)
+
 case.status_code(200)
-case.body_has("mcgee")
+case.body_has("html")
+case.header_has("Content-Length")
+
+################################################################
+
+#5
+payload = "<p>This is body.</p>" # bodyの内容
+case = Case("post", "http://localhost:4200", data=payload)
+
+case.status_code(200)
+case.body_has("html")
 case.header_has("Content-Length")
