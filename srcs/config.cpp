@@ -90,13 +90,6 @@ Main::Main() {
   client_max_body_size = 1000000;
 }
 
-// Server::Server() {
-//   autoindex = false;
-//   client_max_body_size = 1000000;
-//   port = 80;
-//   host = "127.0.0.1";
-// }
-
 Server::Server(const struct Main& main) {
   autoindex = main.autoindex;
   port = 80;
