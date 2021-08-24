@@ -131,7 +131,7 @@ int WebServ::WriteFile(socket_iter it) {
   if (client->GetRequest().GetMethod() == POST) {
     ret = write(client->GetWriteFd(), client->GetRequestBody().c_str(),
                 std::min((ssize_t)client->GetRequestBody().size(),
-                         (ssize_t)1));
+                         (ssize_t)WebServ::buf_max_));
   }
 
   if (ret == -1) throw std::runtime_error("write error\n");
