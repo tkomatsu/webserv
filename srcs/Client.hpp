@@ -25,8 +25,8 @@ class Client : public Socket {
   bool ParseRequest(void);
   void GenProcessForCGI(void);
 
-  int recv(int client_fd);
-  int send(int client_fd);
+  int RecvRequest(int client_fd);
+  int SendResponse(int client_fd);
 
   static const int buf_max_;
 

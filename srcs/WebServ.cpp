@@ -63,7 +63,7 @@ int WebServ::ReadClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
 
-  int ret = client->recv(client_fd);
+  int ret = client->RecvRequest(client_fd);
 
   switch (ret) {
     case -1:  // recv error
@@ -209,7 +209,7 @@ int WebServ::WriteClient(socket_iter it) {
   int ret = -1;
 
   // 完成したレスポンスを送る
-  ret = client->send(client_fd);
+  ret = client->SendResponse(client_fd);
 
   if (ret == -1) {
     close(client_fd);
