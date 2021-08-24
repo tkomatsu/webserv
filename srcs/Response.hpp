@@ -34,6 +34,7 @@ class Response : public HttpMessage {
   std::string Str() const;
   void EraseBody(ssize_t length);
   void Clear();
+  void ErrorResponse(int status);
 
   class StatusException : public std::domain_error {
    public:
@@ -46,6 +47,9 @@ class Response : public HttpMessage {
   virtual void ParseStartline();
   virtual void ParseHeader();
   virtual void ParseBody();
+
+  std::string ErrorHtml(int status);
+  std::string ErrorStatusLine(int status);
 };
 
 #endif /* RESPONSE_HPP */

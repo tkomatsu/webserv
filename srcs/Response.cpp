@@ -1,5 +1,7 @@
 #include "Response.hpp"
 
+#include <sstream>
+
 Response::Status::Status() {
   code[100] = "Continue";
   code[101] = "Swithing Protocol";
@@ -109,7 +111,7 @@ void Response::Clear() {
   SetStatusCode(200);
   AppendHeader("Content-Type", "");
   AppendHeader("Date", Now());
-  AppendHeader("Server", "webserv");
+  AppendHeader("Server", "webserv/0.4.2");
 }
 
 void Response::SetStatusMessage(const std::string& msg) {
@@ -130,4 +132,30 @@ void Response::ParseBody() {
     AppendBody(raw_);
     raw_ = "";
   }
+}
+
+void Response::ErrorResponse(int status) {
+  Clear();
+  SetStatusCode(status);
+  AppendBody(ErrorHtml(status));
+  AppendHeader("Content-Type", "text/html");
+  AppendHeader("Connection", "keep-alive");
+  AppendHeader("Content-Length", ft::ltoa(body_.size()));
+}
+
+std::string Response::ErrorHtml(int status) {
+  std::string body = "<html>\n<head><title>";
+  body += ErrorStatusLine(status);
+  body += "</title></head>\n<body>\n<center><h1>";
+  body += ErrorStatusLine(status);
+  body += "</h1></center>\n<hr><center>";
+  body += GetHeader("Server");
+  body += "</center>\n</body>\n</html>\n";
+  return body;
+}
+
+std::string Response::ErrorStatusLine(int status) {
+  std::stringstream s;
+  s << status << " " << kResponseStatus.code.find(status)->second;
+  return (s.str());
 }

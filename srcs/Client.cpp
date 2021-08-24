@@ -32,11 +32,11 @@ int Client::SetSocket(int _fd) {
 void Client::AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
 
 void Client::AppendResponseHeader(std::string key, std::string val) {
-    response_.AppendHeader(key, val);
+  response_.AppendHeader(key, val);
 };
 
 void Client::AppendResponseHeader(std::pair<std::string, std::string> header) {
-    response_.AppendHeader(header);
+  response_.AppendHeader(header);
 };
 
 void Client::AppendResponseRawData(std::string data, bool is_continue) {
@@ -103,6 +103,7 @@ void Client::Prepare(void) {
   int ret;
   ret = READ_FILE;
   // ret = WRITE_FILE;
+  // ret = WRITE_CGI;
   // ret = WRITE_CLIENT;
   // ret = READ_WRITE_CGI;
   SetStatus((enum SocketStatus)ret);
@@ -153,6 +154,10 @@ int Client::recv(int client_fd) {
   if (ret == 0) return ret;   // closed by client
 
   request_.AppendRawData(buf);
+  if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
+    response_.ErrorResponse(405);
+    SetStatus(WRITE_CLIENT);
+  }
 
   return 1;
 }
@@ -221,4 +226,10 @@ void Client::GenProcessForCGI() {
   if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) != 0)
     throw std::runtime_error("fcntl error\n");
   close(pipe_read[1]);
+}
+
+// TODO
+bool Client::IsValidRequest(void) {
+  if (request_.GetMethod() != GET) return false;
+  return true;
 }

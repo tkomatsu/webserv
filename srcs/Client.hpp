@@ -3,6 +3,7 @@
 
 #include <sys/stat.h>
 
+#include <stdexcept>
 #include <vector>
 
 #include "ISocket.hpp"
@@ -39,7 +40,7 @@ class Client : public Socket {
 
   const std::string &GetResponseBody() const { return response_.GetBody(); };
   const std::string &GetRequestBody() { return request_.GetBody(); };
-  
+
   void AppendResponseBody(std::string buf);
   void AppendResponseHeader(std::string key, std::string val);
   void AppendResponseHeader(std::pair<std::string, std::string> header);
@@ -57,14 +58,22 @@ class Client : public Socket {
   void SetPipe(int *pipe_write, int *pipe_read);
   void ExecCGI(int *pipe_write, int *pipe_read, char **args, char **envs);
 
+  bool IsValidRequest();
+
   Request request_;
   Response response_;
 
-  size_t sended_; // num of chars sended to client
+  size_t sended_;  // num of chars sended to client
 
   int write_fd_;
   int read_fd_;
   const config::Config config_;
+
+ public:
+  class HttpResponseException : public std::runtime_error {
+   public:
+    HttpResponseException(const std::string &what) : std::runtime_error(what) {}
+  };
 };
 
 #endif /* CLIENT_HPP */
