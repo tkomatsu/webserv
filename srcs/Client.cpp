@@ -32,20 +32,11 @@ int Client::SetSocket(int _fd) {
 void Client::AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
 
 void Client::AppendResponseHeader(std::string key, std::string val) {
-  try {
-    response_.GetHeader(key);
-  } catch (const std::exception &) {
     response_.AppendHeader(key, val);
-  }
 };
 
 void Client::AppendResponseHeader(std::pair<std::string, std::string> header) {
-  try {
-    response_.GetHeader(header.first);
-  } catch (const std::exception &) {
     response_.AppendHeader(header);
-  }
-  response_.AppendHeader(header);
 };
 
 void Client::AppendResponseRawData(std::string data, bool is_continue) {
