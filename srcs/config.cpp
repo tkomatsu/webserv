@@ -72,17 +72,18 @@ void PrintKeyValue(const std::string& key, const T& value, bool indent = false) 
 
 namespace config {
 
-Parser::Parser(const std::string& filename) : filename_(filename) {
-  Load();
-}
-
-Parser::~Parser() {}
-
 Main::Main() {
   print_config = false;
   autoindex = false;
   client_max_body_size = 1000000;
 }
+
+// Server::Server() {
+//   autoindex = false;
+//   client_max_body_size = 1000000;
+//   port = 80;
+//   host = "127.0.0.1";
+// }
 
 Server::Server(const struct Main& main) {
   autoindex = main.autoindex;
@@ -94,7 +95,7 @@ Server::Server(const struct Main& main) {
   error_pages = main.error_pages;
 }
 
-Location::Location(const std::string& path, const struct Server& server) : path(path) {
+Location::Location(const struct Server& server) {
   autoindex = server.autoindex;
   client_max_body_size = server.client_max_body_size;
   upload_pass = server.upload_pass;
@@ -105,16 +106,43 @@ Location::Location(const std::string& path, const struct Server& server) : path(
   redirect = server.redirect;
 }
 
-std::vector<struct Config> Parser::GetConfigs() {
-  std::vector<struct Config> configs;
+Config::Config(const struct Server& server) : server_(server) {};
+
+Config::~Config() {};
+
+Config::Config(const Config& other) : server_(other.server_) {}
+
+Config& Config::operator=(const Config& other) {
+  if (this != &other) {
+    server_ = other.server_;
+  }
+  return *this;
+}
+
+int Config::GetPort() const {
+  return server_.port;
+}
+
+std::string Config::GetHost() const {
+  return server_.host;
+}
+
+Parser::Parser(const std::string& filename) : filename_(filename) {
+  Load();
+}
+
+Parser::~Parser() {}
+
+std::vector<Config> Parser::GetConfigs() {
+  std::vector<Config> configs;
 
   if (servers_.empty())
     return configs;
 
   std::vector<struct Server>::const_iterator itr;
   for (itr = servers_.begin(); itr != servers_.end(); ++itr) {
-    struct Config config = *itr;
-    configs.push_back(*itr);
+    Config config = Config(*itr);
+    configs.push_back(config);
   }
 
   return configs;
@@ -251,7 +279,8 @@ void Parser::AddLocation(enum Context context, const std::string& name,
       throw ParameterError(BuildError(name, "duplicated"));
   }
 
-  struct Location location(path, server);
+  struct Location location(server);
+  location.path = path;
   server.locations.push_back(location);
 }
 

@@ -11,7 +11,7 @@
 
 const int Client::buf_max_ = 8192;
 
-Client::Client(const struct config::Config& config) : config_(config) {
+Client::Client(const config::Config& config) : config_(config) {
   socket_status_ = READ_CLIENT;
 }
 

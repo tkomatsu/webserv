@@ -17,7 +17,7 @@ typedef struct fileinfo {
 
 class Client : public Socket {
  public:
-  Client(const struct config::Config& config);
+  Client(const config::Config& config);
 
   int SetSocket(int _fd);
   void Prepare(void);
