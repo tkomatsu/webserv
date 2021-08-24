@@ -63,8 +63,8 @@ void CGI::CalcEnvs() {
   envs_map_["REQUEST_METHOD"] = methods_[request_.GetMethod()];
   envs_map_["REQUEST_URI"] = request_.GetURI();
   envs_map_["SCRIPT_NAME"] = envs_map_["PATH_INFO"];
-  envs_map_["SERVER_NAME"] = config_.host;
-  envs_map_["SERVER_PORT"] = ft::ltoa(config_.port);
+  envs_map_["SERVER_NAME"] = config_.GetHost();
+  envs_map_["SERVER_PORT"] = ft::ltoa(config_.GetPort());
   envs_map_["SERVER_PROTOCOL"] = "HTTP/1.1";
   envs_map_["SERVER_SOFTWARE"] = "Webserv/0.4.2";
 }
