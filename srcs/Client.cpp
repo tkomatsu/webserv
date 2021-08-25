@@ -165,21 +165,19 @@ int Client::RecvRequest(int client_fd) {
 int Client::SendResponse(int client_fd) {
   int ret;
 
-  ret = ::send(
-      client_fd, &((response_.Str().c_str())[sended_]),
-      std::min((size_t)Client::buf_max_, response_.Str().size() - sended_), 0);
+  size_t len = std::min((size_t)buf_max_, response_.Str().size() - sended_);
+  ret = ::send(client_fd, &((response_.Str().c_str())[sended_]), len, 0);
   if (ret == -1) return ret;  // send error
 
   sended_ += ret;
-
   if (sended_ >= response_.Str().size()) {
     std::cout << "send to   " + host_ip_ << ":" << port_ << std::endl;
     response_.Clear();
     request_.Clear();
     sended_ = 0;
+    SetStatus(READ_CLIENT);
     return 1;  // all sended
   }
-
   return 2;  // continue send
 }
 
@@ -204,7 +202,22 @@ int Client::ReadStaticFile() {
 }
 
 // TODO
-int Client::WriteStaticFile() { return 1; }
+int Client::WriteStaticFile() {
+  int ret = 1;
+
+  size_t len = std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
+  if (request_.GetMethod() == POST) {
+    if ((ret = write(GetWriteFd(), request_.GetBody().c_str(), len)) < 0)
+      throw std::runtime_error("write error\n");
+  }
+
+  EraseRequestBody(ret);
+  if (GetRequestBody().empty()) {
+    close(GetWriteFd());
+    SetStatus(WRITE_CLIENT);
+  }
+  return ret;
+}
 
 int Client::ReadCGIout() {
   int ret = 1;
@@ -220,18 +233,31 @@ int Client::ReadCGIout() {
   AppendResponseRawData(buf, ret);
   if (ret == 0) {
     close(GetReadFd());
-
     // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
     AppendResponseHeader("Content-Length",
                          ft::ltoa(response_.GetBody().length()));
-
     SetStatus(WRITE_CLIENT);
   }
   return ret;
 }
 
 // TODO
-int Client::WriteCGIin() { return 1; }
+int Client::WriteCGIin() {
+  int ret = 1;
+
+  size_t len = std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
+  if (GetRequest().GetMethod() == POST) {
+    if ((ret = write(GetWriteFd(), request_.GetBody().c_str(), len)) < 0)
+      throw std::runtime_error("write error\n");
+    EraseRequestBody(ret);
+  }
+
+  if (GetRequestBody().empty()) {
+    close(GetWriteFd());
+    SetStatus(WRITE_CLIENT);
+  }
+  return ret;
+}
 
 void Client::SetPipe(int *pipe_write, int *pipe_read) {
   if (pipe(pipe_write) == -1) throw std::runtime_error("pipe error\n");

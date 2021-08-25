@@ -110,24 +110,7 @@ int WebServ::ReadFile(socket_iter it) {
 int WebServ::WriteFile(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  int ret = 1;
-
-  if (client->GetRequest().GetMethod() == POST) {
-    ret = write(client->GetWriteFd(), client->GetRequestBody().c_str(),
-                std::min((ssize_t)client->GetRequestBody().size(),
-                         (ssize_t)Client::buf_max_));
-  }
-
-  if (ret == -1) throw std::runtime_error("write error\n");
-
-  client->EraseRequestBody(ret);
-
-  if (client->GetRequestBody().empty()) {
-    close(client->GetWriteFd());
-    client->SetStatus(WRITE_CLIENT);
-  }
-
-  return ret;
+  return client->WriteStaticFile();
 }
 
 int WebServ::ReadCGI(socket_iter it) {
@@ -147,41 +130,19 @@ int WebServ::ReadCGI(socket_iter it) {
 int WebServ::WriteCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  int ret = 1;
-
-  if (client->GetRequest().GetMethod() == POST) {
-    ret = write(client->GetWriteFd(), client->GetRequestBody().c_str(),
-                std::min((ssize_t)client->GetRequestBody().size(),
-                         (ssize_t)Client::buf_max_));
-  }
-
-  if (ret == -1) throw std::runtime_error("write error\n");
-
-  client->EraseRequestBody(ret);
-
-  if (client->GetRequestBody().empty()) {
-    close(client->GetWriteFd());
-    client->SetStatus(READ_CGI);
-  }
-
-  return ret;
+  return client->WriteCGIin();
 }
 
 int WebServ::WriteClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  int ret = -1;
+  int ret;
 
-  // 完成したレスポンスを送る
-  ret = client->SendResponse(client_fd);
-
-  if (ret == -1) {
+  if ((ret = client->SendResponse(client_fd)) < 0) {
     close(client_fd);
     sockets_.erase(it);
     throw std::runtime_error("send error\n");
   }
-  if (ret == 1) client->SetStatus(READ_CLIENT);
-
   return ret;
 }
 
