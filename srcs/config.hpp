@@ -69,11 +69,6 @@ struct Location {
   std::pair<int, std::string> redirect;
 };
 
-inline bool CompareLocations(const struct Location* a,
-                             const struct Location* b) {
-  return a->path.length() < b->path.length();
-}
-
 class Config {
  public:
   Config(const struct Server& server);
