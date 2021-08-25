@@ -58,62 +58,38 @@ int WebServ::AcceptSession(socket_iter it) {
   return accepted;
 }
 
-int WebServ::ReadClient(socket_iter it) {
+void WebServ::ReadClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
 
   int ret = client->RecvRequest(client_fd);
-
-  switch (ret) {
-    case -1:  // recv error
-      close(client_fd);
-      delete it->second;
-      sockets_.erase(it);
-      throw std::runtime_error("recv error\n");
-      break;
-
-    case 0:  // closed by client
-      close(client_fd);
-      delete it->second;
-      sockets_.erase(it);
-      // throw std::runtime_error("closed by client\n");
-      break;
-
-    default:
-      break;
+  if (ret <= 0) {
+    close(client_fd);
+    delete it->second;
+    sockets_.erase(it);
+    if (ret < 0) throw std::runtime_error("recv error\n");
   }
-
   if (client->GetRequest().GetStatus() == HttpMessage::DONE) {
     std::cout << "\nrecv from " + client->GetHostIp() << ":"
               << client->GetPort() << std::endl;
     client->Prepare();
   }
-
-  return 0;
 }
 
-int WebServ::ReadFile(socket_iter it) {
+void WebServ::ReadFile(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
 
   int ret = client->ReadStaticFile();
-
   if (ret < 0) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
     throw std::runtime_error("read error\n");
   }
-  return ret;
 }
 
-int WebServ::WriteFile(socket_iter it) {
-  int client_fd = it->first;
-  Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  return client->WriteStaticFile();
-}
-
-int WebServ::ReadCGI(socket_iter it) {
+void WebServ::ReadCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
 
@@ -124,16 +100,9 @@ int WebServ::ReadCGI(socket_iter it) {
     sockets_.erase(it);
     throw std::runtime_error("read error\n");
   }
-  return ret;
 }
 
-int WebServ::WriteCGI(socket_iter it) {
-  int client_fd = it->first;
-  Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  return client->WriteCGIin();
-}
-
-int WebServ::WriteClient(socket_iter it) {
+void WebServ::WriteClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret;
@@ -143,7 +112,18 @@ int WebServ::WriteClient(socket_iter it) {
     sockets_.erase(it);
     throw std::runtime_error("send error\n");
   }
-  return ret;
+}
+
+void WebServ::WriteFile(socket_iter it) {
+  int client_fd = it->first;
+  Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
+  client->WriteStaticFile();
+}
+
+void WebServ::WriteCGI(socket_iter it) {
+  int client_fd = it->first;
+  Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
+  client->WriteCGIin();
 }
 
 int WebServ::HasUsableIO() {
@@ -212,40 +192,6 @@ int WebServ::ExecClientEvent(socket_iter it) {
   int hit = 0;
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-
-  /*　こんな感じにするにはclient_fdかread_fdのやつでわけるか、毎回read_fdとかを-1にしないといけない
-    if (FD_ISSET(client_fd, &rfd_set_) ||
-      FD_ISSET(client->GetReadFd(), &rfd_set_)) {
-    if (client->GetStatus() == READ_CLIENT) {
-      ReadClient(it);
-      ++hit;
-    }
-    if (client->GetStatus() == READ_FILE) {
-      ReadFile(it);
-      ++hit;
-    }
-    if ((client->GetStatus() == READ_CGI ||
-         client->GetStatus() == READ_WRITE_CGI)) {
-      ReadCGI(it);
-      ++hit;
-    }
-  }
-
-  if (FD_ISSET(client_fd, &wfd_set_) ||
-      FD_ISSET(client->GetWriteFd(), &wfd_set_)) {
-    if (client->GetStatus() == WRITE_FILE) {
-      WriteFile(it);
-      ++hit;
-    }
-    if (client->GetStatus() == READ_WRITE_CGI) {
-      WriteCGI(it);
-      ++hit;
-    }
-    if (client->GetStatus() == WRITE_CLIENT) {
-      WriteClient(it);
-      ++hit;
-    }
-  }*/
 
   if (client->GetStatus() == READ_CLIENT && FD_ISSET(client_fd, &rfd_set_)) {
     ReadClient(it);

@@ -146,9 +146,9 @@ void Client::Prepare(void) {
 
 int Client::RecvRequest(int client_fd) {
   int ret;
-  char buf[Client::buf_max_] = {0};
+  char buf[buf_max_] = {0};
 
-  ret = ::recv(client_fd, buf, Client::buf_max_ - 1, 0);
+  ret = ::recv(client_fd, buf, buf_max_ - 1, 0);
 
   if (ret == -1) return ret;  // recv error
   if (ret == 0) return ret;   // closed by client
@@ -158,7 +158,6 @@ int Client::RecvRequest(int client_fd) {
     response_.ErrorResponse(405);
     SetStatus(WRITE_CLIENT);
   }
-
   return 1;
 }
 
@@ -176,21 +175,20 @@ int Client::SendResponse(int client_fd) {
     request_.Clear();
     sended_ = 0;
     SetStatus(READ_CLIENT);
-    return 1;  // all sended
   }
-  return 2;  // continue send
+  return 1;  // continue send
 }
 
 int Client::ReadStaticFile() {
   int ret = 1;
   char buf[buf_max_] = {0};
 
-  ret = read(GetReadFd(), buf, buf_max_ - 1);
+  ret = read(read_fd_, buf, buf_max_ - 1);
   if (ret == -1) {
-    close(GetReadFd());
+    close(read_fd_);
     return ret;
   } else if (ret == 0) {
-    close(GetReadFd());
+    close(read_fd_);
     // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
     AppendResponseHeader("Content-Length",
                          ft::ltoa(response_.GetBody().size()));
@@ -202,37 +200,35 @@ int Client::ReadStaticFile() {
 }
 
 // TODO
-int Client::WriteStaticFile() {
+void Client::WriteStaticFile() {
   int ret = 1;
 
   size_t len = std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
   if (request_.GetMethod() == POST) {
-    if ((ret = write(GetWriteFd(), request_.GetBody().c_str(), len)) < 0)
+    if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
       throw std::runtime_error("write error\n");
   }
-
   EraseRequestBody(ret);
   if (GetRequestBody().empty()) {
-    close(GetWriteFd());
+    close(write_fd_);
     SetStatus(WRITE_CLIENT);
   }
-  return ret;
 }
 
 int Client::ReadCGIout() {
-  int ret = 1;
+  int ret = 0;
   char buf[buf_max_] = {0};
   std::string headers;
   std::string body;
 
-  ret = read(GetReadFd(), buf, buf_max_ - 1);
+  ret = read(read_fd_, buf, buf_max_ - 1);
   if (ret < 0) {
-    close(GetReadFd());
+    close(read_fd_);
     return ret;
   }
   AppendResponseRawData(buf, ret);
   if (ret == 0) {
-    close(GetReadFd());
+    close(read_fd_);
     // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
     AppendResponseHeader("Content-Length",
                          ft::ltoa(response_.GetBody().length()));
@@ -241,22 +237,19 @@ int Client::ReadCGIout() {
   return ret;
 }
 
-// TODO
-int Client::WriteCGIin() {
-  int ret = 1;
-
-  size_t len = std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
-  if (GetRequest().GetMethod() == POST) {
-    if ((ret = write(GetWriteFd(), request_.GetBody().c_str(), len)) < 0)
+void Client::WriteCGIin() {
+  if (request_.GetMethod() == POST) {
+    size_t len =
+        std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
+    int ret = 0;
+    if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
       throw std::runtime_error("write error\n");
     EraseRequestBody(ret);
   }
-
   if (GetRequestBody().empty()) {
-    close(GetWriteFd());
+    close(write_fd_);
     SetStatus(WRITE_CLIENT);
   }
-  return ret;
 }
 
 void Client::SetPipe(int *pipe_write, int *pipe_read) {
