@@ -65,20 +65,11 @@ void Client::Prepare(void) {
     if (read_fd_ == -1) throw std::runtime_error("open error\n");
     if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
       throw std::runtime_error("fcntl error\n");
-    response_.AppendHeader("Content-Type", "text/html");
-
   } else if (ret == WRITE_FILE) {
     write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644);
     fcntl(write_fd_, F_SETFL, O_NONBLOCK);
-
-    response_.SetStatusCode(201);
-    response_.AppendHeader("Content-Type", "text/html");
-    response_.AppendHeader("Content-Location", "/post.html");
   } else if (ret == READ_WRITE_CGI) {
     GenProcessForCGI();
-
-    response_.SetStatusCode(200);
-    response_.AppendHeader("Content-Type", "text/html");
   } else if (ret == WRITE_CLIENT) {
     if (is_autoindex) response_.AutoIndexResponse("./docs/");
   }
@@ -151,6 +142,9 @@ void Client::WriteStaticFile() {
   EraseRequestBody(ret);
   if (GetRequestBody().empty()) {
     close(write_fd_);
+    response_.SetStatusCode(201);
+    response_.AppendHeader("Content-Type", "text/html");
+    response_.AppendHeader("Content-Location", "/post.html");
     SetStatus(WRITE_CLIENT);
   }
 }
@@ -169,7 +163,8 @@ int Client::ReadCGIout() {
   AppendResponseRawData(buf, ret);
   if (ret == 0) {
     close(read_fd_);
-    // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
+    response_.SetStatusCode(200);
+    response_.AppendHeader("Content-Type", "text/html");
     AppendResponseHeader("Content-Length",
                          ft::ltoa(response_.GetBody().length()));
     SetStatus(WRITE_CLIENT);
