@@ -1,9 +1,17 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
+#include <dirent.h>
+#include <sys/stat.h>
+
 #include <sstream>
 
 #include "HttpMessage.hpp"
+
+typedef struct fileinfo {
+  struct dirent* dirent_;
+  struct stat stat_;
+} fileinfo;
 
 class Response : public HttpMessage {
  public:
@@ -35,6 +43,7 @@ class Response : public HttpMessage {
   void EraseBody(ssize_t length);
   void Clear();
   void ErrorResponse(int status);
+  void AutoIndexResponse(const std::string& path);
 
   class StatusException : public std::domain_error {
    public:
@@ -50,6 +59,8 @@ class Response : public HttpMessage {
 
   std::string ErrorHtml(int status);
   std::string ErrorStatusLine(int status);
+
+  std::string AutoIndexHtml(const std::string& path);
 };
 
 #endif /* RESPONSE_HPP */

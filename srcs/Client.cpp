@@ -46,57 +46,6 @@ void Client::AppendResponseRawData(std::string data, bool is_continue) {
 
 void Client::SetStatus(enum SocketStatus status) { socket_status_ = status; }
 
-std::string Client::MakeAutoIndexContent(std::string dir_path) {
-  DIR *dirp = opendir(dir_path.c_str());
-  if (dirp == NULL) return "";
-  struct dirent *dp;
-  std::vector<fileinfo> index;
-
-  while ((dp = readdir(dirp)) != NULL) {
-    fileinfo info;
-
-    info.dirent_ = dp;
-    stat((dir_path + std::string(dp->d_name)).c_str(), &info.stat_);
-    index.push_back(info);
-  }
-  closedir(dirp);
-  std::string tmp;
-  tmp += "<html>\n<head><title>Index of ";
-  tmp += "/";
-  tmp += "</title></head>\n<body bgcolor=\"white\">\n<h1>Index of ";
-  tmp += "/</h1><hr><pre><a href=\"../\">../</a>\n";
-
-  for (std::vector<fileinfo>::iterator it = index.begin(); it != index.end();
-       ++it) {
-    fileinfo info = *it;
-
-    if (info.dirent_->d_name[0] == '.') continue;
-
-    tmp += "<a href=\"" + std::string(info.dirent_->d_name) + "/\">";
-    if (std::string(info.dirent_->d_name).length() >= 50)
-      tmp += std::string(info.dirent_->d_name).substr(0, 47) + "..&gt;";
-    else {
-      tmp += std::string(info.dirent_->d_name);
-      if (S_ISDIR(info.stat_.st_mode)) tmp += "/";
-    }
-    tmp +=
-        "</a>" +
-        std::string(50 - std::min((size_t)50,
-                                  std::string(info.dirent_->d_name).length()),
-                    ' ');
-    if (!S_ISDIR(info.stat_.st_mode)) tmp += " ";
-    tmp += ft::AutoIndexNow(info.stat_.st_mtimespec.tv_sec);
-    tmp += std::string(19, ' ');
-    if (S_ISREG(info.stat_.st_mode))
-      tmp += ft::ltoa(info.stat_.st_size) + "\n";
-    else
-      tmp += "-\n";
-  }
-  tmp += "</pre><hr></body>\n</html>\n";
-
-  return tmp;
-}
-
 // ここの各準備処理を先々の関数に分けるのはやりづらい…
 // 先々の関数は複数回ループが回るので、一回でいい操作(open)とかはここでやりたい
 void Client::Prepare(void) {
@@ -106,6 +55,7 @@ void Client::Prepare(void) {
   // ret = WRITE_CGI;
   // ret = WRITE_CLIENT;
   // ret = READ_WRITE_CGI;
+  // ret = WRITE_CLIENT;
   SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
@@ -130,17 +80,7 @@ void Client::Prepare(void) {
     response_.SetStatusCode(200);
     response_.AppendHeader("Content-Type", "text/html");
   } else if (ret == WRITE_CLIENT) {
-    if (is_autoindex) {
-      response_.SetStatusCode(200);
-      response_.AppendHeader("Content-Type", "text/html");
-
-      std::string tmp = MakeAutoIndexContent("./docs/");
-      if (tmp.empty()) {
-        // 404
-      }
-
-      response_.SetBody(tmp);
-    }
+    if (is_autoindex) response_.AutoIndexResponse("./docs/");
   }
 }
 

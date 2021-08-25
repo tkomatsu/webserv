@@ -1,8 +1,6 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <sys/stat.h>
-
 #include <stdexcept>
 #include <vector>
 
@@ -10,11 +8,6 @@
 #include "Request.hpp"
 #include "Response.hpp"
 #include "config.hpp"
-
-typedef struct fileinfo {
-  struct dirent *dirent_;
-  struct stat stat_;
-} fileinfo;
 
 class Client : public Socket {
  public:
@@ -55,8 +48,6 @@ class Client : public Socket {
 
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
   void SetStatus(enum SocketStatus status);
-
-  std::string MakeAutoIndexContent(std::string dir_path);
 
   // Clear
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };

@@ -34,18 +34,3 @@ TEST_F(ClientTest, SetSocket) {
     EXPECT_EQ(err.what(), std::string("accept error\n"));
   }
 }
-
-TEST_F(ClientTest, AutoIndex) {
-  config::Main main_context;
-  config::Server server_context(main_context);
-  server_context.port = 4200;
-  server_context.host = "127.0.0.1";
-  config::Config config(server_context);
-
-  Server server(config);
-  Client client(server.GetConfig());
-  // std::cout << std::string(getenv("WEBSERV_ROOT")) + "docs/" << std::endl;
-  std::string res = client.MakeAutoIndexContent("./");
-
-  EXPECT_TRUE(std::regex_match(res, std::regex("(.|\n)*")));
-}

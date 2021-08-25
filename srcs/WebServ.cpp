@@ -61,9 +61,9 @@ int WebServ::AcceptSession(socket_iter it) {
 void WebServ::ReadClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
+  int ret;
 
-  int ret = client->RecvRequest(client_fd);
-  if (ret <= 0) {
+  if ((ret = client->RecvRequest(client_fd)) <= 0) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
@@ -79,9 +79,9 @@ void WebServ::ReadClient(socket_iter it) {
 void WebServ::ReadFile(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
+  int ret;
 
-  int ret = client->ReadStaticFile();
-  if (ret < 0) {
+  if ((ret = client->ReadStaticFile()) < 0) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
@@ -92,9 +92,9 @@ void WebServ::ReadFile(socket_iter it) {
 void WebServ::ReadCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
+  int ret;
 
-  int ret = client->ReadCGIout();
-  if (ret < 0) {
+  if ((ret = client->ReadCGIout()) < 0) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
