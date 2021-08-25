@@ -69,6 +69,11 @@ struct Location {
   std::pair<int, std::string> redirect;
 };
 
+inline bool CompareLocations(const struct Location* a,
+                             const struct Location* b) {
+  return a->path.length() < b->path.length();
+}
+
 class Config {
  public:
   Config(const struct Server& server);
@@ -78,9 +83,23 @@ class Config {
 
   int GetPort() const;
   std::string GetHost() const;
+  std::string GetServerName() const;
+
+  bool GetAutoindex(const std::string& uri) const;
+  int GetClientMaxBodySize(const std::string& uri) const;
+  std::string GetAlias(const std::string& uri) const;
+  std::string GetUploadPass(const std::string& uri) const;
+  std::string GetUploadStore(const std::string& uri) const;
+  std::set<std::string> GetExtensions(const std::string& uri) const;
+  std::set<std::string> GetIndexes(const std::string& uri) const;
+  std::map<int, std::string> GetErrorPages(const std::string& uri) const;
+  std::set<enum Method> GetAllowedMethods(const std::string& uri) const;
+  std::pair<int, std::string> GetRedirect(const std::string& uri) const;
 
  private:
   struct Server server_;
+
+  const struct Location* MatchLocation(const std::string& uri) const;
 };
 
 struct LineComponent;
