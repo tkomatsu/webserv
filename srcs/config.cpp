@@ -1,4 +1,5 @@
 #include "config.hpp"
+#include "Client.hpp"
 #include <algorithm>
 
 namespace {
@@ -149,21 +150,13 @@ const struct Location* Config::MatchLocation(const std::string& uri) const {
         longest_prefix = &*itr;
     }
   }
+  if (longest_prefix == NULL)
+    throw Client::HttpResponseException("no matching location found");
   return longest_prefix;
-  //
-  // std::vector<const struct Location*> selected;
-  // for (std::vector<const struct Location>::const_iterator itr =
-  //          server_.locations.begin();
-  //      itr != server_.locations.end(); ++itr) {
-  //   if (uri.find(itr->path) == 0) selected.push_back(&*itr);
-  // }
-  // if (selected.empty()) return NULL;
-  // return *std::max_element(selected.begin(), selected.end(), CompareLocations);
 }
 
 bool Config::GetAutoindex(const std::string& uri) const {
   const struct Location* location = MatchLocation(uri);
-  // TODO: NULL
   return location->autoindex;
 }
 
