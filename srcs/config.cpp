@@ -1,4 +1,6 @@
 #include "config.hpp"
+#include "Client.hpp"
+#include <algorithm>
 
 namespace {
 
@@ -130,6 +132,78 @@ int Config::GetPort() const {
 
 std::string Config::GetHost() const {
   return server_.host;
+}
+
+std::string Config::GetServerName() const {
+  return server_.server_name;
+}
+
+const struct Location* Config::MatchLocation(const std::string& uri) const {
+  if (server_.locations.empty()) throw std::runtime_error("no location specified");
+  const struct Location* longest_prefix = NULL;
+  std::vector<const struct Location>::const_iterator itr;
+  for (itr = server_.locations.begin(); itr != server_.locations.end(); ++itr) {
+    if (uri.find(itr->path) == 0) {
+      if (longest_prefix == NULL)
+        longest_prefix = &*itr;
+      else if (itr->path.length() > longest_prefix->path.length())
+        longest_prefix = &*itr;
+    }
+  }
+  if (longest_prefix == NULL)
+    throw Client::HttpResponseException("no matching location found");
+  return longest_prefix;
+}
+
+bool Config::GetAutoindex(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->autoindex;
+}
+
+int Config::GetClientMaxBodySize(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->client_max_body_size;
+}
+
+std::string Config::GetAlias(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->alias;
+}
+
+std::string Config::GetUploadPass(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->upload_pass;
+}
+
+std::string Config::GetUploadStore(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->upload_store;
+}
+
+std::set<std::string> Config::GetExtensions(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->extensions;
+}
+
+std::set<std::string> Config::GetIndexes(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->indexes;
+}
+
+std::map<int, std::string> Config::GetErrorPages(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->error_pages;
+}
+
+std::set<enum Method> Config::GetAllowedMethods(const std::string& uri) const {
+
+  const struct Location* location = MatchLocation(uri);
+  return location->allowed_methods;
+}
+
+std::pair<int, std::string> Config::GetRedirect(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->redirect;
 }
 
 Parser::Parser(const std::string& filename) : filename_(filename) {
