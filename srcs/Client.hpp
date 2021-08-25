@@ -27,6 +27,10 @@ class Client : public Socket {
 
   int RecvRequest(int client_fd);
   int SendResponse(int client_fd);
+  int ReadStaticFile();
+  int WriteStaticFile();
+  int ReadCGIout();
+  int WriteCGIin();
 
   static const int buf_max_;
 

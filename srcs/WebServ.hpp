@@ -19,7 +19,6 @@ class WebServ {
   void Activate(void);
 
   static const std::string default_path_;
-  static const int buf_max_;
 
  private:
   int HasUsableIO();

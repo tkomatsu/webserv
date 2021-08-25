@@ -4,6 +4,7 @@
 #include "WebServ.hpp"
 
 int main(int argc, char *argv[]) {
+  // SIGCHILDに対するデフォルト挙動が無視だから不要では？
   signal(SIGCHLD, SIG_IGN);
 
   if (!(argc == 1 || argc == 2)) {

@@ -144,7 +144,7 @@ void Client::Prepare(void) {
   }
 }
 
-int Client::recv(int client_fd) {
+int Client::RecvRequest(int client_fd) {
   int ret;
   char buf[Client::buf_max_] = {0};
 
@@ -162,7 +162,7 @@ int Client::recv(int client_fd) {
   return 1;
 }
 
-int Client::send(int client_fd) {
+int Client::SendResponse(int client_fd) {
   int ret;
 
   ret = ::send(
@@ -182,6 +182,56 @@ int Client::send(int client_fd) {
 
   return 2;  // continue send
 }
+
+int Client::ReadStaticFile() {
+  int ret = 1;
+  char buf[buf_max_] = {0};
+
+  ret = read(GetReadFd(), buf, buf_max_ - 1);
+  if (ret == -1) {
+    close(GetReadFd());
+    return ret;
+  } else if (ret == 0) {
+    close(GetReadFd());
+    // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
+    AppendResponseHeader("Content-Length",
+                         ft::ltoa(response_.GetBody().size()));
+    SetStatus(WRITE_CLIENT);
+  } else {
+    AppendResponseBody(buf);
+  }
+  return ret;
+}
+
+// TODO
+int Client::WriteStaticFile() { return 1; }
+
+int Client::ReadCGIout() {
+  int ret = 1;
+  char buf[buf_max_] = {0};
+  std::string headers;
+  std::string body;
+
+  ret = read(GetReadFd(), buf, buf_max_ - 1);
+  if (ret < 0) {
+    close(GetReadFd());
+    return ret;
+  }
+  AppendResponseRawData(buf, ret);
+  if (ret == 0) {
+    close(GetReadFd());
+
+    // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
+    AppendResponseHeader("Content-Length",
+                         ft::ltoa(response_.GetBody().length()));
+
+    SetStatus(WRITE_CLIENT);
+  }
+  return ret;
+}
+
+// TODO
+int Client::WriteCGIin() { return 1; }
 
 void Client::SetPipe(int *pipe_write, int *pipe_read) {
   if (pipe(pipe_write) == -1) throw std::runtime_error("pipe error\n");

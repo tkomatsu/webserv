@@ -10,7 +10,6 @@
 #include "config.hpp"
 
 const std::string WebServ::default_path_ = "./conf/default.conf";
-const int WebServ::buf_max_ = 8192;
 
 WebServ::WebServ(const std::string &path) {
   timeout_ = (struct timeval){1, 0};
@@ -96,35 +95,15 @@ int WebServ::ReadClient(socket_iter it) {
 int WebServ::ReadFile(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  int ret = 1;
-  char buf[WebServ::buf_max_] = {0};
 
-  ret = read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
+  int ret = client->ReadStaticFile();
 
-  switch (ret) {
-    case -1:  // read error
-      close(client->GetReadFd());
-      close(client_fd);
-      delete it->second;
-      sockets_.erase(it);
-      throw std::runtime_error("read error\n");
-      break;
-
-    case 0:  // read complete
-      close(client->GetReadFd());
-
-      // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
-      client->AppendResponseHeader(
-          "Content-Length", ft::ltoa(client->GetResponse().GetBody().length()));
-
-      client->SetStatus(WRITE_CLIENT);
-      break;
-
-    default:  // just read
-      client->AppendResponseBody(buf);
-      break;
+  if (ret < 0) {
+    close(client_fd);
+    delete it->second;
+    sockets_.erase(it);
+    throw std::runtime_error("read error\n");
   }
-
   return ret;
 }
 
@@ -136,7 +115,7 @@ int WebServ::WriteFile(socket_iter it) {
   if (client->GetRequest().GetMethod() == POST) {
     ret = write(client->GetWriteFd(), client->GetRequestBody().c_str(),
                 std::min((ssize_t)client->GetRequestBody().size(),
-                         (ssize_t)WebServ::buf_max_));
+                         (ssize_t)Client::buf_max_));
   }
 
   if (ret == -1) throw std::runtime_error("write error\n");
@@ -154,28 +133,13 @@ int WebServ::WriteFile(socket_iter it) {
 int WebServ::ReadCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  int ret = 1;
-  char buf[WebServ::buf_max_] = {0};
-  std::string headers;
-  std::string body;
 
-  ret = read(client->GetReadFd(), buf, WebServ::buf_max_ - 1);
+  int ret = client->ReadCGIout();
   if (ret < 0) {
-    close(client->GetReadFd());
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
     throw std::runtime_error("read error\n");
-  }
-  client->AppendResponseRawData(buf, ret);
-  if (ret == 0) {
-    close(client->GetReadFd());
-
-    // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
-    client->AppendResponseHeader(
-        "Content-Length", ft::ltoa(client->GetResponse().GetBody().length()));
-
-    client->SetStatus(WRITE_CLIENT);
   }
   return ret;
 }
@@ -188,7 +152,7 @@ int WebServ::WriteCGI(socket_iter it) {
   if (client->GetRequest().GetMethod() == POST) {
     ret = write(client->GetWriteFd(), client->GetRequestBody().c_str(),
                 std::min((ssize_t)client->GetRequestBody().size(),
-                         (ssize_t)WebServ::buf_max_));
+                         (ssize_t)Client::buf_max_));
   }
 
   if (ret == -1) throw std::runtime_error("write error\n");
