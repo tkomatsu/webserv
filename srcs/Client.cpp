@@ -49,14 +49,14 @@ void Client::SetStatus(enum SocketStatus status) { socket_status_ = status; }
 // ここの各準備処理を先々の関数に分けるのはやりづらい…
 // 先々の関数は複数回ループが回るので、一回でいい操作(open)とかはここでやりたい
 void Client::Prepare(void) {
+  // temp
   int ret;
   ret = READ_FILE;
   // ret = WRITE_FILE;
   // ret = WRITE_CGI;
   // ret = WRITE_CLIENT;
   // ret = READ_WRITE_CGI;
-  // ret = WRITE_CLIENT;
-  SetStatus((enum SocketStatus)ret);
+  if (socket_status_ != WRITE_CLIENT) SetStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
 
