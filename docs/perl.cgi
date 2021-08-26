@@ -13,13 +13,12 @@ sub html {
     $str =~ s/"/&quot;/g;
     $str =~ s/'/&#x27;/g;
     return $str;
-}    
+}
 
 #
 # ヘッダ部を書き出します
 #
 print <<EOF;
-Content-Type: text/html
 Content-Type: text/html
 
 <!doctype html>

@@ -39,11 +39,11 @@ void Client::SetEventStatus(enum SocketStatus status) {
 void Client::Prepare(void) {
   // temp
   int ret;
-  ret = READ_FILE;
+  // ret = READ_FILE;
   // ret = WRITE_FILE;
   // ret = WRITE_CGI;
   // ret = WRITE_CLIENT;
-  // ret = READ_WRITE_CGI;
+  ret = READ_WRITE_CGI;
   if (socket_status_ != WRITE_CLIENT) SetEventStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
@@ -150,11 +150,11 @@ int Client::ReadCGIout() {
     return ret;
   }
   response_.AppendRawData(buf);
-  if (!ret) response_.EndCGI();
   if (ret == 0) {
+    response_.EndCGI();
+    waitpid(-1, NULL, 0);
     close(read_fd_);
     response_.SetStatusCode(200);
-    response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Length",
                            ft::ltoa(response_.GetBody().length()));
     SetEventStatus(WRITE_CLIENT);
@@ -170,10 +170,10 @@ void Client::WriteCGIin() {
     if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
       throw std::runtime_error("write error\n");
     EraseRequestBody(ret);
-  }
-  if (request_.GetBody().empty()) {
-    close(write_fd_);
-    SetEventStatus(WRITE_CLIENT);
+    if (request_.GetBody().empty()) {
+      close(write_fd_);
+      SetEventStatus(WRITE_CLIENT);
+    }
   }
 }
 
@@ -199,8 +199,6 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, char **args,
 }
 
 void Client::GenProcessForCGI() {
-  CGI cgi_vals = CGI(request_, this->port_, this->host_ip_, config_);
-
   int pipe_write[2];
   int pipe_read[2];
   pid_t pid;
@@ -208,6 +206,7 @@ void Client::GenProcessForCGI() {
   SetPipe(pipe_write, pipe_read);
 
   if ((pid = fork()) == 0) {
+    CGI cgi_vals = CGI(request_, port_, host_ip_, config_);
     ExecCGI(pipe_write, pipe_read, cgi_vals.GetArgs(), cgi_vals.GetEnvs());
   }
 

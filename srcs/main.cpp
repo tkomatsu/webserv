@@ -3,16 +3,7 @@
 
 #include "WebServ.hpp"
 
-void sigchld_handler(int s) {
-  (void)s;
-  int olderrno = errno;
-  waitpid(-1, NULL, 0);
-  errno = olderrno;
-}
-
 int main(int argc, char *argv[]) {
-  signal(SIGCHLD, sigchld_handler);
-
   if (!(argc == 1 || argc == 2)) {
     std::cerr << "usage: ./webserv config_file" << std::endl;
     return (EXIT_FAILURE);
