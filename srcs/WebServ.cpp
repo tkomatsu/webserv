@@ -29,10 +29,10 @@ WebServ::~WebServ() {
 void WebServ::ParseConfig(const std::string &path) {
   config::Parser parser(path);
 
-  std::vector<struct config::Config> configs = parser.GetConfigs();
+  std::vector<config::Config> configs = parser.GetConfigs();
   if (configs.empty()) return;
 
-  std::vector<struct config::Config>::const_iterator itr;
+  std::vector<config::Config>::const_iterator itr;
   for (itr = configs.begin(); itr != configs.end(); ++itr) {
     Server *server = new Server(*itr);
     int fd = server->SetSocket();

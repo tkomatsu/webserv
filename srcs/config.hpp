@@ -54,7 +54,7 @@ struct Server {
 };
 
 struct Location {
-  Location(const std::string& path, const struct Server& server);
+  Location(const struct Server& server);
 
   bool autoindex;
   int client_max_body_size;
@@ -69,8 +69,32 @@ struct Location {
   std::pair<int, std::string> redirect;
 };
 
-struct Config : Server {
-  Config(const struct Server& server) : Server(server) {};
+class Config {
+ public:
+  Config(const struct Server& server);
+  ~Config();
+  Config(const Config& other);
+  Config& operator=(const Config& other);
+
+  int GetPort() const;
+  std::string GetHost() const;
+  std::string GetServerName() const;
+
+  bool GetAutoindex(const std::string& uri) const;
+  int GetClientMaxBodySize(const std::string& uri) const;
+  std::string GetAlias(const std::string& uri) const;
+  std::string GetUploadPass(const std::string& uri) const;
+  std::string GetUploadStore(const std::string& uri) const;
+  std::set<std::string> GetExtensions(const std::string& uri) const;
+  std::set<std::string> GetIndexes(const std::string& uri) const;
+  std::map<int, std::string> GetErrorPages(const std::string& uri) const;
+  std::set<enum Method> GetAllowedMethods(const std::string& uri) const;
+  std::pair<int, std::string> GetRedirect(const std::string& uri) const;
+
+ private:
+  struct Server server_;
+
+  const struct Location* MatchLocation(const std::string& uri) const;
 };
 
 struct LineComponent;
@@ -89,7 +113,7 @@ class Parser {
   explicit Parser(const std::string& filename);
   ~Parser();
 
-  std::vector<struct Config> GetConfigs();
+  std::vector<Config> GetConfigs();
   void Print() const;
 
  private:

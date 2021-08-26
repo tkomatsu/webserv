@@ -13,7 +13,7 @@ class Client : public Socket {
  public:
   static const int buf_max_;
 
-  Client(const struct config::Config config);
+  Client(const config::Config &config);
 
   int SetSocket(int _fd);
 

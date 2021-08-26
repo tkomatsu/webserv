@@ -1,5 +1,9 @@
 #include "config.hpp"
 
+#include <algorithm>
+
+#include "Client.hpp"
+
 namespace {
 
 std::string::const_iterator skip_leading_whitespace(
@@ -17,8 +21,7 @@ std::string MapToString(const std::map<FirstType, SecondType>& map) {
   }
   typename std::map<FirstType, SecondType>::const_iterator itr = map.begin();
   oss << itr->first << ": " << itr->second;
-  while (++itr != map.end())
-    oss << ", " << itr->first << ": " << itr->second;
+  while (++itr != map.end()) oss << ", " << itr->first << ": " << itr->second;
   oss << "}";
   return oss.str();
 }
@@ -35,13 +38,12 @@ std::string VectorToString(const std::vector<T>& vector) {
   std::ostringstream oss;
   oss << "[";
   if (vector.empty()) {
-      oss << "]";
-      return oss.str();
+    oss << "]";
+    return oss.str();
   }
   typename std::vector<T>::const_iterator itr = vector.begin();
   oss << *itr;
-  while (++itr != vector.end())
-    oss << ", " << *itr;
+  while (++itr != vector.end()) oss << ", " << *itr;
   oss << "]";
   return oss.str();
 }
@@ -51,19 +53,19 @@ std::string SetToString(const std::set<T>& set) {
   std::ostringstream oss;
   oss << "[";
   if (set.empty()) {
-      oss << "]";
-      return oss.str();
+    oss << "]";
+    return oss.str();
   }
   typename std::set<T>::const_iterator itr = set.begin();
   oss << *itr;
-  while (++itr != set.end())
-    oss << ", " << *itr;
+  while (++itr != set.end()) oss << ", " << *itr;
   oss << "]";
   return oss.str();
 }
 
 template <typename T>
-void PrintKeyValue(const std::string& key, const T& value, bool indent = false) {
+void PrintKeyValue(const std::string& key, const T& value,
+                   bool indent = false) {
   if (indent) std::cerr << "          ";
   std::cerr << std::setw(22) << std::left << key << ": " << value << std::endl;
 }
@@ -76,19 +78,11 @@ bool IsInteger(const std::string& s) {
   return true;
 }
 
-bool IsExtension(const std::string& s) {
-  return s == ".php" || s == ".py";
-}
+bool IsExtension(const std::string& s) { return s == ".php" || s == ".py"; }
 
 }  // namespace
 
 namespace config {
-
-Parser::Parser(const std::string& filename) : filename_(filename) {
-  Load();
-}
-
-Parser::~Parser() {}
 
 Main::Main() {
   print_config = false;
@@ -106,7 +100,7 @@ Server::Server(const struct Main& main) {
   error_pages = main.error_pages;
 }
 
-Location::Location(const std::string& path, const struct Server& server) : path(path) {
+Location::Location(const struct Server& server) {
   autoindex = server.autoindex;
   client_max_body_size = server.client_max_body_size;
   upload_pass = server.upload_pass;
@@ -117,16 +111,107 @@ Location::Location(const std::string& path, const struct Server& server) : path(
   redirect = server.redirect;
 }
 
-std::vector<struct Config> Parser::GetConfigs() {
-  std::vector<struct Config> configs;
+Config::Config(const struct Server& server) : server_(server){};
 
-  if (servers_.empty())
-    return configs;
+Config::~Config(){};
+
+Config::Config(const Config& other) : server_(other.server_) {}
+
+Config& Config::operator=(const Config& other) {
+  if (this != &other) {
+    server_ = other.server_;
+  }
+  return *this;
+}
+
+int Config::GetPort() const { return server_.port; }
+
+std::string Config::GetHost() const { return server_.host; }
+
+std::string Config::GetServerName() const { return server_.server_name; }
+
+const struct Location* Config::MatchLocation(const std::string& uri) const {
+  if (server_.locations.empty())
+    throw std::runtime_error("no location specified");
+  const struct Location* longest_prefix = NULL;
+  std::vector<const struct Location>::const_iterator itr;
+  for (itr = server_.locations.begin(); itr != server_.locations.end(); ++itr) {
+    if (uri.find(itr->path) == 0) {
+      if (longest_prefix == NULL)
+        longest_prefix = &*itr;
+      else if (itr->path.length() > longest_prefix->path.length())
+        longest_prefix = &*itr;
+    }
+  }
+  if (longest_prefix == NULL)
+    // throw Client::HttpResponseException("no matching location found");
+    throw Client::HttpResponseException("404");
+  return longest_prefix;
+}
+
+bool Config::GetAutoindex(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->autoindex;
+}
+
+int Config::GetClientMaxBodySize(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->client_max_body_size;
+}
+
+std::string Config::GetAlias(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->alias;
+}
+
+std::string Config::GetUploadPass(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->upload_pass;
+}
+
+std::string Config::GetUploadStore(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->upload_store;
+}
+
+std::set<std::string> Config::GetExtensions(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->extensions;
+}
+
+std::set<std::string> Config::GetIndexes(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->indexes;
+}
+
+std::map<int, std::string> Config::GetErrorPages(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->error_pages;
+}
+
+std::set<enum Method> Config::GetAllowedMethods(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->allowed_methods;
+}
+
+std::pair<int, std::string> Config::GetRedirect(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->redirect;
+}
+
+Parser::Parser(const std::string& filename) : filename_(filename) { Load(); }
+
+Parser::~Parser() {}
+
+std::vector<Config> Parser::GetConfigs() {
+  std::vector<Config> configs;
+
+  if (servers_.empty()) return configs;
 
   std::vector<struct Server>::const_iterator itr;
   for (itr = servers_.begin(); itr != servers_.end(); ++itr) {
-    struct Config config = *itr;
-    configs.push_back(*itr);
+    Config config = Config(*itr);
+    configs.push_back(config);
   }
 
   return configs;
@@ -171,10 +256,8 @@ void Parser::Load() {
       (this->*(f))(context, line.name, line.params);
     }
 
-    if (line.type == BLOCK_START)
-      PushContext(context);
-    if (line.type == BLOCK_END)
-      PopContext(context);
+    if (line.type == BLOCK_START) PushContext(context);
+    if (line.type == BLOCK_END) PopContext(context);
   }
 
   if (print_config_) Print();
@@ -237,7 +320,7 @@ void Parser::AddPrintConfig(enum Context context, const std::string& name,
 }
 
 void Parser::AddServer(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                       const std::vector<std::string>& params) {
   if (context != MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
   if (!params.empty())
@@ -248,7 +331,7 @@ void Parser::AddServer(enum Context context, const std::string& name,
 }
 
 void Parser::AddLocation(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                         const std::vector<std::string>& params) {
   if (context != SERVER)
     throw ContextError(BuildError(name, "is not allowed here"));
   if (params.size() != 1)
@@ -259,16 +342,16 @@ void Parser::AddLocation(enum Context context, const std::string& name,
   struct Server& server = servers_.back();
   std::vector<struct Location>::const_iterator itr;
   for (itr = server.locations.begin(); itr != server.locations.end(); ++itr) {
-    if (itr->path == path)
-      throw ParameterError(BuildError(name, "duplicated"));
+    if (itr->path == path) throw ParameterError(BuildError(name, "duplicated"));
   }
 
-  struct Location location(path, server);
+  struct Location location(server);
+  location.path = path;
   server.locations.push_back(location);
 }
 
 void Parser::AddErrorPage(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                          const std::vector<std::string>& params) {
   if (params.size() < 2 || params.size() > 200)
     throw ParameterError(BuildError(name, "with wrong number of parameter"));
 
@@ -291,15 +374,14 @@ void Parser::AddErrorPage(enum Context context, const std::string& name,
 }
 
 void Parser::AddClientMaxBodySize(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                                  const std::vector<std::string>& params) {
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
   if (!IsInteger(params.front()))
     throw ParameterError(BuildError(name, "string is not a number"));
   int size = std::atoi(params.front().c_str());
-  if (size < 0)
-    throw ParameterError(BuildError(name, "cannot be negative"));
+  if (size < 0) throw ParameterError(BuildError(name, "cannot be negative"));
   if (context == MAIN)
     main_.client_max_body_size = size;
   else if (context == SERVER)
@@ -308,9 +390,8 @@ void Parser::AddClientMaxBodySize(enum Context context, const std::string& name,
     servers_.back().locations.back().client_max_body_size = size;
 }
 
-
 void Parser::AddAutoindex(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                          const std::vector<std::string>& params) {
   if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
   if (!(params.front() == "on" || params.front() == "off"))
@@ -326,13 +407,13 @@ void Parser::AddAutoindex(enum Context context, const std::string& name,
 }
 
 void Parser::AddIndex(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                      const std::vector<std::string>& params) {
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
-    if (itr->empty())
-      throw ParameterError(BuildError(name, "cannot be empty"));
+  for (std::vector<std::string>::const_iterator itr = params.begin();
+       itr != params.end(); ++itr) {
+    if (itr->empty()) throw ParameterError(BuildError(name, "cannot be empty"));
     if (context == MAIN)
       main_.indexes.insert(*itr);
     else if (context == SERVER)
@@ -390,7 +471,8 @@ void Parser::AddAllowedMethods(enum Context context, const std::string& name,
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
+  for (std::vector<std::string>::const_iterator itr = params.begin();
+       itr != params.end(); ++itr) {
     if (*itr == "GET")
       servers_.back().locations.back().allowed_methods.insert(GET);
     else if (*itr == "POST")
@@ -403,7 +485,7 @@ void Parser::AddAllowedMethods(enum Context context, const std::string& name,
 }
 
 void Parser::AddAlias(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                      const std::vector<std::string>& params) {
   if (context != LOCATION)
     throw ContextError(BuildError(name, "is not allowed here"));
   if (params.size() != 1)
@@ -413,7 +495,7 @@ void Parser::AddAlias(enum Context context, const std::string& name,
 }
 
 void Parser::AddUploadPass(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                           const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
   if (params.size() != 1)
@@ -426,7 +508,7 @@ void Parser::AddUploadPass(enum Context context, const std::string& name,
 }
 
 void Parser::AddUploadStore(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                            const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
   if (params.size() != 1)
@@ -439,13 +521,14 @@ void Parser::AddUploadStore(enum Context context, const std::string& name,
 }
 
 void Parser::AddExtensions(enum Context context, const std::string& name,
-    const std::vector<std::string>& params) {
+                           const std::vector<std::string>& params) {
   if (context == MAIN)
     throw ContextError(BuildError(name, "is not allowed here"));
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  for (std::vector<std::string>::const_iterator itr = params.begin(); itr != params.end(); ++itr) {
+  for (std::vector<std::string>::const_iterator itr = params.begin();
+       itr != params.end(); ++itr) {
     if (!IsExtension(*itr))
       throw ParameterError(BuildError(name, "is not valid"));
     if (context == SERVER)
@@ -461,9 +544,12 @@ void Parser::Print() const {
   for (std::vector<struct Server>::const_iterator itr = servers_.begin();
        itr != servers_.end(); ++itr) {
     const Server& server = *itr;
-    std::cerr << "------------------------------------------------------------------------------" << std::endl;
-    std::cerr << "                                 ~ Server ~"<< std::endl;
-    std::cerr << "------------------------------------------------------------------------------";
+    std::cerr << "-------------------------------------------------------------"
+                 "-----------------"
+              << std::endl;
+    std::cerr << "                                 ~ Server ~" << std::endl;
+    std::cerr << "-------------------------------------------------------------"
+                 "-----------------";
     std::cerr << std::endl;
     PrintKeyValue("autoindex", server.autoindex);
     PrintKeyValue("port", server.port);
@@ -479,11 +565,14 @@ void Parser::Print() const {
     for (std::vector<struct config::Location>::const_iterator itr =
              server.locations.begin();
          itr != server.locations.end(); ++itr) {
-      std::cerr << "------------------------------------------------------------------------------" << std::endl;
+      std::cerr << "-----------------------------------------------------------"
+                   "-------------------"
+                << std::endl;
       const struct config::Location& location = *itr;
       std::cerr << "Location: " << location.path << std::endl;
       PrintKeyValue("autoindex", location.autoindex, true);
-      PrintKeyValue("client_max_body_size", location.client_max_body_size, true);
+      PrintKeyValue("client_max_body_size", location.client_max_body_size,
+                    true);
       PrintKeyValue("index", SetToString(location.indexes), true);
       PrintKeyValue("alias", location.alias, true);
       PrintKeyValue("error_page", MapToString(location.error_pages), true);
@@ -497,9 +586,9 @@ void Parser::Print() const {
   }
 }
 
-LineBuilder::LineBuilder(std::ifstream& file) : file_(file) {};
+LineBuilder::LineBuilder(std::ifstream& file) : file_(file){};
 
-LineBuilder::~LineBuilder() {};
+LineBuilder::~LineBuilder(){};
 
 bool LineBuilder::GetNext(LineComponent& line) {
   line.name.clear();
@@ -507,8 +596,7 @@ bool LineBuilder::GetNext(LineComponent& line) {
   line.type = NONE;
 
   do {
-    if (current_.empty() && !std::getline(file_, current_))
-      break;
+    if (current_.empty() && !std::getline(file_, current_)) break;
     Extract(line);
   } while (line.type == NONE);
 
@@ -519,8 +607,7 @@ void LineBuilder::Extract(LineComponent& line) {
   std::string::const_iterator curr = current_.begin();
   std::string::const_iterator end = current_.end();
 
-  if (line.name.empty())
-    curr = ExtractName(line.name, curr, end);
+  if (line.name.empty()) curr = ExtractName(line.name, curr, end);
   curr = ExtractParams(line.params, curr, end);
   curr = ExtractType(line.type, curr, end);
 
@@ -541,11 +628,9 @@ std::string::const_iterator LineBuilder::ExtractName(
   std::string::const_iterator to;
 
   from = skip_leading_whitespace(begin, end);
-  if (from == end)
-    return end;
+  if (from == end) return end;
 
-  if (!std::isalpha(*from) && *from != '_')
-    return from;
+  if (!std::isalpha(*from) && *from != '_') return from;
 
   to = from;
   while (std::isalnum(*to) || *to == '_') ++to;
@@ -561,8 +646,7 @@ std::string::const_iterator LineBuilder::ExtractParams(
   std::string::const_iterator to;
 
   from = skip_leading_whitespace(begin, end);
-  if (from == end)
-    return end;
+  if (from == end) return end;
 
   for (to = from; to != end; ++to)
     if (*to == '{' || *to == '}' || *to == ';' || (to == begin && *to == '#') ||
@@ -579,7 +663,6 @@ std::string::const_iterator LineBuilder::ExtractParams(
 std::string::const_iterator LineBuilder::ExtractType(
     LineType& type, std::string::const_iterator begin,
     std::string::const_iterator end) {
-
   // either {, }, ;, #, or end
   if (begin == end) {
     type = NONE;
