@@ -111,7 +111,6 @@ int Client::ReadStaticFile() {
     return ret;
   } else if (ret == 0) {
     close(read_fd_);
-    // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
     response_.AppendHeader("Content-Length",
                            ft::ltoa(response_.GetBody().size()));
     SetEventStatus(WRITE_CLIENT);
@@ -121,7 +120,6 @@ int Client::ReadStaticFile() {
   return ret;
 }
 
-// TODO
 void Client::WriteStaticFile() {
   int ret = 1;
 
