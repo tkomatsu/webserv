@@ -77,8 +77,6 @@ void Response::SetStatusCode(int status) {
   SetStatusMessage(kResponseStatus.code.find(status)->second);
 }
 
-void Response::SetBody(std::string body) { body_ = body; }
-
 int Response::GetStatusCode() const { return status_code_; }
 
 void Response::EndCGI() { status_ = DONE; }
@@ -168,7 +166,7 @@ void Response::AutoIndexResponse(const std::string& path) {
   if (body.empty())
     ErrorResponse(404);
   else
-    SetBody(body);
+    AppendBody(body);
 }
 
 std::string Response::AutoIndexHtml(const std::string& dir_path) {

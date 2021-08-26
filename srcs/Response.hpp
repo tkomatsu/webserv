@@ -33,7 +33,6 @@ class Response : public HttpMessage {
   ~Response();
 
   void SetStatusCode(int status);
-  void SetBody(std::string body);
 
   int GetStatusCode() const;
   const std::string& GetStatusMessage() const;
