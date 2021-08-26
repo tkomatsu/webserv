@@ -206,7 +206,9 @@ void Client::GenProcessForCGI() {
 
   SetPipe(pipe_write, pipe_read);
 
-  if ((pid = fork()) == 0) {
+  if ((pid = fork()) < 0)
+    throw std::runtime_error("fork error\n");
+  else if (pid == 0) {
     CGI cgi_vals = CGI(request_, port_, host_ip_, config_);
     ExecCGI(pipe_write, pipe_read, cgi_vals);
   }
