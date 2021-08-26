@@ -6,9 +6,9 @@ skinparam shadowing false
 class Webserv {
   - max_fd : int
   - sockets : map<int, Socket>
-  + Activate() : void
+  + Activate(void) : void
   - ParseConfig(const string&) : void
-  - HasUsableIO() : int
+  - HasUsableIO(void) : int
   - AcceptSession(map<int, Socket>::iterator) : void
   - ReadClient(map<int, Socket>::iterator) : void
   - ReadFile(map<int, Socket>::iterator) : void
@@ -22,12 +22,13 @@ interface ISocket {
   # address : struct sockaddr_in
   # port : int
   # host : char*
-  # config : struct Config
+  # socket_status : enum SocketStatus
 }
 
 class Server {
+  - config : config::Config
   + SetSocket() : int
-  + Accept() : int
+  + GetConfig() : const config::Config
 }
 
 class Client {
@@ -36,26 +37,28 @@ class Client {
   - write_fd : int
   - read_fd : int
   - status : enum ClientStatus
+  - sended : size_t
+  - config : const config::Config
   + SetSocket(int) : int
-  + SetEventStatus(enum ClientStatus) : void
-  + BranchRequest(int) : enum SocketStatus
-  + ReadFile(int) : bool
-  + WriteFile(int) : bool
-  + WriteCGI(int) : bool
-  + ReadCGI(int) : bool
-  + HandleResponse(int) : bool
+  + RecvRequest(int) : int
+  + ReadStaticFile(int) : int
+  + ReadCGIout(void) : int
+  + SendResponse(int) : int
+  + WriteStaticFile(int) : void
+  + WriteCGIin(int) : void
+  + GetStatus() const : enum ClientStatus
   + GetWriteFd() const : int
   + GetReadFd() const : int
-  + GetStatus() const : enum ClientStatus
+  + HandleException(const char*) : void
 }
 
 class HttpMessage {
-  - status : enum ParseStatus
-  - delim : string
-  - raw : string
-  - http_version : string
-  - headers : map<string, string>
-  - body : string
+  # status : enum ParseStatus
+  # delim : string
+  # raw : string
+  # http_version : string
+  # headers : map<string, string>
+  # body : string
   + AppendRawData(const string&) : void
   + AppendHeader(const string&, const string&) : void
   + AppendHeader(const pair<string, string>&) : void
@@ -67,11 +70,7 @@ class HttpMessage {
   + GetHeader(const string&) const : const string&
   + GetBody() const : const string&
   + Now(time_t) : string
-  + Clear(): void
-  - {abstract} ParseMessage() : void
-  - {abstract} ParseStartline() : void
-  - {abstract} ParseHeader() : void
-  - {abstract} ParseBody() : void
+  + Clear(void): void
 }
 
 class Request {
@@ -80,11 +79,8 @@ class Request {
   + GetMethod() const : enum Method
   + GetURI() const : const string&
   + GetStatus() const : enum ParseStatus
-  + Clear() : void
-  - {abstract} ParseMessage() : void
-  - {abstract} ParseStartline() : void
-  - {abstract} ParseHeader() : void
-  - {abstract} ParseBody() : void
+  + EraseBody(ssize_t) : void
+  + Clear(void) : void
 }
 
 class Response {
@@ -94,14 +90,12 @@ class Response {
   + SetStatusCode(int) : void
   + GetStatusCode() const : int
   + GetStautsMessage() const : const string&
-  + EndCGI() : void
-  + Str() : string
-  + Clear() : void
-  - SetStatusMessage(const string&) : void
-  - {abstract} ParseMessage() : void
-  - {abstract} ParseStartline() : void
-  - {abstract} ParseHeader() : void
-  - {abstract} ParseBody() : void
+  + EndCGI(void) : void
+  + Str(void) : string
+  + EraseBody(ssize_t) : void
+  + Clear(void) : void
+  + ErrorResponse(int) : void
+  + AutoIndexResponse(const std::string&) : void
 }
 
 enum Method {
@@ -168,5 +162,6 @@ HttpMessage <|-- Response
 config::Server *-- config::Location
 config::Config <|-- config::Server
 Server *-- config::Config
+Client *-- config::Config
 
 @enduml
