@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include "CGI.hpp"
 #include "ISocket.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
@@ -39,7 +40,7 @@ class Client : public Socket {
   void Prepare(void);
   void GenProcessForCGI(void);
   void SetPipe(int *pipe_write, int *pipe_read);
-  void ExecCGI(int *pipe_write, int *pipe_read, char **args, char **envs);
+  void ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi);
   bool IsValidRequest();
 
   // member variables

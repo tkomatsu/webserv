@@ -15,8 +15,8 @@ class CGI {
   static const int num_envs_;
   static const std::string methods_[4];
 
-  char **GetArgs() { return args_; };
-  char **GetEnvs() { return envs_; };
+  char **GetArgs() const { return args_; };
+  char **GetEnvs() const { return envs_; };
 
  private:
   void SetArgs();
@@ -34,4 +34,4 @@ class CGI {
   std::map<std::string, std::string> envs_map_;
 };
 
-#endif
+#endif /* CGI_HPP */

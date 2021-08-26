@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 
-#include "CGI.hpp"
 #include "utility.hpp"
 
 const int Client::buf_max_ = 8192;
@@ -182,8 +181,10 @@ void Client::SetPipe(int *pipe_write, int *pipe_read) {
   if (pipe(pipe_read) == -1) throw std::runtime_error("pipe error\n");
 }
 
-void Client::ExecCGI(int *pipe_write, int *pipe_read, char **args,
-                     char **envs) {
+void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi) {
+  char **args = cgi.GetArgs();
+  char **envs = cgi.GetEnvs();
+
   if (dup2(pipe_write[0], STDIN_FILENO) == -1)
     throw std::runtime_error("pipe error\n");
   if (dup2(pipe_read[1], STDOUT_FILENO) == -1)
@@ -207,7 +208,7 @@ void Client::GenProcessForCGI() {
 
   if ((pid = fork()) == 0) {
     CGI cgi_vals = CGI(request_, port_, host_ip_, config_);
-    ExecCGI(pipe_write, pipe_read, cgi_vals.GetArgs(), cgi_vals.GetEnvs());
+    ExecCGI(pipe_write, pipe_read, cgi_vals);
   }
 
   write_fd_ = pipe_write[1];
