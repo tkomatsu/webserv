@@ -30,14 +30,11 @@ class Client : public Socket {
   int GetWriteFd() { return write_fd_; };
   int GetReadFd() { return read_fd_; };
 
-  // Clear
-  void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
-  void ClearResponse(void) { response_.Clear(); }
-
   // Exception handling
   void HandleException(const char *err_msg);
 
  private:
+  void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
   void SetStatus(enum SocketStatus status);
   void Prepare(void);
   void GenProcessForCGI(void);
