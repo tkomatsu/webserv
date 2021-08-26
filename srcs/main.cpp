@@ -3,9 +3,15 @@
 
 #include "WebServ.hpp"
 
+void sigchld_handler(int s) {
+  (void)s;
+  int olderrno = errno;
+  waitpid(-1, NULL, 0);
+  errno = olderrno;
+}
+
 int main(int argc, char *argv[]) {
-  // SIGCHILDに対するデフォルト挙動が無視だから不要では？
-  signal(SIGCHLD, SIG_IGN);
+  signal(SIGCHLD, sigchld_handler);
 
   if (!(argc == 1 || argc == 2)) {
     std::cerr << "usage: ./webserv config_file" << std::endl;
