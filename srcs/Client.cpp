@@ -30,21 +30,6 @@ int Client::SetSocket(int _fd) {
   return fd;
 }
 
-void Client::AppendResponseBody(std::string buf) { response_.AppendBody(buf); };
-
-void Client::AppendResponseHeader(std::string key, std::string val) {
-  response_.AppendHeader(key, val);
-};
-
-void Client::AppendResponseHeader(std::pair<std::string, std::string> header) {
-  response_.AppendHeader(header);
-};
-
-void Client::AppendResponseRawData(std::string data, bool is_continue) {
-  response_.AppendRawData(data);
-  if (!is_continue) response_.EndCGI();
-};
-
 void Client::SetStatus(enum SocketStatus status) { socket_status_ = status; }
 
 // ここの各準備処理を先々の関数に分けるのはやりづらい…
@@ -125,11 +110,11 @@ int Client::ReadStaticFile() {
   } else if (ret == 0) {
     close(read_fd_);
     // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
-    AppendResponseHeader("Content-Length",
-                         ft::ltoa(response_.GetBody().size()));
+    response_.AppendHeader("Content-Length",
+                           ft::ltoa(response_.GetBody().size()));
     SetStatus(WRITE_CLIENT);
   } else {
-    AppendResponseBody(buf);
+    response_.AppendBody(buf);
   }
   return ret;
 }
@@ -164,13 +149,14 @@ int Client::ReadCGIout() {
     close(read_fd_);
     return ret;
   }
-  AppendResponseRawData(buf, ret);
+  response_.AppendRawData(buf);
+  if (!ret) response_.EndCGI();
   if (ret == 0) {
     close(read_fd_);
     response_.SetStatusCode(200);
     response_.AppendHeader("Content-Type", "text/html");
-    AppendResponseHeader("Content-Length",
-                         ft::ltoa(response_.GetBody().length()));
+    response_.AppendHeader("Content-Length",
+                           ft::ltoa(response_.GetBody().length()));
     SetStatus(WRITE_CLIENT);
   }
   return ret;
