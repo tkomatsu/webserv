@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <string>
 
 #include "CGI.hpp"
 #include "utility.hpp"
@@ -85,9 +86,12 @@ int Client::RecvRequest(int client_fd) {
   if (ret == 0) return ret;   // closed by client
 
   request_.AppendRawData(buf);
+  if (request_.GetStatus() == HttpMessage::DONE) {
+    std::cout << "\nrecv from " << host_ip_ << ":" << port_ << std::endl;
+    Prepare();
+  }
   if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
-    response_.ErrorResponse(405);
-    SetStatus(WRITE_CLIENT);
+    throw HttpResponseException("405");
   }
   return 1;
 }
@@ -140,7 +144,7 @@ void Client::WriteStaticFile() {
       throw std::runtime_error("write error\n");
   }
   EraseRequestBody(ret);
-  if (GetRequestBody().empty()) {
+  if (request_.GetBody().empty()) {
     close(write_fd_);
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
@@ -181,7 +185,7 @@ void Client::WriteCGIin() {
       throw std::runtime_error("write error\n");
     EraseRequestBody(ret);
   }
-  if (GetRequestBody().empty()) {
+  if (request_.GetBody().empty()) {
     close(write_fd_);
     SetStatus(WRITE_CLIENT);
   }
@@ -236,4 +240,9 @@ void Client::GenProcessForCGI() {
 bool Client::IsValidRequest(void) {
   if (request_.GetMethod() != GET) return false;
   return true;
+}
+
+void Client::HandleException(const char *err_msg) {
+  response_.ErrorResponse(std::atoi(err_msg));
+  SetStatus(WRITE_CLIENT);
 }

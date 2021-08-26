@@ -29,29 +29,24 @@ class Client : public Socket {
   void WriteCGIin();
 
   // Getter
-  const Response &GetResponse() { return response_; };
-  const Request &GetRequest() { return request_; };
   int GetStatus() { return socket_status_; };
   int GetWriteFd() { return write_fd_; };
   int GetReadFd() { return read_fd_; };
-  int GetPort() { return port_; };
-  std::string GetHostIp() { return host_ip_; };
-
-  const std::string &GetResponseBody() const { return response_.GetBody(); };
-  const std::string &GetRequestBody() { return request_.GetBody(); };
 
   // Setter
   void AppendResponseBody(std::string buf);
   void AppendResponseHeader(std::string key, std::string val);
   void AppendResponseHeader(std::pair<std::string, std::string> header);
   void AppendResponseRawData(std::string data, bool is_continue);
-
   void SetResponseBody(std::string buf) { response_.SetBody(buf); };
   void SetStatus(enum SocketStatus status);
 
   // Clear
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
   void ClearResponse(void) { response_.Clear(); }
+
+  // Exception handling
+  void HandleException(const char *err_msg);
 
  private:
   void SetPipe(int *pipe_write, int *pipe_read);

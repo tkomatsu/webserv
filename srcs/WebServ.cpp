@@ -69,11 +69,6 @@ void WebServ::ReadClient(socket_iter it) {
     sockets_.erase(it);
     if (ret < 0) throw std::runtime_error("recv error\n");
   }
-  if (client->GetRequest().GetStatus() == HttpMessage::DONE) {
-    std::cout << "\nrecv from " + client->GetHostIp() << ":"
-              << client->GetPort() << std::endl;
-    client->Prepare();
-  }
 }
 
 void WebServ::ReadFile(socket_iter it) {
@@ -240,10 +235,15 @@ void WebServ::Activate(void) {
     if (n > 0) {
       for (std::map<int, Socket *>::iterator it = sockets_.begin();
            n && it != sockets_.end(); ++it) {
-        if (dynamic_cast<Server *>(it->second)) {
-          if (AcceptSession(it) == 1) --n;
-        } else {
-          if ((hit = ExecClientEvent(it) > 0)) n -= hit;
+        try {
+          if (dynamic_cast<Server *>(it->second)) {
+            if (AcceptSession(it) == 1) --n;
+          } else {
+            if ((hit = ExecClientEvent(it) > 0)) n -= hit;
+          }
+        } catch (Client::HttpResponseException &e) {
+          Client *client = dynamic_cast<Client *>(it->second);
+          client->HandleException(e.what());
         }
       }
     } else {
