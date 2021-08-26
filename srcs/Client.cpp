@@ -12,7 +12,7 @@
 
 const int Client::buf_max_ = 8192;
 
-Client::Client(const config::Config& config) : config_(config) {
+Client::Client(const config::Config &config) : config_(config) {
   socket_status_ = READ_CLIENT;
   sended_ = 0;
 }
@@ -30,7 +30,9 @@ int Client::SetSocket(int _fd) {
   return fd;
 }
 
-void Client::SetStatus(enum SocketStatus status) { socket_status_ = status; }
+void Client::SetEventStatus(enum SocketStatus status) {
+  socket_status_ = status;
+}
 
 // ここの各準備処理を先々の関数に分けるのはやりづらい…
 // 先々の関数は複数回ループが回るので、一回でいい操作(open)とかはここでやりたい
@@ -42,7 +44,7 @@ void Client::Prepare(void) {
   // ret = WRITE_CGI;
   // ret = WRITE_CLIENT;
   // ret = READ_WRITE_CGI;
-  if (socket_status_ != WRITE_CLIENT) SetStatus((enum SocketStatus)ret);
+  if (socket_status_ != WRITE_CLIENT) SetEventStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
 
@@ -94,7 +96,7 @@ int Client::SendResponse(int client_fd) {
     response_.Clear();
     request_.Clear();
     sended_ = 0;
-    SetStatus(READ_CLIENT);
+    SetEventStatus(READ_CLIENT);
   }
   return 1;  // continue send
 }
@@ -112,7 +114,7 @@ int Client::ReadStaticFile() {
     // TODO: エラーレスポンスのヘッダーとかぶるから消したい。
     response_.AppendHeader("Content-Length",
                            ft::ltoa(response_.GetBody().size()));
-    SetStatus(WRITE_CLIENT);
+    SetEventStatus(WRITE_CLIENT);
   } else {
     response_.AppendBody(buf);
   }
@@ -134,7 +136,7 @@ void Client::WriteStaticFile() {
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Location", "/post.html");
-    SetStatus(WRITE_CLIENT);
+    SetEventStatus(WRITE_CLIENT);
   }
 }
 
@@ -157,7 +159,7 @@ int Client::ReadCGIout() {
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Length",
                            ft::ltoa(response_.GetBody().length()));
-    SetStatus(WRITE_CLIENT);
+    SetEventStatus(WRITE_CLIENT);
   }
   return ret;
 }
@@ -173,7 +175,7 @@ void Client::WriteCGIin() {
   }
   if (request_.GetBody().empty()) {
     close(write_fd_);
-    SetStatus(WRITE_CLIENT);
+    SetEventStatus(WRITE_CLIENT);
   }
 }
 
@@ -230,5 +232,5 @@ bool Client::IsValidRequest(void) {
 
 void Client::HandleException(const char *err_msg) {
   response_.ErrorResponse(std::atoi(err_msg));
-  SetStatus(WRITE_CLIENT);
+  SetEventStatus(WRITE_CLIENT);
 }

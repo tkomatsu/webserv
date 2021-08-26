@@ -35,7 +35,7 @@ class Client : public Socket {
 
  private:
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
-  void SetStatus(enum SocketStatus status);
+  void SetEventStatus(enum SocketStatus status);
   void Prepare(void);
   void GenProcessForCGI(void);
   void SetPipe(int *pipe_write, int *pipe_read);

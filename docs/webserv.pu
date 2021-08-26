@@ -37,7 +37,7 @@ class Client {
   - read_fd : int
   - status : enum ClientStatus
   + SetSocket(int) : int
-  + SetStatus(enum ClientStatus) : void
+  + SetEventStatus(enum ClientStatus) : void
   + BranchRequest(int) : enum SocketStatus
   + ReadFile(int) : bool
   + WriteFile(int) : bool
