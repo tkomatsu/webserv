@@ -26,9 +26,9 @@ class Client : public Socket {
   void WriteCGIin();
 
   // Getter
-  int GetStatus() { return socket_status_; };
-  int GetWriteFd() { return write_fd_; };
-  int GetReadFd() { return read_fd_; };
+  int GetStatus() const { return socket_status_; };
+  int GetWriteFd() const { return write_fd_; };
+  int GetReadFd() const { return read_fd_; };
 
   // Exception handling
   void HandleException(const char *err_msg);

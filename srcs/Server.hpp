@@ -13,7 +13,7 @@ class Server : public Socket {
       : Socket(config.GetPort(), config.GetHost()), config_(config){};
 
   int SetSocket();
-  const config::Config GetConfig();
+  const config::Config& GetConfig() const;
 
  private:
   config::Config config_;

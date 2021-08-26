@@ -26,6 +26,4 @@ int Server::SetSocket() {
   return fd;
 }
 
-const config::Config Server::GetConfig() {
-  return config_;
-}
+const config::Config &Server::GetConfig() const { return config_; }
