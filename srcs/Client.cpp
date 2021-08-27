@@ -38,11 +38,10 @@ void Client::SetEventStatus(enum SocketStatus status) {
 void Client::Prepare(void) {
   // temp
   int ret;
-  // ret = READ_FILE;
-  // ret = WRITE_FILE;
-  // ret = WRITE_CGI;
+  ret = READ_FILE;
+  ret = WRITE_FILE;
   // ret = WRITE_CLIENT;
-  ret = READ_WRITE_CGI;
+  // ret = READ_WRITE_CGI;
   if (socket_status_ != WRITE_CLIENT) SetEventStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
@@ -54,7 +53,9 @@ void Client::Prepare(void) {
       throw std::runtime_error("fcntl error\n");
   } else if (ret == WRITE_FILE) {
     write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644);
-    fcntl(write_fd_, F_SETFL, O_NONBLOCK);
+    if (write_fd_ == -1) throw std::runtime_error("open error\n");
+    if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) == -1)
+      throw std::runtime_error("fcntl error\n");
   } else if (ret == READ_WRITE_CGI) {
     GenProcessForCGI();
   } else if (ret == WRITE_CLIENT) {
@@ -127,12 +128,14 @@ void Client::WriteStaticFile() {
     if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
       throw std::runtime_error("write error\n");
   }
+  response_.AppendBody(request_.GetBody().substr(0, ret));
   EraseRequestBody(ret);
   if (request_.GetBody().empty()) {
     close(write_fd_);
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Location", "/post.html");
+    response_.AppendHeader("Content-Length", ft::ltoa(response_.GetBody().size()));
     SetEventStatus(WRITE_CLIENT);
   }
 }
@@ -226,7 +229,7 @@ void Client::GenProcessForCGI() {
 
 // TODO
 bool Client::IsValidRequest(void) {
-  if (request_.GetMethod() != GET) return false;
+  // if (request_.GetMethod() != GET) return false;
   return true;
 }
 
