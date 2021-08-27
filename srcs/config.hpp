@@ -30,7 +30,7 @@ struct Main {
   bool print_config;
   bool autoindex;
   int client_max_body_size;
-  std::set<std::string> indexes;
+  std::vector<std::string> indexes;
   std::map<int, std::string> error_pages;
 };
 
@@ -47,7 +47,7 @@ struct Server {
   std::string upload_pass;
   std::string upload_store;
   std::set<std::string> extensions;
-  std::set<std::string> indexes;
+  std::vector<std::string> indexes;
   std::map<int, std::string> error_pages;
   std::pair<int, std::string> redirect;
   std::vector<struct Location> locations;
@@ -63,7 +63,7 @@ struct Location {
   std::string upload_pass;
   std::string upload_store;
   std::set<std::string> extensions;
-  std::set<std::string> indexes;
+  std::vector<std::string> indexes;
   std::map<int, std::string> error_pages;
   std::set<enum Method> allowed_methods;
   std::pair<int, std::string> redirect;
@@ -87,7 +87,7 @@ class Config {
   std::string GetUploadPass(const std::string& uri) const;
   std::string GetUploadStore(const std::string& uri) const;
   std::set<std::string> GetExtensions(const std::string& uri) const;
-  std::set<std::string> GetIndexes(const std::string& uri) const;
+  std::vector<std::string> GetIndexes(const std::string& uri) const;
   std::map<int, std::string> GetErrorPages(const std::string& uri) const;
   std::set<enum Method> GetAllowedMethods(const std::string& uri) const;
   std::pair<int, std::string> GetRedirect(const std::string& uri) const;

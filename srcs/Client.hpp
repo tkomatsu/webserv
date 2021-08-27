@@ -1,7 +1,6 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <stdexcept>
 #include <vector>
 
 #include "CGI.hpp"
@@ -43,7 +42,8 @@ class Client : public Socket {
   void ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi);
   bool IsValidRequest();
   bool IsValidExtension(std::string path_uri, std::string request_path);
-  enum SocketStatus GetNextOfReadClient();
+  std::string GetIndexFileIfExist(std::string path_uri, std::string request_path);
+  enum SocketStatus GetNextOfReadClient(std::string *path_uri);
   std::string MakePathUri(std::string alias_path, std::string request_uri,
                           std::string location_path);
 
@@ -54,12 +54,6 @@ class Client : public Socket {
   int write_fd_;
   int read_fd_;
   const config::Config config_;
-
- public:
-  class HttpResponseException : public std::runtime_error {
-   public:
-    HttpResponseException(const std::string &what) : std::runtime_error(what) {}
-  };
 };
 
 #endif /* CLIENT_HPP */

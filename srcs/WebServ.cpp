@@ -4,12 +4,13 @@
 
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
 
 #include "Client.hpp"
 #include "Server.hpp"
 #include "config.hpp"
 
-const std::string WebServ::default_path_ = "./conf/default.conf";
+const std::string WebServ::default_path_ = "./conf/basic.conf";
 
 WebServ::WebServ(const std::string &path) {
   timeout_ = (struct timeval){1, 0};
@@ -67,7 +68,7 @@ void WebServ::ReadClient(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    if (ret < 0) throw std::runtime_error("recv error\n");
+    if (ret < 0) throw std::runtime_error(strerror(errno));
   }
 }
 
@@ -80,7 +81,7 @@ void WebServ::ReadFile(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    throw std::runtime_error("read error\n");
+    throw std::runtime_error(strerror(errno));
   }
 }
 
@@ -93,7 +94,7 @@ void WebServ::ReadCGI(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    throw std::runtime_error("read error\n");
+    throw std::runtime_error(strerror(errno));
   }
 }
 
@@ -105,7 +106,7 @@ void WebServ::WriteClient(socket_iter it) {
   if ((ret = client->SendResponse(client_fd)) < 0) {
     close(client_fd);
     sockets_.erase(it);
-    throw std::runtime_error("send error\n");
+    throw std::runtime_error(strerror(errno));
   }
 }
 
@@ -239,9 +240,9 @@ void WebServ::Activate(void) {
           if (dynamic_cast<Server *>(it->second)) {
             if (AcceptSession(it) == 1) --n;
           } else {
-            if ((hit = ExecClientEvent(it) > 0)) n -= hit;
+            if ((hit = ExecClientEvent(it)) > 0) n -= hit;
           }
-        } catch (Client::HttpResponseException &e) {
+        } catch (ft::HttpResponseException &e) {
           Client *client = dynamic_cast<Client *>(it->second);
           client->HandleException(e.what());
         }

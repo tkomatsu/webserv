@@ -48,57 +48,77 @@ bool Client::IsValidExtension(std::string path_uri, std::string request_path) {
     return false;
 }
 
-enum SocketStatus Client::GetNextOfReadClient() {
+std::string Client::GetIndexFileIfExist(std::string path_uri,
+                                        std::string request_path) {
+  std::vector<std::string> conf_indexes = config_.GetIndexes(request_path);
+
+  for (size_t i = 0; i < conf_indexes.size(); ++i) {
+    struct stat buffer;
+    std::string filename = conf_indexes[i];
+
+    if (stat((path_uri + filename).c_str(), &buffer) != -1) {
+      return filename;
+    }
+  }
+  return "";
+}
+
+enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
   enum SocketStatus ret = WRITE_CLIENT;
 
-  std::vector<std::string> request_uri = ft::vsplit(
-      request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
-      // requestクラスに移動
+  std::vector<std::string> request_uri = ft::vsplit(request_.GetURI(), '?');
 
-  std::cout << request_uri[0] << std::endl;
-  if (request_uri.size() >= 1) std::cout << request_uri[1] << std::endl;
-
+  if (request_uri.size() > 1) std::cout << request_uri[1] << std::endl;
   std::string request_path = request_uri[0];
   std::string alias = config_.GetAlias(request_path);
   std::string location_path = config_.GetPath(request_path);
 
-  std::string path_uri = MakePathUri(alias, request_path, location_path);
-
-
+  *path_uri = MakePathUri(alias, request_path, location_path);
 
   switch (request_.GetMethod()) {
     case GET:
-      if (config_.GetAllowedMethods(request_path).count(GET) == 0)
+      if (config_.GetAllowedMethods(request_path).count(GET) == 0) {
         //  throw 405
         break;
+      }
 
       // (CGI)
-      if (IsValidExtension(path_uri, request_path)) {
+      if (IsValidExtension(*path_uri, request_path)) {
         ret = READ_WRITE_CGI;
         break;
       }
 
       // (SIMPLE GET)
       struct stat buffer;
-      if (stat(path_uri.c_str(), &buffer) == -1)
+      if (stat((*path_uri).c_str(), &buffer) == -1) {
+        std::cout << "わんだらa" << std::endl;
         //   throw 404;
         break;
+      }
+
       if (S_ISREG(buffer.st_mode)) {
+        std::cout << "わんだらb" << std::endl;
         ret = READ_FILE;
         break;
       } else if (S_ISDIR(buffer.st_mode)) {
-        //    (GET INDEX)
-        if (files in dir) in config_.GetIndexes() {
-            //       modify path to the index file
-            //       ret = READ_FILE; (read index file)
-            //       break;
-          }
-        else if (config_.GetAutoindex(request_path) == true) {
-          //    (AUTOINDEX)
+        std::cout << "わんだら" << std::endl;
+
+        *path_uri += "/";
+
+        std::string index_filename =
+            GetIndexFileIfExist(*path_uri, request_path);
+        if (index_filename.empty() == false) {
+          // (GET INDEX)
+          *path_uri += index_filename;
+          ret = READ_FILE;
+          break;
+        } else if (config_.GetAutoindex(request_path) == true) {
+          // (AUTOINDEX)
           ret = WRITE_CLIENT;
           break;
         }
       }
+      std::cout << "わんだらz" << std::endl;
 
       // throw 404
       break;
@@ -145,26 +165,29 @@ void Client::Prepare(void) {
   if (socket_status_ != READ_CLIENT) return;
 
   enum SocketStatus ret;
+  std::string path_uri;
 
-  ret = GetNextOfReadClient();
+  ret = GetNextOfReadClient(&path_uri);
   SetEventStatus(ret);
 
   bool is_autoindex = true;
+  std::cout << "path_uri is " << path_uri << std::endl;
 
   if (ret == READ_FILE) {
-    read_fd_ = open("./docs/html/index.html", O_RDONLY);
-    if (read_fd_ == -1) throw std::runtime_error("open error\n");
+    if ((read_fd_ = open(path_uri.c_str(), O_RDONLY)) < 0)
+      throw ft::HttpResponseException("500");
     if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
-      throw std::runtime_error("fcntl error\n");
+      throw ft::HttpResponseException("500");
   } else if (ret == WRITE_FILE) {
-    write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644);
-    if (write_fd_ == -1) throw std::runtime_error("open error\n");
-    if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) == -1)
-      throw std::runtime_error("fcntl error\n");
+    if ((write_fd_ = open(path_uri.c_str(), O_RDWR | O_CREAT, 0644)) < 0)
+      throw ft::HttpResponseException("500");
+    if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) < 0)
+      throw ft::HttpResponseException("500");
+
   } else if (ret == READ_WRITE_CGI) {
     GenProcessForCGI();
   } else if (ret == WRITE_CLIENT) {
-    if (is_autoindex) response_.AutoIndexResponse("./docs/");
+    if (is_autoindex) response_.AutoIndexResponse(path_uri.c_str());
   }
 }
 
@@ -183,7 +206,7 @@ int Client::RecvRequest(int client_fd) {
     Prepare();
   }
   if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
-    throw HttpResponseException("405");
+    throw ft::HttpResponseException("405");
   }
   return 1;
 }
@@ -231,17 +254,18 @@ void Client::WriteStaticFile() {
   size_t len = std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
   if (request_.GetMethod() == POST) {
     if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
-      throw std::runtime_error("write error\n");
+      throw ft::HttpResponseException("500");
   }
-  response_.AppendBody(request_.GetBody().substr(0, ret));
+
   EraseRequestBody(ret);
   if (request_.GetBody().empty()) {
     close(write_fd_);
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Location", "/post.html");
-    response_.AppendHeader("Content-Length",
-                           ft::ltoa(response_.GetBody().size()));
+
+    response_.AppendHeader("Content-Length", "0");
+
     SetEventStatus(WRITE_CLIENT);
   }
 }
@@ -276,7 +300,7 @@ void Client::WriteCGIin() {
         std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
     int ret = 0;
     if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
-      throw std::runtime_error("write error\n");
+      throw ft::HttpResponseException("500");
     EraseRequestBody(ret);
     if (request_.GetBody().empty()) {
       close(write_fd_);
@@ -286,8 +310,8 @@ void Client::WriteCGIin() {
 }
 
 void Client::SetPipe(int *pipe_write, int *pipe_read) {
-  if (pipe(pipe_write) == -1) throw std::runtime_error("pipe error\n");
-  if (pipe(pipe_read) == -1) throw std::runtime_error("pipe error\n");
+  if (pipe(pipe_write) == -1) throw ft::HttpResponseException("500");
+  if (pipe(pipe_read) == -1) throw ft::HttpResponseException("500");
 }
 
 void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi) {
@@ -295,9 +319,9 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi) {
   char **envs = cgi.GetEnvs();
 
   if (dup2(pipe_write[0], STDIN_FILENO) == -1)
-    throw std::runtime_error("pipe error\n");
+    throw ft::HttpResponseException("500");
   if (dup2(pipe_read[1], STDOUT_FILENO) == -1)
-    throw std::runtime_error("pipe error\n");
+    throw ft::HttpResponseException("500");
 
   close(pipe_write[0]);
   close(pipe_write[1]);
@@ -316,7 +340,7 @@ void Client::GenProcessForCGI() {
   SetPipe(pipe_write, pipe_read);
 
   if ((pid = fork()) < 0)
-    throw std::runtime_error("fork error\n");
+    throw ft::HttpResponseException("500");
   else if (pid == 0) {
     CGI cgi_vals = CGI(request_, port_, host_ip_, config_);
     ExecCGI(pipe_write, pipe_read, cgi_vals);
@@ -324,12 +348,12 @@ void Client::GenProcessForCGI() {
 
   write_fd_ = pipe_write[1];
   if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) != 0)
-    throw std::runtime_error("fcntl error\n");
+    throw ft::HttpResponseException("500");
   close(pipe_write[0]);
 
   read_fd_ = pipe_read[0];
   if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) != 0)
-    throw std::runtime_error("fcntl error\n");
+    throw ft::HttpResponseException("500");
   close(pipe_read[1]);
 }
 
@@ -344,8 +368,9 @@ void Client::HandleException(const char *err_msg) {
   SetEventStatus(WRITE_CLIENT);
 }
 
-std::string MakePathUri(std::string alias_path, std::string request_path,
-                        std::string location_path) {
+std::string Client::MakePathUri(std::string alias_path,
+                                std::string request_path,
+                                std::string location_path) {
   if (alias_path.empty())
     // throw 404
     return "";
