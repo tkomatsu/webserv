@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <ctime>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -34,6 +35,11 @@ std::vector<std::string> vsplit(std::string s, char delim);
 std::pair<std::string, std::string> div(std::string s, char delim);
 std::string AutoIndexNow(time_t time);
 int strcasecmp(const std::string &a, const std::string &b);
+
+class HttpResponseException : public std::runtime_error {
+ public:
+  HttpResponseException(const std::string &what) : std::runtime_error(what) {}
+};
 
 }  // namespace ft
 

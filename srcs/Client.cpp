@@ -77,7 +77,7 @@ int Client::RecvRequest(int client_fd) {
     Prepare();
   }
   if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
-    throw HttpResponseException("405");
+    throw ft::HttpResponseException("405");
   }
   return 1;
 }

@@ -241,7 +241,7 @@ void WebServ::Activate(void) {
           } else {
             if ((hit = ExecClientEvent(it) > 0)) n -= hit;
           }
-        } catch (Client::HttpResponseException &e) {
+        } catch (ft::HttpResponseException &e) {
           Client *client = dynamic_cast<Client *>(it->second);
           client->HandleException(e.what());
         }

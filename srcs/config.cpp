@@ -145,7 +145,7 @@ const struct Location* Config::MatchLocation(const std::string& uri) const {
   }
   if (longest_prefix == NULL)
     // throw Client::HttpResponseException("no matching location found");
-    throw Client::HttpResponseException("404");
+    throw ft::HttpResponseException("404");
   return longest_prefix;
 }
 

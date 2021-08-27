@@ -1,7 +1,6 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <stdexcept>
 #include <vector>
 
 #include "CGI.hpp"
@@ -50,12 +49,6 @@ class Client : public Socket {
   int write_fd_;
   int read_fd_;
   const config::Config config_;
-
- public:
-  class HttpResponseException : public std::runtime_error {
-   public:
-    HttpResponseException(const std::string &what) : std::runtime_error(what) {}
-  };
 };
 
 #endif /* CLIENT_HPP */
