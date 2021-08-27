@@ -47,13 +47,16 @@ void Client::Prepare(void) {
   bool is_autoindex = true;
 
   if (ret == READ_FILE) {
-    read_fd_ = open("./docs/html/index.html", O_RDONLY);
-    if (read_fd_ == -1) throw std::runtime_error("open error\n");
+    if ((read_fd_ = open("./docs/html/index.html", O_RDONLY)) < 0)
+      throw ft::HttpResponseException("500");
     if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
-      throw std::runtime_error("fcntl error\n");
+      throw ft::HttpResponseException("500");
   } else if (ret == WRITE_FILE) {
-    write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644);
-    fcntl(write_fd_, F_SETFL, O_NONBLOCK);
+    if ((write_fd_ = open("./docs/upload/post.html", O_RDWR | O_CREAT, 0644)) <
+        0)
+      throw ft::HttpResponseException("500");
+    if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) < 0)
+      throw ft::HttpResponseException("500");
   } else if (ret == READ_WRITE_CGI) {
     GenProcessForCGI();
   } else if (ret == WRITE_CLIENT) {
@@ -76,7 +79,7 @@ int Client::RecvRequest(int client_fd) {
     Prepare();
   }
   if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
-    throw HttpResponseException("405");
+    throw ft::HttpResponseException("405");
   }
   return 1;
 }
@@ -124,7 +127,7 @@ void Client::WriteStaticFile() {
   size_t len = std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
   if (request_.GetMethod() == POST) {
     if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
-      throw std::runtime_error("write error\n");
+      throw ft::HttpResponseException("500");
   }
   EraseRequestBody(ret);
   if (request_.GetBody().empty()) {
@@ -167,7 +170,7 @@ void Client::WriteCGIin() {
         std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
     int ret = 0;
     if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
-      throw std::runtime_error("write error\n");
+      throw ft::HttpResponseException("500");
     EraseRequestBody(ret);
     if (request_.GetBody().empty()) {
       close(write_fd_);
@@ -177,8 +180,8 @@ void Client::WriteCGIin() {
 }
 
 void Client::SetPipe(int *pipe_write, int *pipe_read) {
-  if (pipe(pipe_write) == -1) throw std::runtime_error("pipe error\n");
-  if (pipe(pipe_read) == -1) throw std::runtime_error("pipe error\n");
+  if (pipe(pipe_write) == -1) throw ft::HttpResponseException("500");
+  if (pipe(pipe_read) == -1) throw ft::HttpResponseException("500");
 }
 
 void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi) {
@@ -186,9 +189,9 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi) {
   char **envs = cgi.GetEnvs();
 
   if (dup2(pipe_write[0], STDIN_FILENO) == -1)
-    throw std::runtime_error("pipe error\n");
+    throw ft::HttpResponseException("500");
   if (dup2(pipe_read[1], STDOUT_FILENO) == -1)
-    throw std::runtime_error("pipe error\n");
+    throw ft::HttpResponseException("500");
 
   close(pipe_write[0]);
   close(pipe_write[1]);
@@ -207,7 +210,7 @@ void Client::GenProcessForCGI() {
   SetPipe(pipe_write, pipe_read);
 
   if ((pid = fork()) < 0)
-    throw std::runtime_error("fork error\n");
+    throw ft::HttpResponseException("500");
   else if (pid == 0) {
     CGI cgi_vals = CGI(request_, port_, host_ip_, config_);
     ExecCGI(pipe_write, pipe_read, cgi_vals);
@@ -215,12 +218,12 @@ void Client::GenProcessForCGI() {
 
   write_fd_ = pipe_write[1];
   if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) != 0)
-    throw std::runtime_error("fcntl error\n");
+    throw ft::HttpResponseException("500");
   close(pipe_write[0]);
 
   read_fd_ = pipe_read[0];
   if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) != 0)
-    throw std::runtime_error("fcntl error\n");
+    throw ft::HttpResponseException("500");
   close(pipe_read[1]);
 }
 
