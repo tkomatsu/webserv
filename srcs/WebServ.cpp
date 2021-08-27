@@ -67,7 +67,7 @@ void WebServ::ReadClient(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    if (ret < 0) throw std::runtime_error("recv error\n");
+    if (ret < 0) throw ft::HttpResponseException("400");
   }
 }
 
@@ -80,7 +80,7 @@ void WebServ::ReadFile(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    throw std::runtime_error("read error\n");
+    throw ft::HttpResponseException("500");
   }
 }
 
@@ -93,7 +93,7 @@ void WebServ::ReadCGI(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    throw std::runtime_error("read error\n");
+    throw ft::HttpResponseException("500");
   }
 }
 
@@ -105,7 +105,7 @@ void WebServ::WriteClient(socket_iter it) {
   if ((ret = client->SendResponse(client_fd)) < 0) {
     close(client_fd);
     sockets_.erase(it);
-    throw std::runtime_error("send error\n");
+    throw ft::HttpResponseException("500");
   }
 }
 
