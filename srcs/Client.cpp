@@ -40,7 +40,7 @@ void Client::Prepare(void) {
   int ret;
   ret = READ_FILE;
   ret = WRITE_FILE;
-  // ret = WRITE_CLIENT;
+  ret = WRITE_CLIENT;
   // ret = READ_WRITE_CGI;
   if (socket_status_ != WRITE_CLIENT) SetEventStatus((enum SocketStatus)ret);
 

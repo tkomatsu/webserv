@@ -167,6 +167,7 @@ void Response::AutoIndexResponse(const std::string& path) {
     ErrorResponse(404);
   else
     AppendBody(body);
+  AppendHeader("Content-Length", ft::ltoa(body_.size()));
 }
 
 std::string Response::AutoIndexHtml(const std::string& dir_path) {
