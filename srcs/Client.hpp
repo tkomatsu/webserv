@@ -42,6 +42,10 @@ class Client : public Socket {
   void SetPipe(int *pipe_write, int *pipe_read);
   void ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi);
   bool IsValidRequest();
+  bool IsValidExtension(std::string path_uri, std::string request_path);
+  enum SocketStatus GetNextOfReadClient();
+  std::string MakePathUri(std::string alias_path, std::string request_uri,
+                          std::string location_path);
 
   // member variables
   Request request_;

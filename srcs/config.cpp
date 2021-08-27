@@ -159,6 +159,11 @@ int Config::GetClientMaxBodySize(const std::string& uri) const {
   return location->client_max_body_size;
 }
 
+std::string Config::GetPath(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->path;
+}
+
 std::string Config::GetAlias(const std::string& uri) const {
   const struct Location* location = MatchLocation(uri);
   return location->alias;
