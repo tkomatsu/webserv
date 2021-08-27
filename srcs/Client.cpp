@@ -40,9 +40,8 @@ void Client::Prepare(void) {
   int ret;
   // ret = READ_FILE;
   // ret = WRITE_FILE;
-  // ret = WRITE_CGI;
-  // ret = WRITE_CLIENT;
-  ret = READ_WRITE_CGI;
+  ret = WRITE_CLIENT;
+  // ret = READ_WRITE_CGI;
   if (socket_status_ != WRITE_CLIENT) SetEventStatus((enum SocketStatus)ret);
 
   bool is_autoindex = true;
@@ -133,6 +132,7 @@ void Client::WriteStaticFile() {
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Location", "/post.html");
+    response_.AppendHeader("Content-Length", "0");
     SetEventStatus(WRITE_CLIENT);
   }
 }

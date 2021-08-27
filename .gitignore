@@ -8,3 +8,5 @@ test/build
 objs
 
 webserv
+
+docs/upload/*
