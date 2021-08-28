@@ -2,6 +2,7 @@
 
 #include <dirent.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <unistd.h>
 
 #include <iostream>
@@ -63,25 +64,57 @@ std::string Client::GetIndexFileIfExist(std::string path_uri,
   return "";
 }
 
+bool Client::IsValidUploadRequest(std::string request_path) {
+  std::string alias = config_.GetAlias(request_path);
+  std::string upload_pass = config_.GetUploadPass(request_path);
+  std::string upload_store = config_.GetUploadStore(request_path);
+
+  std::vector<std::string> request_splited = ft::vsplit(request_path, '/');
+  std::vector<std::string> upload_pass_splited = ft::vsplit(upload_pass, '/');
+
+  std::string upload_pass_path = MakePathUri(alias, upload_pass, "/");
+  std::string upload_store_path = MakePathUri(alias, upload_store, "/");
+
+  struct stat buffer;
+  if (stat((upload_pass_path).c_str(), &buffer) == -1) {
+    return false;
+  }
+  if (stat((upload_store_path).c_str(), &buffer) == -1) {
+    return false;
+  }
+  if (upload_pass_splited.size() > request_splited.size()) {
+    return false;
+  }
+
+  size_t i = 0;
+  while (i < upload_pass_splited.size()) {
+    if (request_splited[i] == upload_pass_splited[i]) {
+      ++i;
+    } else {
+      break;
+    }
+  }
+
+  return i == upload_pass_splited.size();
+}
+
 enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
   enum SocketStatus ret = WRITE_CLIENT;
 
-  std::vector<std::string> request_uri = ft::vsplit(request_.GetURI(), '?');
-
-  if (request_uri.size() > 1) std::cout << request_uri[1] << std::endl;
-  std::string request_path = request_uri[0];
+  std::string request_path = request_.GetURI();
   std::string alias = config_.GetAlias(request_path);
   std::string location_path = config_.GetPath(request_path);
 
   *path_uri = MakePathUri(alias, request_path, location_path);
 
-  switch (request_.GetMethod()) {
-    case GET:
-      if (config_.GetAllowedMethods(request_path).count(GET) == 0) {
-        //  throw 405
-        break;
-      }
+  enum Method method = request_.GetMethod();
 
+  if (config_.GetAllowedMethods(request_path).count(method) == 0) {
+    throw ft::HttpResponseException("405");
+  }
+
+  switch (method) {
+    case GET:
       // (CGI)
       if (IsValidExtension(*path_uri, request_path)) {
         ret = READ_WRITE_CGI;
@@ -91,25 +124,28 @@ enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
       // (SIMPLE GET)
       struct stat buffer;
       if (stat((*path_uri).c_str(), &buffer) == -1) {
-        std::cout << "わんだらa" << std::endl;
-        //   throw 404;
+        throw ft::HttpResponseException("404");
         break;
       }
 
       if (S_ISREG(buffer.st_mode)) {
-        std::cout << "わんだらb" << std::endl;
         ret = READ_FILE;
         break;
       } else if (S_ISDIR(buffer.st_mode)) {
-        std::cout << "わんだら" << std::endl;
-
         *path_uri += "/";
 
         std::string index_filename =
             GetIndexFileIfExist(*path_uri, request_path);
         if (index_filename.empty() == false) {
-          // (GET INDEX)
           *path_uri += index_filename;
+
+          // (CGI)
+          if (IsValidExtension(*path_uri, request_path)) {
+            ret = READ_WRITE_CGI;
+            break;
+          }
+
+          // (GET INDEX)
           ret = READ_FILE;
           break;
         } else if (config_.GetAutoindex(request_path) == true) {
@@ -118,43 +154,37 @@ enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
           break;
         }
       }
-      std::cout << "わんだらz" << std::endl;
 
-      // throw 404
+      throw ft::HttpResponseException("404");
       break;
 
     case POST:
-      // if (config.GetAllowedMethods(request_.GetURI()).find(POST) ==
-      // false)
-      //   throw 405
-
       // (CGI)
-      // std::vector<std::string> request_uri = ft::vsplit(
-      //     request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc",
-      //     "mcgee=mine"]
-      // path = alias + (request_uri[0] - location)
-      // if path's extension in config.GetExtensions():
-      ret = READ_WRITE_CGI;
-      //   break;
+      if (IsValidExtension(*path_uri, request_path)) {
+        ret = READ_WRITE_CGI;
+        break;
+      }
 
-      // (upload)
-      // if upload_store & upload_pass:
-      //   if request_.GetURI() == upload_pass
-      //      ret = WRITE_FILE;
-      //      break;
+      // (UPLOAD)
+      if (!config_.GetUploadPass(request_path).empty() &&
+          !config_.GetUploadStore(request_path).empty()) {
+        if (IsValidUploadRequest(request_path)) {
+          *path_uri =
+              MakePathUri(alias, config_.GetUploadStore(request_path), "/") +
+              std::string("/" + ft::what_time() + ".html");
+          ret = WRITE_FILE;
+          break;
+        }
+      }
 
-      //  throw 405
+      throw ft::HttpResponseException("405");
       break;
     case DELETE:
-      // if (config.GetAllowedMethods(request_.GetURI()).find(DELETE) ==
-      // false)
-      //   throw 405
-
-      // remove(filepath);
-      // ret = WRITE_CLIENT;
+      remove((*path_uri).c_str());
+      ret = WRITE_CLIENT;
       break;
     case INVALID:
-      // throw 405
+      throw ft::HttpResponseException("405");
       break;
   }
 
@@ -167,11 +197,17 @@ void Client::Prepare(void) {
   enum SocketStatus ret;
   std::string path_uri;
 
-  ret = GetNextOfReadClient(&path_uri);
-  SetEventStatus(ret);
+  std::string request_path = request_.GetURI();
+  std::pair<int, std::string> redirect = config_.GetRedirect(request_path);
 
-  bool is_autoindex = true;
-  std::cout << "path_uri is " << path_uri << std::endl;
+  // no redirect
+  if (redirect.first == 0 && redirect.second.empty()) {
+    ret = GetNextOfReadClient(&path_uri);
+    SetEventStatus(ret);
+  } else {
+    ret = WRITE_CLIENT;
+    SetEventStatus(ret);
+  }
 
   if (ret == READ_FILE) {
     if ((read_fd_ = open(path_uri.c_str(), O_RDONLY)) < 0)
@@ -183,11 +219,17 @@ void Client::Prepare(void) {
       throw ft::HttpResponseException("500");
     if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) < 0)
       throw ft::HttpResponseException("500");
-
   } else if (ret == READ_WRITE_CGI) {
     GenProcessForCGI();
   } else if (ret == WRITE_CLIENT) {
-    if (is_autoindex) response_.AutoIndexResponse(path_uri.c_str());
+    if (config_.GetAutoindex(request_path))
+      response_.AutoIndexResponse(path_uri.c_str());
+    else if (request_.GetMethod() == DELETE)
+      response_.DeleteResponse();
+    else if (!(redirect.first == 0 && redirect.second.empty()))
+      response_.RedirectResponse(redirect.first, redirect.second);
+    else
+      throw ft::HttpResponseException("405");
   }
 }
 
@@ -207,6 +249,12 @@ int Client::RecvRequest(int client_fd) {
   }
   if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
     throw ft::HttpResponseException("405");
+  }
+  if (request_.GetStatus() == HttpMessage::DONE &&
+      (config_.GetClientMaxBodySize(request_.GetURI()) != 0 &&
+       (size_t)config_.GetClientMaxBodySize(request_.GetURI()) <
+           request_.GetBody().size())) {
+    throw ft::HttpResponseException("413");
   }
   return 1;
 }
@@ -371,9 +419,9 @@ void Client::HandleException(const char *err_msg) {
 std::string Client::MakePathUri(std::string alias_path,
                                 std::string request_path,
                                 std::string location_path) {
-  if (alias_path.empty())
-    // throw 404
-    return "";
+  if (alias_path.empty()) {
+    throw ft::HttpResponseException("404");
+  }
 
   std::vector<std::string> alias_splited = ft::vsplit(alias_path, '/');
   std::vector<std::string> request_splited = ft::vsplit(request_path, '/');
@@ -381,7 +429,7 @@ std::string Client::MakePathUri(std::string alias_path,
 
   // step1: delta = request - location
   size_t i = 0;
-  while (i < request_splited.size() &&
+  while (i < location_splited.size() &&
          request_splited[i] == location_splited[i])
     ++i;
   std::vector<std::string> delta(request_splited.size() - i);

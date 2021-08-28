@@ -35,6 +35,7 @@ std::vector<std::string> vsplit(std::string s, char delim);
 std::pair<std::string, std::string> div(std::string s, char delim);
 std::string AutoIndexNow(time_t time);
 int strcasecmp(const std::string &a, const std::string &b);
+std::string what_time(void);
 
 class HttpResponseException : public std::runtime_error {
  public:

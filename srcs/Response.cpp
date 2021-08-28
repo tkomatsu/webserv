@@ -170,6 +170,21 @@ void Response::AutoIndexResponse(const std::string& path) {
   AppendHeader("Content-Length", ft::ltoa(body_.size()));
 }
 
+void Response::DeleteResponse(void) {
+  Clear();
+  SetStatusCode(204);
+  AppendHeader("Content-Type", "text/html");
+  AppendHeader("Content-Length", "0");
+}
+
+void Response::RedirectResponse(int code, std::string location) {
+  Clear();
+  SetStatusCode(code);
+  AppendHeader("Content-Type", "text/html");
+  AppendHeader("Content-Length", "0");
+  AppendHeader("Location", location);
+}
+
 std::string Response::AutoIndexHtml(const std::string& dir_path) {
   DIR* dirp = opendir(dir_path.c_str());
   if (dirp == NULL) return "";

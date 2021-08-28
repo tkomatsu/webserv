@@ -16,7 +16,8 @@ class Request : public HttpMessage {
   ~Request();
 
   enum Method GetMethod() const;
-  const std::string& GetURI() const;
+  const std::string GetURI() const;
+  const std::string GetQueryString() const;
   enum ParseStatus GetStatus() const;
 
   void EraseBody(ssize_t length);

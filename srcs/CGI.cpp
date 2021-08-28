@@ -9,7 +9,6 @@ const int CGI::num_envs_ = 19;
 const std::string CGI::methods_[4] = {"GET", "POST", "DELETE", "INVALID"};
 
 void CGI::SetArgs() {
-  // CGIに渡す引数をパースする
 
   std::vector<std::string> request_uri = ft::vsplit(
       request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
@@ -61,7 +60,11 @@ void CGI::CalcEnvs() {
   envs_map_["REMOTE_IDENT"] = "";
   envs_map_["REMOTE_USER"] = "";
   envs_map_["REQUEST_METHOD"] = methods_[request_.GetMethod()];
-  envs_map_["REQUEST_URI"] = request_.GetURI();
+  if (request_.GetQueryString().empty())
+    envs_map_["REQUEST_URI"] = request_.GetURI();
+  else
+    envs_map_["REQUEST_URI"] =
+        request_.GetURI() + "?" + request_.GetQueryString();
   envs_map_["SCRIPT_NAME"] = envs_map_["PATH_INFO"];
   envs_map_["SERVER_NAME"] = config_.GetHost();
   envs_map_["SERVER_PORT"] = ft::ltoa(config_.GetPort());

@@ -43,6 +43,8 @@ class Response : public HttpMessage {
   void Clear();
   void ErrorResponse(int status);
   void AutoIndexResponse(const std::string& path);
+  void DeleteResponse(void);
+  void RedirectResponse(int code, std::string location);
 
   class StatusException : public std::domain_error {
    public:

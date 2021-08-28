@@ -12,11 +12,23 @@ enum Method Request::GetMethod() const {
   return method_;
 }
 
-const std::string& Request::GetURI() const {
+const std::string Request::GetURI() const {
   if (uri_.empty()) {
     throw RequestFatalException("URI is not defined");
   }
-  return uri_;
+  std::vector<std::string> uri_vector = ft::vsplit(uri_, '?');
+  return uri_vector[0];
+}
+
+const std::string Request::GetQueryString() const {
+  if (uri_.empty()) {
+    throw RequestFatalException("URI is not defined");
+  }
+  std::vector<std::string> uri_vector = ft::vsplit(uri_, '?');
+  if (uri_vector.size() >= 2)
+    return uri_vector[1];
+  else
+    return "";
 }
 
 enum Request::ParseStatus Request::GetStatus() const { return status_; }

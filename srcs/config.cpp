@@ -265,7 +265,7 @@ void Parser::Load() {
     if (line.type == BLOCK_END) PopContext(context);
   }
 
-  /* if (print_config_) */ Print();
+  if (print_config_) Print();
 }
 
 void Parser::ValidateLineSyntax(const LineComponent& line) {
