@@ -36,6 +36,13 @@ std::pair<std::string, std::string> div(std::string s, char delim);
 std::string AutoIndexNow(time_t time);
 int strcasecmp(const std::string &a, const std::string &b);
 
+struct CaseInsensitiveCompare
+    : public std::binary_function<std::string, std::string, bool> {
+  bool operator()(const std::string &a, const std::string &b) const {
+    return strcasecmp(a, b) < 0;
+  }
+};
+
 class HttpResponseException : public std::runtime_error {
  public:
   HttpResponseException(const std::string &what) : std::runtime_error(what) {}
