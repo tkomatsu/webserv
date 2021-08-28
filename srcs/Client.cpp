@@ -256,7 +256,7 @@ int Client::HandleException(const char *err_msg) {
         return 1;
       }
     }
-  } catch (std::runtime_error &e) {
+  } catch (ft::ConfigException &e) {
     std::cerr << "config: " << e.what() << std::endl;
   }
   response_.ErrorResponse(status_code);
