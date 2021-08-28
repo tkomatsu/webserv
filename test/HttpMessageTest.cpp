@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+
 #include "HttpMessage.hpp"
 
 class HttpMessageTest : public testing::Test {
@@ -6,20 +7,28 @@ class HttpMessageTest : public testing::Test {
   void SetUp() override {}
   void TearDown() override {}
 
-  void ExpectHeader(HttpMessage &message, const std::string& name, const std::string& value) {
+  void ExpectHeader(HttpMessage& message, const std::string& name,
+                    const std::string& value) {
     EXPECT_EQ(value, message.GetHeader(name));
   }
 
-  void ExpectBody(HttpMessage &message, const std::string& body) {
+  void ExpectBody(HttpMessage& message, const std::string& body) {
     EXPECT_EQ(body, message.GetBody());
   }
-
 };
 
 TEST_F(HttpMessageTest, Hedear) {
   HttpMessage message;
-  message.AppendHeader("name", "value");
-  ExpectHeader(message, "name", "value");
+  message.AppendHeader("name-type", "value");
+  ExpectHeader(message, "name-type", "value");
+  ExpectHeader(message, "Name-type", "value");
+  ExpectHeader(message, "nAme-TYpe", "value");
+  ExpectHeader(message, "naMe-type", "value");
+  ExpectHeader(message, "namE-tYpe", "value");
+  ExpectHeader(message, "NAme-Type", "value");
+  ExpectHeader(message, "nAMe-type", "value");
+  ExpectHeader(message, "naME-tyPe", "value");
+  ExpectHeader(message, "NamE-typE", "value");
 }
 
 TEST_F(HttpMessageTest, Body) {
@@ -49,7 +58,7 @@ TEST_F(HttpMessageTest, Exception) {
     message.GetHeader("aaa");
   } catch (HttpMessage::HeaderKeyException& e) {
     SUCCEED();
-    return ;
+    return;
   }
   FAIL();
 }
