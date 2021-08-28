@@ -74,13 +74,18 @@ int Client::RecvRequest(int client_fd) {
   if (ret == -1) return ret;  // recv error
   if (ret == 0) return ret;   // closed by client
 
-  request_.AppendRawData(buf);
-  if (request_.GetStatus() == HttpMessage::DONE) {
-    std::cout << "\nrecv from " << host_ip_ << ":" << port_ << std::endl;
-    Prepare();
-  }
-  if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
-    throw ft::HttpResponseException("405");
+  try {
+    request_.AppendRawData(buf);
+    if (request_.GetStatus() == HttpMessage::DONE) {
+      std::cout << "\nrecv from " << host_ip_ << ":" << port_ << std::endl;
+      Prepare();
+    }
+    if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
+      throw ft::HttpResponseException("405");
+    }
+  } catch (const Request::RequestFatalException &e) {
+    std::cout << "RequestFatalException: " << e.what() << std::endl;
+    throw ft::HttpResponseException("400");
   }
   return 1;
 }
@@ -236,7 +241,6 @@ bool Client::IsValidRequest(void) {
 
 int Client::HandleException(const char *err_msg) {
   int status_code = std::atoi(err_msg);
-  std::cerr << "error status code: " << status_code << std::endl;
   try {
     std::map<int, std::string> error_pages =
         config_.GetErrorPages(request_.GetURI());
