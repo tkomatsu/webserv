@@ -234,6 +234,23 @@ bool Client::IsValidRequest(void) {
 }
 
 void Client::HandleException(const char *err_msg) {
-  response_.ErrorResponse(std::atoi(err_msg));
+  int status_code = std::atoi(err_msg);
+  /*
+  std::map<int, std::string> error_pages =
+      config_.GetErrorPages(request_.GetURI());
+  for (std::map<int, std::string>::iterator i = error_pages.begin();
+       i != error_pages.end(); ++i) {
+    if (status_code == i->first) {
+      response_.SetStatusCode(status_code);
+      if ((read_fd_ = open("i->second", O_RDONLY)) < 0)
+        throw ft::HttpResponseException("500");
+      if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
+        throw ft::HttpResponseException("500");
+      SetEventStatus(READ_FILE);
+      return;
+    }
+  }
+  */
+  response_.ErrorResponse(status_code);
   SetEventStatus(WRITE_CLIENT);
 }
