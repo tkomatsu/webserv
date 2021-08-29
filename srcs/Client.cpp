@@ -30,6 +30,12 @@ int Client::SetSocket(int _fd) {
   return fd;
 }
 
+void Client::SetContentLocation(std::string content_location) {
+  content_location_ = content_location;
+}
+
+std::string Client::GetContentLocation(void) { return content_location_; }
+
 void Client::SetEventStatus(enum SocketStatus status) {
   socket_status_ = status;
 }
@@ -169,9 +175,13 @@ enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
       if (!config_.GetUploadPass(request_path).empty() &&
           !config_.GetUploadStore(request_path).empty()) {
         if (IsValidUploadRequest(request_path)) {
+          std::string filename = std::string("/" + ft::what_time() + ".html");
           *path_uri =
               MakePathUri(alias, config_.GetUploadStore(request_path), "/") +
-              std::string("/" + ft::what_time() + ".html");
+              "/" + filename;
+          SetContentLocation(
+              MakePathUri("/", config_.GetUploadStore(request_path), "/") +
+              filename);
           ret = WRITE_FILE;
           break;
         }
@@ -220,15 +230,15 @@ void Client::Prepare(void) {
     if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) < 0)
       throw ft::HttpResponseException("500");
   } else if (ret == READ_WRITE_CGI) {
-    GenProcessForCGI();
+    GenProcessForCGI(path_uri);
   } else if (ret == WRITE_CLIENT) {
-    if (config_.GetAutoindex(request_path))
-      response_.AutoIndexResponse(path_uri.c_str());
-    else if (request_.GetMethod() == DELETE)
-      response_.DeleteResponse();
-    else if (!(redirect.first == 0 && redirect.second.empty()))
+    if (!(redirect.first == 0 && redirect.second.empty())) {
       response_.RedirectResponse(redirect.first, redirect.second);
-    else
+    } else if (request_.GetMethod() == DELETE) {
+      response_.DeleteResponse();
+    } else if (config_.GetAutoindex(request_path)) {
+      response_.AutoIndexResponse(path_uri.c_str(), request_path);
+    } else
       throw ft::HttpResponseException("405");
   }
 }
@@ -310,7 +320,7 @@ void Client::WriteStaticFile() {
     close(write_fd_);
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
-    response_.AppendHeader("Content-Location", "/post.html");
+    response_.AppendHeader("Content-Location", GetContentLocation());
 
     response_.AppendHeader("Content-Length", "0");
 
@@ -350,10 +360,10 @@ void Client::WriteCGIin() {
     if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
       throw ft::HttpResponseException("500");
     EraseRequestBody(ret);
-    if (request_.GetBody().empty()) {
-      close(write_fd_);
-      SetEventStatus(WRITE_CLIENT);
-    }
+  }
+  if (request_.GetBody().empty()) {
+    close(write_fd_);
+    SetEventStatus(READ_CGI);
   }
 }
 
@@ -362,7 +372,8 @@ void Client::SetPipe(int *pipe_write, int *pipe_read) {
   if (pipe(pipe_read) == -1) throw ft::HttpResponseException("500");
 }
 
-void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi) {
+void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi,
+                     const std::string &path_uri) {
   char **args = cgi.GetArgs();
   char **envs = cgi.GetEnvs();
 
@@ -376,11 +387,11 @@ void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi) {
   close(pipe_read[0]);
   close(pipe_read[1]);
 
-  execve("./docs/perl.cgi", args, envs);
+  execve(path_uri.c_str(), args, envs);
   exit(EXIT_FAILURE);
 }
 
-void Client::GenProcessForCGI() {
+void Client::GenProcessForCGI(const std::string &path_uri) {
   int pipe_write[2];
   int pipe_read[2];
   pid_t pid;
@@ -391,7 +402,7 @@ void Client::GenProcessForCGI() {
     throw ft::HttpResponseException("500");
   else if (pid == 0) {
     CGI cgi_vals = CGI(request_, port_, host_ip_, config_);
-    ExecCGI(pipe_write, pipe_read, cgi_vals);
+    ExecCGI(pipe_write, pipe_read, cgi_vals, path_uri);
   }
 
   write_fd_ = pipe_write[1];

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#echo $WEBSERV_ROOT
-
 if [ "$1" = "unit" -o -z "$1" ]; then
 (
     echo "             _ _   _            _   "
@@ -9,6 +7,7 @@ if [ "$1" = "unit" -o -z "$1" ]; then
     echo "| | | | '_ \| | __| __/ _ \/ __| __|"
     echo "| |_| | | | | | |_| ||  __/\__ \ |_ "
     echo " \__,_|_| |_|_|\__|\__\___||___/\__|"
+    echo
 
     cmake -S . -B build
     cmake --build build
@@ -31,18 +30,15 @@ if [ "$1" = "http" -o -z "$1" ]; then
     echo "| | | | |_| |_| |_) | ||  __/\__ \ |_ "
     echo "|_| |_|\__|\__| .__/ \__\___||___/\__|"
     echo "              |_|                     "
+    echo
 
     cd ../
     make
-    ./webserv &
-    sleep 1
     ./test/http/httptest
 
     if [ $? -eq 0 ]; then
-        pkill webserv
         exit 0
     else
-        pkill webserv
         exit 1
     fi
 )

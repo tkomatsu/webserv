@@ -158,11 +158,11 @@ std::string Response::ErrorStatusLine(int status) {
   return (s.str());
 }
 
-void Response::AutoIndexResponse(const std::string& path) {
+void Response::AutoIndexResponse(const std::string& path, const std::string& index_of) {
   Clear();
   SetStatusCode(200);
   AppendHeader("Content-Type", "text/html");
-  std::string body = AutoIndexHtml(path);
+  std::string body = AutoIndexHtml(path, index_of);
   if (body.empty())
     ErrorResponse(404);
   else
@@ -185,7 +185,7 @@ void Response::RedirectResponse(int code, std::string location) {
   AppendHeader("Location", location);
 }
 
-std::string Response::AutoIndexHtml(const std::string& dir_path) {
+std::string Response::AutoIndexHtml(const std::string& dir_path, const std::string& index_of) {
   DIR* dirp = opendir(dir_path.c_str());
   if (dirp == NULL) return "";
   struct dirent* dp;
@@ -201,9 +201,9 @@ std::string Response::AutoIndexHtml(const std::string& dir_path) {
   closedir(dirp);
   std::string tmp;
   tmp += "<html>\n<head><title>Index of ";
-  tmp += "/";
+  tmp += index_of;
   tmp += "</title></head>\n<body bgcolor=\"white\">\n<h1>Index of ";
-  tmp += "/</h1><hr><pre><a href=\"../\">../</a>\n";
+  tmp += index_of + "</h1><hr><pre><a href=\"../\">../</a>\n";
 
   for (std::vector<fileinfo>::iterator it = index.begin(); it != index.end();
        ++it) {
@@ -213,7 +213,7 @@ std::string Response::AutoIndexHtml(const std::string& dir_path) {
 
     tmp += "<a href=\"" + std::string(info.dirent_->d_name) + "/\">";
     if (std::string(info.dirent_->d_name).length() >= 50)
-      tmp += std::string(info.dirent_->d_name).substr(0, 47) + "..&gt;";
+      tmp += std::string(info.dirent_->d_name).substr(0, 47) + "..>";
     else {
       tmp += std::string(info.dirent_->d_name);
       if (S_ISDIR(info.stat_.st_mode)) tmp += "/";
