@@ -201,7 +201,7 @@ enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
   return ret;
 }
 
-void Client::Prepare(void) {
+void Client::Preprocess(void) {
   if (socket_status_ != READ_CLIENT) return;
 
   enum SocketStatus ret;
@@ -255,7 +255,7 @@ int Client::RecvRequest(int client_fd) {
   request_.AppendRawData(buf);
   if (request_.GetStatus() == HttpMessage::DONE) {
     std::cout << "\nrecv from " << host_ip_ << ":" << port_ << std::endl;
-    Prepare();
+    Preprocess();
   }
   if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
     throw ft::HttpResponseException("405");

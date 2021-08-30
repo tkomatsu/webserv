@@ -39,7 +39,7 @@ class Client : public Socket {
   void SetEventStatus(enum SocketStatus status);
   void SetContentLocation(std::string content_location);
   std::string GetContentLocation(void);
-  void Prepare(void);
+  void Preprocess(void);
   void GenProcessForCGI(const std::string &path_uri);
   void SetPipe(int *pipe_write, int *pipe_read);
   void ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi,

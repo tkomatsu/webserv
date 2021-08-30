@@ -19,7 +19,7 @@ class Color:
     CYAN      = '\033[36m'
     WHITE     = '\033[37m'
     END       = '\033[0m'
-    BOLD      = '\038[1m'
+    BOLD      = '\033[1m'
     UNDERLINE = '\033[4m'
     INVISIBLE = '\033[08m'
     REVERCE   = '\033[07m'
