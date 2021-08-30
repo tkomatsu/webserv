@@ -1,3 +1,5 @@
+add_compile_definitions(GOOGLE_TEST)
+
 cmake_minimum_required(VERSION 3.14)
 project(webserv)
 
@@ -48,3 +50,5 @@ target_link_libraries(
 
 include(GoogleTest)
 gtest_discover_tests(WebservTest)
+
+remove_definitions(GOOGLE_TEST)

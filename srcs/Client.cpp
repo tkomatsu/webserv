@@ -70,8 +70,8 @@ std::string Client::GetIndexFileIfExist(std::string path_uri,
   return "";
 }
 
-bool Client::IsValidUploadRequest(std::string request_path) {
-  std::string alias = config_.GetAlias(request_path);
+bool Client::IsValidUploadRequest(std::string alias,
+                                  const std::string &request_path) {
   std::string upload_pass = config_.GetUploadPass(request_path);
   std::string upload_store = config_.GetUploadStore(request_path);
 
@@ -174,7 +174,7 @@ enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
       // (UPLOAD)
       if (!config_.GetUploadPass(request_path).empty() &&
           !config_.GetUploadStore(request_path).empty()) {
-        if (IsValidUploadRequest(request_path)) {
+        if (IsValidUploadRequest(alias, request_path)) {
           std::string filename = std::string("/" + ft::what_time() + ".html");
           *path_uri =
               MakePathUri(alias, config_.GetUploadStore(request_path), "/") +
@@ -232,11 +232,11 @@ void Client::Preprocess(void) {
   } else if (ret == READ_WRITE_CGI) {
     GenProcessForCGI(path_uri);
   } else if (ret == WRITE_CLIENT) {
-    if (!(redirect.first == 0 && redirect.second.empty())) {
+    if (!(redirect.first == 0 && redirect.second.empty())) {  // redirect
       response_.RedirectResponse(redirect.first, redirect.second);
-    } else if (request_.GetMethod() == DELETE) {
+    } else if (request_.GetMethod() == DELETE) {  // DELETE
       response_.DeleteResponse();
-    } else if (config_.GetAutoindex(request_path)) {
+    } else if (config_.GetAutoindex(request_path)) {  // autoindex
       response_.AutoIndexResponse(path_uri.c_str(), request_path);
     } else
       throw ft::HttpResponseException("405");

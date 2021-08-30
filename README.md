@@ -9,7 +9,7 @@ $ ./webserv
 $ make unittest
 ```
 
-## integration test
+## http test
 ```
 $ make httptest
 ```

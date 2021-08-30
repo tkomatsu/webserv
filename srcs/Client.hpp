@@ -9,10 +9,19 @@
 #include "Response.hpp"
 #include "config.hpp"
 
+#ifdef GOOGLE_TEST
+#include <gtest/gtest.h>
+#endif
+
 class Client : public Socket {
+#ifdef GOOGLE_TEST
+  FRIEND_TEST(ClientTest, IsValidExtension);
+  FRIEND_TEST(ClientTest, GetIndexFileIfExist);
+  FRIEND_TEST(ClientTest, IsValidUploadRequest);
+#endif
+
  public:
   static const int buf_max_;
-
   Client(const config::Config &config);
 
   // Socket actions
@@ -46,7 +55,7 @@ class Client : public Socket {
                const std::string &path_uri);
   bool IsValidRequest();
   bool IsValidExtension(std::string path_uri, std::string request_path);
-  bool IsValidUploadRequest(std::string request_path);
+  bool IsValidUploadRequest(std::string alias, const std::string &request_path);
   std::string GetIndexFileIfExist(std::string path_uri,
                                   std::string request_path);
   enum SocketStatus GetNextOfReadClient(std::string *path_uri);

@@ -27,7 +27,6 @@ class Color:
 
 class Case():
 	def __init__(self, name, method, uri, headers=None, body=None):
-		time.sleep(0.2)
 		method = method.lower()
 		global index
 		index += 1
