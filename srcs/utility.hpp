@@ -48,6 +48,11 @@ class HttpResponseException : public std::runtime_error {
   HttpResponseException(const std::string &what) : std::runtime_error(what) {}
 };
 
+class ConfigException : public std::runtime_error {
+ public:
+  ConfigException(const std::string &what) : std::runtime_error(what) {}
+};
+
 }  // namespace ft
 
 #endif /* UTILITY_HPP */

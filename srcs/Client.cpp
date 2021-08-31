@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include "utility.hpp"
@@ -38,9 +39,9 @@ void Client::SetEventStatus(enum SocketStatus status) {
 void Client::Prepare(void) {
   // temp
   int ret;
-  // ret = READ_FILE;
+  ret = READ_FILE;
   // ret = WRITE_FILE;
-  ret = WRITE_CLIENT;
+  // ret = WRITE_CLIENT;
   // ret = READ_WRITE_CGI;
   if (socket_status_ != WRITE_CLIENT) SetEventStatus((enum SocketStatus)ret);
 
@@ -73,13 +74,18 @@ int Client::RecvRequest(int client_fd) {
   if (ret == -1) return ret;  // recv error
   if (ret == 0) return ret;   // closed by client
 
-  request_.AppendRawData(buf);
-  if (request_.GetStatus() == HttpMessage::DONE) {
-    std::cout << "\nrecv from " << host_ip_ << ":" << port_ << std::endl;
-    Prepare();
-  }
-  if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
-    throw ft::HttpResponseException("405");
+  try {
+    request_.AppendRawData(buf);
+    if (request_.GetStatus() == HttpMessage::DONE) {
+      std::cout << "\nrecv from " << host_ip_ << ":" << port_ << std::endl;
+      Prepare();
+    }
+    if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
+      throw ft::HttpResponseException("405");
+    }
+  } catch (const Request::RequestFatalException &e) {
+    std::cout << "RequestFatalException: " << e.what() << std::endl;
+    throw ft::HttpResponseException("400");
   }
   return 1;
 }
@@ -234,6 +240,24 @@ bool Client::IsValidRequest(void) {
 }
 
 void Client::HandleException(const char *err_msg) {
-  response_.ErrorResponse(std::atoi(err_msg));
+  int status_code = std::atoi(err_msg);
+  try {
+    std::map<int, std::string> error_pages =
+        config_.GetErrorPages(request_.GetURI());
+    for (std::map<int, std::string>::iterator i = error_pages.begin();
+         i != error_pages.end(); ++i) {
+      if (status_code == i->first) {
+        response_.SetStatusCode(status_code);
+        if ((read_fd_ = open(i->second.c_str(), O_RDONLY)) < 0)
+          throw ft::HttpResponseException("500");
+        if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
+          throw ft::HttpResponseException("500");
+        SetEventStatus(READ_FILE);
+      }
+    }
+  } catch (ft::ConfigException &e) {
+    std::cerr << "config: " << e.what() << std::endl;
+  }
+  response_.ErrorResponse(status_code);
   SetEventStatus(WRITE_CLIENT);
 }
