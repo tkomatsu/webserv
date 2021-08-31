@@ -239,7 +239,7 @@ bool Client::IsValidRequest(void) {
   return true;
 }
 
-int Client::HandleException(const char *err_msg) {
+void Client::HandleException(const char *err_msg) {
   int status_code = std::atoi(err_msg);
   try {
     std::map<int, std::string> error_pages =
@@ -253,7 +253,6 @@ int Client::HandleException(const char *err_msg) {
         if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
           throw ft::HttpResponseException("500");
         SetEventStatus(READ_FILE);
-        return 1;
       }
     }
   } catch (ft::ConfigException &e) {
@@ -261,5 +260,4 @@ int Client::HandleException(const char *err_msg) {
   }
   response_.ErrorResponse(status_code);
   SetEventStatus(WRITE_CLIENT);
-  return 0;
 }

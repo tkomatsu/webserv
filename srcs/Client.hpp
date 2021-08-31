@@ -31,7 +31,7 @@ class Client : public Socket {
   int GetReadFd() const { return read_fd_; };
 
   // Exception handling
-  int HandleException(const char *err_msg);
+  void HandleException(const char *err_msg);
 
  private:
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };

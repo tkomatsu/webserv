@@ -243,7 +243,7 @@ void WebServ::Activate(void) {
         }
       } catch (ft::HttpResponseException &e) {
         Client *client = dynamic_cast<Client *>(it->second);
-        n += client->HandleException(e.what());
+        client->HandleException(e.what());
       }
     }
   }
