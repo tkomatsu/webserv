@@ -12,65 +12,65 @@ server = Server()
 server.run("basic.conf")######
 ##############################
 
-case = Case("nonexist folder", "GET", "http://localhost:4200/abc")
+case = Case("nonexist folder", "GET", "http://localhost:8008/abc")
 case.status_code(404)
 case.body_has("404 Not Found")
 case.header_has("Content-Length")
 
 
-case = Case("index file", "GET", "http://localhost:4200?key1=val1&key2=val2")
+case = Case("index file", "GET", "http://localhost:8008?key1=val1&key2=val2")
 case.status_code(200)
 case.body_has("html")
 case.header_has("Content-Length")
 
 
 payload = {"key1": "val1", "key2": "val2"} # リクエストヘッダ
-case = Case("extra request header", "GET", "http://localhost:4200", headers=payload)
+case = Case("extra request header", "GET", "http://localhost:8008", headers=payload)
 case.status_code(200)
 case.body_has("めざせいっかげつ")
 case.header_has("Content-Length")
 
 
-case = Case("post 405", "POST", "http://localhost:4200", body="this is body.")
+case = Case("post 405", "POST", "http://localhost:8008", body="this is body.")
 case.status_code(405)
 case.body_is(".*html.*")
 case.header_has("Content-Length")
 
 
-case = Case("post redirect", "POST", "http://localhost:4201/upload", body="this is body.")
+case = Case("post redirect", "POST", "http://localhost:8080/upload", body="this is body.")
 case.status_code(301)
 case.body_has("")
 case.header_has("Content-Length")
-case.header("Location", "http://127.0.0.1:4201/upload/")
+case.header("Location", "http://127.0.0.1:8080/upload/")
 
 
-case = Case("post upload", "POST", "http://localhost:4201/upload/", body="this is body.")
+case = Case("post upload", "POST", "http://localhost:8080/upload/", body="this is body.")
 case.status_code(201)
 case.body_has("")
 case.header_has("Content-Length")
 case.header_has("Content-Location")
 
 
-case = Case("redirect get upload folder (autoindex)", "GET", "http://localhost:4201/upload")
+case = Case("redirect get upload folder (autoindex)", "GET", "http://localhost:8080/upload")
 case.status_code(301)
 case.body_has("")
 case.header_has("Content-Length")
-case.header("Location", "http://127.0.0.1:4201/upload/")
+case.header("Location", "http://127.0.0.1:8080/upload/")
 
 
-case = Case("get upload folder (autoindex)", "GET", "http://localhost:4201/upload/")
+case = Case("get upload folder (autoindex)", "GET", "http://localhost:8080/upload/")
 case.status_code(200)
 case.body_has("Index of")
 case.header_has("Content-Length")
 
 
-case = Case("redirect 301", "GET", "http://localhost:4200/kapouet/")
+case = Case("redirect 301", "GET", "http://localhost:8008/kapouet/")
 case.status_code(301)
 case.header_has("Content-Length")
 case.header_has("Location")
 
 
-case = Case("cgi", "POST", "http://localhost:4200/cgi/perl.py", body="key1=val1&key2=val2")
+case = Case("cgi", "POST", "http://localhost:8008/cgi/perl.py", body="key1=val1&key2=val2")
 case.status_code(200)
 case.header_has("Content-Length")
 case.body_is("<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>CGI TEST</title>\n</head>\n<body>\n<h1>CGI TEST</h1>\n<pre>\n.*")
@@ -78,7 +78,7 @@ case.body_is("<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>
 
 subprocess.run(("touch", "./docs/html/cant_read"))
 os.chmod("./docs/html/cant_read", 660)
-case = Case("forbidden file acces", "GET", "http://localhost:4200/cant_read")
+case = Case("forbidden file acces", "GET", "http://localhost:8008/cant_read")
 case.status_code(403)
 case.header_has("Content-Length")
 case.body_has("403")

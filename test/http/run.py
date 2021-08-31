@@ -17,7 +17,7 @@ class Server():
 			print("\n" + Color.BOLD + Color.REVERCE + "./webserv" + Color.END + Color.END)
 			subprocess.Popen(('./webserv'), stdout=subprocess.DEVNULL)
 			config_name = "basic.conf"
-		time.sleep(1)
+		time.sleep(2)
 
 	def stop(self):
 		subprocess.run(('pkill', 'webserv'))
