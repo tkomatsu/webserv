@@ -104,6 +104,22 @@ bool Client::IsValidUploadRequest(std::string alias,
   return i == upload_pass_splited.size();
 }
 
+bool Client::DirectoryRedirect(std::string request_path) {
+  std::string alias = config_.GetAlias(request_path);
+  std::string location_path = config_.GetPath(request_path);
+  std::string path_uri = MakePathUri(alias, request_path, location_path);
+
+  struct stat buffer;
+  if (stat((path_uri).c_str(), &buffer) == -1) {
+    throw ft::HttpResponseException("404");
+  }
+
+  if (S_ISDIR(buffer.st_mode) && request_path[request_path.size() - 1] != '/')
+    return true;
+  else
+    return false;
+}
+
 enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
   enum SocketStatus ret = WRITE_CLIENT;
 
@@ -208,7 +224,20 @@ void Client::Preprocess(void) {
   std::string path_uri;
 
   std::string request_path = request_.GetURI();
-  std::pair<int, std::string> redirect = config_.GetRedirect(request_path);
+  std::pair<int, std::string> redirect;
+
+  try { // this is the first time config getter is used
+  redirect= config_.GetRedirect(request_path);
+  } catch (const std::exception &e) {
+    throw ft::HttpResponseException("404");
+  }
+
+  if (redirect.first == 0 && redirect.second.empty() &&
+      DirectoryRedirect(request_path)) {
+    redirect.first = 301;
+    redirect.second =
+        "http://" + config_.GetHost() + ":" + ft::ltoa(config_.GetPort()) + request_path + "/";
+  }
 
   // no redirect
   if (redirect.first == 0 && redirect.second.empty()) {
@@ -220,13 +249,14 @@ void Client::Preprocess(void) {
   }
 
   if (ret == READ_FILE) {
+    std::cout << path_uri << std::endl;
     if ((read_fd_ = open(path_uri.c_str(), O_RDONLY)) < 0)
-      throw ft::HttpResponseException("500");
+      throw ft::HttpResponseException("403");
     if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
       throw ft::HttpResponseException("500");
   } else if (ret == WRITE_FILE) {
     if ((write_fd_ = open(path_uri.c_str(), O_RDWR | O_CREAT, 0644)) < 0)
-      throw ft::HttpResponseException("500");
+      throw ft::HttpResponseException("403");
     if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) < 0)
       throw ft::HttpResponseException("500");
   } else if (ret == READ_WRITE_CGI) {
