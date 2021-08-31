@@ -253,6 +253,7 @@ void Client::HandleException(const char *err_msg) {
         if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
           throw ft::HttpResponseException("500");
         SetEventStatus(READ_FILE);
+        return;
       }
     }
   } catch (ft::ConfigException &e) {
