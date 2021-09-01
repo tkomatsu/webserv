@@ -135,6 +135,8 @@ class Parser {
 
   bool IsSimple(const std::string& directive_name);
 
+  void PrioritizeIndexes();
+
   void AddPrintConfig(enum Context context, const std::string& name,
                       const std::vector<std::string>& params);
   void AddServer(enum Context context, const std::string& name,

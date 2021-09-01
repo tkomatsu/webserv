@@ -96,7 +96,6 @@ Server::Server(const struct Main& main) {
   client_max_body_size = main.client_max_body_size;
   host = "127.0.0.1";
   server_name = "";
-  indexes = main.indexes;
   error_pages = main.error_pages;
 }
 
@@ -106,7 +105,6 @@ Location::Location(const struct Server& server) {
   upload_pass = server.upload_pass;
   upload_store = server.upload_store;
   extensions = server.extensions;
-  indexes = server.indexes;
   error_pages = server.error_pages;
   redirect = server.redirect;
 }
@@ -263,6 +261,8 @@ void Parser::Load() {
     if (line.type == BLOCK_END) PopContext(context);
   }
 
+  PrioritizeIndexes();
+
   if (print_config_) Print();
 }
 
@@ -308,6 +308,21 @@ bool Parser::IsBlock(const std::string& directive_name) {
 
 bool Parser::IsSimple(const std::string& directive_name) {
   return !IsBlock(directive_name);
+}
+
+void Parser::PrioritizeIndexes() {
+  for (std::vector<struct Server>::iterator itr = servers_.begin();
+       itr != servers_.end(); ++itr) {
+    struct Server& server = *itr;
+    server.indexes.insert(server.indexes.end(), main_.indexes.begin(),
+                          main_.indexes.end());
+    for (std::vector<struct Location>::iterator itr = server.locations.begin();
+         itr != server.locations.end(); ++itr) {
+      struct Location& location = *itr;
+      location.indexes.insert(location.indexes.end(), server.indexes.begin(),
+                              server.indexes.end());
+    }
+  }
 }
 
 void Parser::AddPrintConfig(enum Context context, const std::string& name,
@@ -414,16 +429,15 @@ void Parser::AddIndex(enum Context context, const std::string& name,
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  for (std::vector<std::string>::const_reverse_iterator itr = params.rbegin();
-       itr != params.rend(); ++itr) {
+  for (std::vector<std::string>::const_iterator itr = params.begin();
+       itr != params.end(); ++itr) {
     if (itr->empty()) throw ParameterError(BuildError(name, "cannot be empty"));
     if (context == MAIN)
-      main_.indexes.insert(main_.indexes.begin(), *itr);
+      main_.indexes.push_back(*itr);
     else if (context == SERVER)
-      servers_.back().indexes.insert(servers_.back().indexes.begin(), *itr);
+      servers_.back().indexes.push_back(*itr);
     else if (context == LOCATION)
-      servers_.back().locations.back().indexes.insert(
-          servers_.back().locations.back().indexes.begin(), *itr);
+      servers_.back().locations.back().indexes.push_back(*itr);
   }
 }
 
@@ -560,7 +574,7 @@ void Parser::Print() const {
     PrintKeyValue("client_max_body_size", server.client_max_body_size);
     PrintKeyValue("host", server.host);
     PrintKeyValue("server_name", server.server_name);
-    PrintKeyValue("index", VectorToString(server.indexes));
+    PrintKeyValue("indexes", VectorToString(server.indexes));
     PrintKeyValue("error_page", MapToString(server.error_pages));
     PrintKeyValue("redirect", PairToString(server.redirect));
     PrintKeyValue("upload_pass", server.upload_pass);
@@ -577,7 +591,7 @@ void Parser::Print() const {
       PrintKeyValue("autoindex", location.autoindex, true);
       PrintKeyValue("client_max_body_size", location.client_max_body_size,
                     true);
-      PrintKeyValue("index", VectorToString(location.indexes), true);
+      PrintKeyValue("indexes", VectorToString(location.indexes), true);
       PrintKeyValue("alias", location.alias, true);
       PrintKeyValue("error_page", MapToString(location.error_pages), true);
       PrintKeyValue("allowed_methods", SetToString(location.allowed_methods),
