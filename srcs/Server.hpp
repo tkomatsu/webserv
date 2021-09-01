@@ -3,6 +3,10 @@
 
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "ISocket.hpp"
 #include "config.hpp"
@@ -12,7 +16,7 @@ class Server : public Socket {
   Server(const config::Config& config)
       : Socket(config.GetPort(), config.GetHost()), config_(config){};
 
-  int SetSocket();
+  int OpenListenSocket();
   const config::Config& GetConfig() const;
 
  private:

@@ -36,7 +36,7 @@ void WebServ::ParseConfig(const std::string &path) {
   std::vector<config::Config>::const_iterator itr;
   for (itr = configs.begin(); itr != configs.end(); ++itr) {
     Server *server = new Server(*itr);
-    int fd = server->SetSocket();
+    int fd = server->OpenListenSocket();
     sockets_[fd] = server;
   }
 }
