@@ -54,12 +54,12 @@ class Client : public Socket {
                const std::string &path_uri);
   bool IsValidRequest();
   bool IsValidExtension(std::string path_uri, std::string request_path);
-  bool IsValidUploadRequest(std::string alias, const std::string &request_path);
+  bool IsValidUploadRequest(const std::string &request_path);
   bool DirectoryRedirect(std::string request_path);
   std::string GetIndexFileIfExist(std::string path_uri,
                                   std::string request_path);
-  enum SocketStatus GetNextOfReadClient(std::string *path_uri);
-  std::string MakePathUri(std::string alias_path, std::string request_uri,
+  enum SocketStatus GetNextOfReadClient(std::string &path_uri);
+  std::string MakePathUri(std::string request_uri,
                           std::string location_path);
 
   // member variables

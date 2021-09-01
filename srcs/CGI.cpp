@@ -128,7 +128,7 @@ CGI::CGI(const Request &request, int client_port, std::string client_host,
     : request_(request),
       client_port_(client_port),
       client_host_(client_host),
-      path_translated_(path_translated_),
+      path_translated_(path_translated),
       config_(config) {
   SetArgs();
   SetEnvs();

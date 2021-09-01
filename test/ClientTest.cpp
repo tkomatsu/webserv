@@ -57,22 +57,19 @@ TEST_F(ClientTest, IsValidUploadRequest) {
   Server server(configs[1]);  // basic.conf's second server(listening 4201)
   Client client(server.GetConfig());
 
-  EXPECT_TRUE(client.IsValidUploadRequest("../../docs", "/upload"));
-  EXPECT_TRUE(client.IsValidUploadRequest("../../docs/", "/upload"));
-  EXPECT_TRUE(client.IsValidUploadRequest("../../docs", "/upload/"));
-  EXPECT_TRUE(client.IsValidUploadRequest("../../docs/", "/upload/"));
-  EXPECT_TRUE(client.IsValidUploadRequest("../../docs", "/upload/new.html"));
-  EXPECT_TRUE(client.IsValidUploadRequest("../../docs", "/upload/new.html/"));
-  EXPECT_TRUE(client.IsValidUploadRequest("../../docs/", "/upload/abc/abc"));
-  EXPECT_TRUE(client.IsValidUploadRequest("../../docs/", "/upload/abc/abc/"));
-  EXPECT_FALSE(client.IsValidUploadRequest("../../docs/", "/"));
-  EXPECT_FALSE(client.IsValidUploadRequest("../../docs/", "/hoge"));
-  EXPECT_FALSE(client.IsValidUploadRequest("../../docs/", "/hoge/upload"));
-  EXPECT_FALSE(client.IsValidUploadRequest("../../docs/", "/hoge/upload/"));
-  EXPECT_FALSE(
-      client.IsValidUploadRequest("../../docs/", "/hoge/upload/new.html"));
-  EXPECT_FALSE(
-      client.IsValidUploadRequest("../../docs/", "/hoge/upload/new.html"));
+  chdir("../../");
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload/"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload/"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload/new.html"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload/new.html/"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge/upload"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge/upload/"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge/upload/new.html"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge/upload/new.html"));
 }
 
 TEST_F(ClientTest, MakePathUri) {
@@ -85,12 +82,12 @@ TEST_F(ClientTest, MakePathUri) {
   // std::string MakePathUri(std::string alias_path, std::string request_uri,
   // std::string location_path);
   // alias_path + (request_uri - location_path)
-  EXPECT_EQ(client.MakePathUri("/data/w3/images/", "/i/top.gif", "/i/"),
-            "/data/w3/images/top.gif");
-  EXPECT_EQ(client.MakePathUri("./data/w3/images/", "/i/top.gif", "/i/"),
-            "./data/w3/images/top.gif");
-  EXPECT_EQ(client.MakePathUri("/data/w3/images/", "/i/top.gif", "/"),
-            "/data/w3/images/i/top.gif");
-  EXPECT_EQ(client.MakePathUri("/data/w3/images", "/i/top.gif", "/i/"),
-            "/data/w3/images/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
+            "./docs/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
+            "./docs/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/"),
+            "./docs/i/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
+            "./docs/top.gif");
 }
