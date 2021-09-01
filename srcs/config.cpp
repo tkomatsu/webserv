@@ -429,8 +429,8 @@ void Parser::AddIndex(enum Context context, const std::string& name,
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  for (std::vector<std::string>::const_reverse_iterator itr = params.rbegin();
-       itr != params.rend(); ++itr) {
+  for (std::vector<std::string>::const_iterator itr = params.begin();
+       itr != params.end(); ++itr) {
     if (itr->empty()) throw ParameterError(BuildError(name, "cannot be empty"));
     if (context == MAIN)
       main_.indexes.push_back(*itr);
