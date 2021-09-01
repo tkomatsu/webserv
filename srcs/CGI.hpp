@@ -9,7 +9,7 @@
 class CGI {
  public:
   CGI(const Request &request, int client_port, std::string client_host,
-      const config::Config &config);
+      const config::Config &config, const std::string &path_translated);
   ~CGI();
 
   static const int num_envs_;
@@ -29,6 +29,7 @@ class CGI {
   const Request &request_;
   int client_port_;
   std::string client_host_;
+  std::string path_translated_;
   const config::Config &config_;
 
   std::map<std::string, std::string> envs_map_;

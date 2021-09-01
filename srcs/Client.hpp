@@ -9,12 +9,23 @@
 #include "Response.hpp"
 #include "config.hpp"
 
+#ifdef GOOGLE_TEST
+#include <gtest/gtest.h>
+#endif
+
 class Client : public Socket {
+#ifdef GOOGLE_TEST
+  FRIEND_TEST(ClientTest, IsValidExtension);
+  FRIEND_TEST(ClientTest, GetIndexFileIfExist);
+  FRIEND_TEST(ClientTest, IsValidUploadRequest);
+  FRIEND_TEST(ClientTest, MakePathUri);
+#endif
+
  public:
   static const int buf_max_;
-
   Client(const config::Config &config);
 
+  // Socket actions
   int SetSocket(int _fd);
 
   // I/O actions
@@ -36,11 +47,25 @@ class Client : public Socket {
  private:
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
   void SetEventStatus(enum SocketStatus status);
-  void Prepare(void);
-  void GenProcessForCGI(void);
+  void Preprocess(void);
+  void GenProcessForCGI(const std::string &path_uri);
   void SetPipe(int *pipe_write, int *pipe_read);
-  void ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi);
+  void ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi,
+               const std::string &path_uri);
   bool IsValidRequest();
+  bool IsValidExtension(std::string path_uri, std::string request_path);
+  bool IsValidUploadRequest(const std::string &request_path);
+  bool DirectoryRedirect(std::string request_path);
+  std::string GetIndexFileIfExist(std::string path_uri,
+                                  std::string request_path);
+  enum SocketStatus GetNextOfReadClient(std::string &path_uri);
+  std::string MakePathUri(std::string request_uri,
+                          std::string location_path);
+
+  // method branching
+  enum SocketStatus HandleGET(std::string &path_uri);
+  enum SocketStatus HandlePOST(std::string &path_uri);
+  enum SocketStatus HandleDELETE(std::string &path_uri);
 
   // member variables
   Request request_;

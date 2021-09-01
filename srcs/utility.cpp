@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include <ctime>
 #include <sstream>
@@ -59,6 +60,13 @@ std::string ltoa(long num) {
   std::string ret = out.str();
 
   return ret;
+}
+
+std::string what_time(void) {
+  struct timeval time_tv;
+
+  gettimeofday(&time_tv, NULL);
+  return ft::ltoa(time_tv.tv_sec) + ft::ltoa(time_tv.tv_usec);
 }
 
 std::string trim(std::string s, std::string chars) {

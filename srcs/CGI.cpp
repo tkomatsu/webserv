@@ -9,8 +9,6 @@ const int CGI::num_envs_ = 19;
 const std::string CGI::methods_[4] = {"GET", "POST", "DELETE", "INVALID"};
 
 void CGI::SetArgs() {
-  // CGIに渡す引数をパースする
-
   std::vector<std::string> request_uri = ft::vsplit(
       request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
   // alias: ./docs/html/  config.GetAlias(request_uri[0])
@@ -27,18 +25,23 @@ void CGI::SetArgs() {
 }
 
 void CGI::CalcEnvs() {
-  envs_map_["AUTH_TYPE"] = "";
-  // try {
-  //   std::string auth = request.GetHeader("Authorization");
-  //   envs_map_["AUTH_TYPE"] = ft::vsplit(auth, ' ')[0];
-  // } catch (std::exception &e) {}
-  envs_map_["CONTENT_LENGTH"] = "";
-  // envs_map_["CONTENT_LENGTH"] = ltoa(request.GetBody().size())
-  envs_map_["CONTENT_TYPE"] = "";
-  // try {
-  //   std::string auth = request.GetHeader("Content-type");
-  // } catch (std::exception &e) {}
+  try {
+    std::string auth = request_.GetHeader("Authorization");
+    envs_map_["AUTH_TYPE"] = ft::vsplit(auth, ' ')[0];
+  } catch (std::exception &e) {
+    envs_map_["AUTH_TYPE"] = "";
+  }
+
+  envs_map_["CONTENT_LENGTH"] = ft::ltoa(request_.GetBody().size());
+
+  try {
+    std::string content_type = request_.GetHeader("Content-type");
+    envs_map_["CONTENT_TYPE"] = content_type;
+  } catch (std::exception &e) {
+  }
+
   envs_map_["GATEWAY_INTERFACE"] = "CGI/1.1";
+
   envs_map_["PATH_INFO"] = "";
   //    [設定]
   //      root /var/www/html
@@ -52,16 +55,20 @@ void CGI::CalcEnvs() {
   //    /var/www/html/dir1/index.php
 
   // ∴　envs_map_["PATH_INFO"] = ft::vsplit(request_.GetURI(), '?')[0];
-  envs_map_["PATH_TRANSLATED"] = "";
-  // envs_map_["PATH_TRANSLATED"] = alias + (request_uri[0] - location);
-  envs_map_["QUERY_STRING"] = "";
-  // if request_uri.size() >= 2 : envs_map_["QUERY_STRING"] = request_uri[1]
+
+  envs_map_["PATH_TRANSLATED"] = path_translated_;
+
+  envs_map_["QUERY_STRING"] = request_.GetQueryString();
   envs_map_["REMOTE_ADDR"] = client_host_;
   envs_map_["REMOTE_PORT"] = ft::ltoa(client_port_);
   envs_map_["REMOTE_IDENT"] = "";
   envs_map_["REMOTE_USER"] = "";
   envs_map_["REQUEST_METHOD"] = methods_[request_.GetMethod()];
-  envs_map_["REQUEST_URI"] = request_.GetURI();
+  if (request_.GetQueryString().empty())
+    envs_map_["REQUEST_URI"] = request_.GetURI();
+  else
+    envs_map_["REQUEST_URI"] =
+        request_.GetURI() + "?" + request_.GetQueryString();
   envs_map_["SCRIPT_NAME"] = envs_map_["PATH_INFO"];
   envs_map_["SERVER_NAME"] = config_.GetHost();
   envs_map_["SERVER_PORT"] = ft::ltoa(config_.GetPort());
@@ -117,10 +124,11 @@ void CGI::SetEnvs() {
 }
 
 CGI::CGI(const Request &request, int client_port, std::string client_host,
-         const config::Config &config)
+         const config::Config &config, const std::string &path_translated)
     : request_(request),
       client_port_(client_port),
       client_host_(client_host),
+      path_translated_(path_translated),
       config_(config) {
   SetArgs();
   SetEnvs();

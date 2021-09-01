@@ -22,7 +22,7 @@ TEST_F(ResponseTest, Version) {
 // autoindex test
 TEST_F(ResponseTest, AutoIndex) {
   Response res;
-  res.AutoIndexResponse("./");
+  res.AutoIndexResponse("./", "./");
   EXPECT_TRUE(std::regex_match(res.GetBody(), std::regex("(.|\n)*")));
   EXPECT_TRUE(res.GetStatusCode() == 200);
   EXPECT_TRUE(res.GetStatusMessage() == "OK");

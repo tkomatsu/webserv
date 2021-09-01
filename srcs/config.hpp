@@ -82,6 +82,7 @@ class Config {
 
   bool GetAutoindex(const std::string& uri) const;
   int GetClientMaxBodySize(const std::string& uri) const;
+  std::string GetPath(const std::string& uri) const;
   std::string GetAlias(const std::string& uri) const;
   std::string GetUploadPass(const std::string& uri) const;
   std::string GetUploadStore(const std::string& uri) const;

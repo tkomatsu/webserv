@@ -1,123 +1,142 @@
 #!/usr/bin/env python3
 # coding: UTF-8
-import requests
 
-index = 0
+from run import Server
+from case import Case
+import subprocess
+import os
 
-class Color:
-    BLACK     = '\033[30m'
-    RED       = '\033[31m'
-    GREEN     = '\033[32m'
-    YELLOW    = '\033[33m'
-    BLUE      = '\033[34m'
-    PURPLE    = '\033[35m'
-    CYAN      = '\033[36m'
-    WHITE     = '\033[37m'
-    END       = '\033[0m'
-    BOLD      = '\038[1m'
-    UNDERLINE = '\033[4m'
-    INVISIBLE = '\033[08m'
-    REVERCE   = '\033[07m'
+server = Server()
 
-class Case():
-	def __init__(self, method, uri, params=None, headers=None, data=None):
-		method = method.lower()
-		global index
-		index += 1
+##############################
+server.run("basic.conf")######
+##############################
 
-		if method == "get":
-			self.r = requests.get(uri, params=params, headers=headers)
-		elif method == "post":
-			self.r = requests.post(uri, params=params, headers=headers, data=data)
-		elif method == "delete":
-			self.r = requests.delete(uri, params=params, headers=headers)
-
-		self.r.encoding = self.r.apparent_encoding
-
-		print("\n" + str(index) + ".\n" + method.upper(), self.r.request.path_url, "HTTP/1.1")
-		if self.r.request.headers:
-			for header in self.r.request.headers:
-				print(header + ": " + self.r.request.headers[header])
-		if self.r.request.body:
-			print("\n" + self.r.request.body)
-		print()
-
-	# status_codeが期待と同じか
-	def status_code(self, expected):
-		if expected == self.r.status_code:
-			print(Color.GREEN + "status_code OK!" + Color.END)
-		else:
-			print(Color.RED + "status_code KO!" + Color.END)
-			exit(1)
-
-	# bodyが期待と同じか
-	def body(self, expected):
-		if expected == self.r.text:
-			print(Color.GREEN + "body OK!" + Color.END)
-		else:
-			print(Color.RED + "body KO!" + Color.END)
-			exit(1)
-
-	# bodyが期待の文字列を含むか
-	def body_has(self, expected):
-		if expected in self.r.text:
-			print(Color.GREEN + "body_has OK!" + Color.END)
-		else:
-			print(Color.RED + "body_has KO!" + Color.END)
-			exit(1)
-
-	# headersに期待のkeyと同じ かつ 期待のvalueが同じものがあるか
-	def header(self, expected_key, expected_val):
-		if expected_key in self.r.headers and self.r.headers[expected_key] == expected_val:
-			print(Color.GREEN + "header OK!" + Color.END)
-		else:
-			print(Color.RED + "header KO!" + Color.END)
-			exit(1)
-
-	# headerに期待のkey含まれるか
-	def header_has(self, expected):
-		if expected in self.r.headers:
-			print(Color.GREEN + "header_has OK!" + Color.END)
-		else:
-			print(Color.RED + "header_has KO!" + Color.END)
-			exit(1)
-
-################################################################
-
-#1
-case = Case("get", "http://localhost:4200/abc")
-
-case.status_code(200)
-case.body_has("html")
+case = Case("nonexist folder", "GET", "http://localhost:8008/abc")
+case.status_code(404)
+case.body_has("404 Not Found")
 case.header_has("Content-Length")
 
-################################################################
 
-#2
-payload = {"key1": "val1", "key2": "val2"} # CGIのクエリ(urlに入る)
-case = Case("get", "http://localhost:4200", params=payload)
-
+case = Case("index file", "GET", "http://localhost:8008?key1=val1&key2=val2")
 case.status_code(200)
 case.body_has("html")
 case.header_has("Content-Length")
 
 
-################################################################
-
-#3
 payload = {"key1": "val1", "key2": "val2"} # リクエストヘッダ
-case = Case("get", "http://localhost:4200", headers=payload)
-
+case = Case("extra request header", "GET", "http://localhost:8008", headers=payload)
 case.status_code(200)
-case.body_has("html")
+case.body_has("めざせいっかげつ")
 case.header_has("Content-Length")
 
 
-################################################################
-
-payload = {"key1": "val1", "key2": "val2"}
-case = Case("post", "http://localhost:4200", data=payload)
-
+case = Case("post 405", "POST", "http://localhost:8008", body="this is body.")
 case.status_code(405)
-case.body_has("html")
+case.body_is(".*html.*")
 case.header_has("Content-Length")
+
+
+case = Case("post redirect", "POST", "http://localhost:8080/upload", body="this is body.")
+case.status_code(301)
+case.body_has("")
+case.header_has("Content-Length")
+case.header("Location", "http://127.0.0.1:8080/upload/")
+
+
+case = Case("post upload", "POST", "http://localhost:8080/upload/", body="this is body.")
+case.status_code(201)
+case.body_has("")
+case.header_has("Content-Length")
+case.header_has("Content-Location")
+
+
+case = Case("redirect get upload folder (autoindex)", "GET", "http://localhost:8080/upload")
+case.status_code(301)
+case.body_has("")
+case.header_has("Content-Length")
+case.header("Location", "http://127.0.0.1:8080/upload/")
+
+
+case = Case("get upload folder (autoindex)", "GET", "http://localhost:8080/upload/")
+case.status_code(200)
+case.body_has("Index of")
+case.header_has("Content-Length")
+
+
+case = Case("redirect 301", "GET", "http://localhost:8008/kapouet/")
+case.status_code(301)
+case.header_has("Content-Length")
+case.header_has("Location")
+
+
+case = Case("cgi", "POST", "http://localhost:8008/cgi/perl.py", body="key1=val1&key2=val2")
+case.status_code(200)
+case.header_has("Content-Length")
+case.body_is("<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>CGI TEST</title>\n</head>\n<body>\n<h1>CGI TEST</h1>\n<pre>\n.*")
+
+
+subprocess.run(("touch", "./docs/html/cant_read"))
+os.chmod("./docs/html/cant_read", 660)
+case = Case("forbidden file acces", "GET", "http://localhost:8008/cant_read")
+case.status_code(403)
+case.header_has("Content-Length")
+case.body_has("403")
+subprocess.run(("rm", "./docs/html/cant_read"))
+
+##########################
+server.stop() # basic.conf
+##########################
+
+
+
+#################################
+server.run("redirect.conf")######
+#################################
+
+case = Case("redirect 301 :5555/a", "GET", "http://localhost:5555/a")
+case.status_code(301)
+case.header_has("Content-Length")
+case.header_has("Location")
+
+
+case = Case("redirect 302 :5555/b", "GET", "http://localhost:5555/b")
+case.status_code(302)
+case.header_has("Content-Length")
+case.header_has("Location")
+
+
+case = Case("redirect 303 :5555/c", "GET", "http://localhost:5555/c")
+case.status_code(303)
+case.header_has("Content-Length")
+case.header_has("Location")
+
+
+case = Case("redirect 307 :5555/d", "GET", "http://localhost:5555/d")
+case.status_code(307)
+case.header_has("Content-Length")
+case.header_has("Location")
+
+#############################
+server.stop() # redirect.conf
+#############################
+
+
+
+###############################
+server.run("delete.conf")######
+###############################
+
+subprocess.run(("touch", "./docs/html/trash"))
+case = Case("http DELETE", "DELETE", "http://localhost:4200/trash")
+case.status_code(204)
+case.header_has("Content-Length")
+
+
+case = Case("http DELETE", "DELETE", "http://localhost:4200/trash")
+case.status_code(404)
+case.header_has("Content-Length")
+
+###########################
+server.stop() # delete.conf
+###########################

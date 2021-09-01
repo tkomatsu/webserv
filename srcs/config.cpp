@@ -155,6 +155,11 @@ int Config::GetClientMaxBodySize(const std::string& uri) const {
   return location->client_max_body_size;
 }
 
+std::string Config::GetPath(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->path;
+}
+
 std::string Config::GetAlias(const std::string& uri) const {
   const struct Location* location = MatchLocation(uri);
   return location->alias;
@@ -424,8 +429,8 @@ void Parser::AddIndex(enum Context context, const std::string& name,
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  for (std::vector<std::string>::const_iterator itr = params.begin();
-       itr != params.end(); ++itr) {
+  for (std::vector<std::string>::const_reverse_iterator itr = params.rbegin();
+       itr != params.rend(); ++itr) {
     if (itr->empty()) throw ParameterError(BuildError(name, "cannot be empty"));
     if (context == MAIN)
       main_.indexes.push_back(*itr);
@@ -569,7 +574,11 @@ void Parser::Print() const {
     PrintKeyValue("client_max_body_size", server.client_max_body_size);
     PrintKeyValue("host", server.host);
     PrintKeyValue("server_name", server.server_name);
+<<<<<<< HEAD
     PrintKeyValue("indexes", VectorToString(server.indexes));
+=======
+    PrintKeyValue("index", VectorToString(server.indexes));
+>>>>>>> 415ac3426eae3d3759880da4a71ec8b3b9d1686a
     PrintKeyValue("error_page", MapToString(server.error_pages));
     PrintKeyValue("redirect", PairToString(server.redirect));
     PrintKeyValue("upload_pass", server.upload_pass);
@@ -586,7 +595,11 @@ void Parser::Print() const {
       PrintKeyValue("autoindex", location.autoindex, true);
       PrintKeyValue("client_max_body_size", location.client_max_body_size,
                     true);
+<<<<<<< HEAD
       PrintKeyValue("indexes", VectorToString(location.indexes), true);
+=======
+      PrintKeyValue("index", VectorToString(location.indexes), true);
+>>>>>>> 415ac3426eae3d3759880da4a71ec8b3b9d1686a
       PrintKeyValue("alias", location.alias, true);
       PrintKeyValue("error_page", MapToString(location.error_pages), true);
       PrintKeyValue("allowed_methods", SetToString(location.allowed_methods),

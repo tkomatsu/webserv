@@ -65,7 +65,7 @@ TEST_F(CGITest, Args) {
   server_context.port = 4200;
   server_context.host = "127.0.0.1";
   config::Config config(server_context);
-  CGI cgi(req, 42, "a", config);
+  CGI cgi(req, 42, "a", config, "abc");
 
   ExpectArgs(cgi);
 }
@@ -78,7 +78,7 @@ TEST_F(CGITest, Envs) {
   server_context.port = 4200;
   server_context.host = "127.0.0.1";
   config::Config config(server_context);
-  CGI cgi(req, 42, "a", config);
+  CGI cgi(req, 42, "a", config, "abc");
 
   ExpectArgs(cgi);
 }
