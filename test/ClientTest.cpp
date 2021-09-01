@@ -26,7 +26,7 @@ TEST_F(ClientTest, SetSocket) {
 
   Server server(config);
   Client client(server.GetConfig());
-  int tmp_fd = server.SetSocket();
+  int tmp_fd = server.OpenListenSocket();
 
   try {
     int res = client.SetSocket(tmp_fd);

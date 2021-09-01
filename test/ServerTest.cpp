@@ -29,6 +29,6 @@ TEST_F(ServerTest, SetSocket) {
   config::Config config(server_context);
   Server server(config);
 
-  int fd = server.SetSocket();
+  int fd = server.OpenListenSocket();
   EXPECT_GT(fd, 0);
 }
