@@ -62,6 +62,11 @@ class Client : public Socket {
   std::string MakePathUri(std::string request_uri,
                           std::string location_path);
 
+  // method branching
+  enum SocketStatus HandleGET(std::string &path_uri);
+  enum SocketStatus HandlePOST(std::string &path_uri);
+  enum SocketStatus HandleDELETE(std::string &path_uri);
+
   // member variables
   Request request_;
   Response response_;

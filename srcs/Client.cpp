@@ -77,7 +77,6 @@ bool Client::IsValidUploadRequest(const std::string &request_path) {
 
   struct stat buffer;
   if (stat((upload_pass_full_path).c_str(), &buffer) == -1) {
-    std::cout << upload_pass_full_path << std::endl;
     return false;
   }
   if (stat((upload_store_full_path).c_str(), &buffer) == -1) {
@@ -114,7 +113,85 @@ bool Client::DirectoryRedirect(std::string request_path) {
     return false;
 }
 
-// モジュール化
+enum SocketStatus Client::HandleGET(std::string &path_uri) {
+  struct stat buffer;
+  if (stat((path_uri).c_str(), &buffer) == -1) {
+    throw ft::HttpResponseException("404");
+  }
+
+  std::string request_path = request_.GetURI();
+
+  // (CGI)
+  if (IsValidExtension(path_uri, request_path)) {
+    return READ_WRITE_CGI;
+  }
+
+  // (SIMPLE GET)
+  if (S_ISREG(buffer.st_mode)) {
+    return READ_FILE;
+  } else if (S_ISDIR(buffer.st_mode)) {
+    path_uri += "/";
+
+    std::string index_filename = GetIndexFileIfExist(path_uri, request_path);
+    if (index_filename.empty() == false) {
+      path_uri += index_filename;
+
+      // (CGI)
+      if (IsValidExtension(path_uri, request_path)) {
+        return READ_WRITE_CGI;
+      }
+
+      // (GET INDEX)
+      return READ_FILE;
+    } else if (config_.GetAutoindex(request_path) == true) {
+      // (AUTOINDEX)
+      return WRITE_CLIENT;
+    }
+  }
+
+  throw ft::HttpResponseException("404");
+}
+
+enum SocketStatus Client::HandlePOST(std::string &path_uri) {
+  struct stat buffer;
+  if (stat((path_uri).c_str(), &buffer) == -1) {
+    throw ft::HttpResponseException("404");
+  }
+
+  std::string request_path = request_.GetURI();
+
+  // (CGI)
+  if (IsValidExtension(path_uri, request_path)) {
+    return READ_WRITE_CGI;
+  }
+
+  // (UPLOAD)
+  if (!config_.GetUploadPass(request_path).empty() &&
+      !config_.GetUploadStore(request_path).empty()) {
+    if (IsValidUploadRequest(request_path)) {
+      std::string filename = std::string("/" + ft::what_time() + ".html");
+      std::string store = config_.GetUploadStore(request_path);
+      if (store[store.size() - 1] == '/')
+        store = store.substr(0, store.size() - 1);
+      path_uri = MakePathUri(store, "/") + filename;
+      response_.AppendHeader("Content-Location", store + filename);
+      return WRITE_FILE;
+    }
+  }
+
+  throw ft::HttpResponseException("405");
+}
+
+enum SocketStatus Client::HandleDELETE(std::string &path_uri) {
+  struct stat buffer;
+  if (stat((path_uri).c_str(), &buffer) == -1) {
+    throw ft::HttpResponseException("404");
+  }
+
+  remove((path_uri).c_str());
+  return WRITE_CLIENT;
+}
+
 enum SocketStatus Client::GetNextOfReadClient(std::string &path_uri) {
   enum SocketStatus ret = WRITE_CLIENT;
 
@@ -128,82 +205,17 @@ enum SocketStatus Client::GetNextOfReadClient(std::string &path_uri) {
     throw ft::HttpResponseException("405");
   }
 
-  struct stat buffer;
-  if (stat((path_uri).c_str(), &buffer) == -1) {
-    throw ft::HttpResponseException("404");
-  }
-
   switch (method) {
     case GET:
-      // (CGI)
-      if (IsValidExtension(path_uri, request_path)) {
-        ret = READ_WRITE_CGI;
-        break;
-      }
-
-      // (SIMPLE GET)
-      if (S_ISREG(buffer.st_mode)) {
-        ret = READ_FILE;
-        break;
-      } else if (S_ISDIR(buffer.st_mode)) {
-        path_uri += "/";
-        std::cout << path_uri << std::endl;
-
-        std::string index_filename =
-            GetIndexFileIfExist(path_uri, request_path);
-        if (index_filename.empty() == false) {
-          path_uri += index_filename;
-
-          // (CGI)
-          if (IsValidExtension(path_uri, request_path)) {
-            ret = READ_WRITE_CGI;
-            break;
-          }
-
-          // (GET INDEX)
-          ret = READ_FILE;
-          break;
-        } else if (config_.GetAutoindex(request_path) == true) {
-          // (AUTOINDEX)
-          ret = WRITE_CLIENT;
-          break;
-        }
-      }
-
-      throw ft::HttpResponseException("404");
+      ret = HandleGET(path_uri);
       break;
-
     case POST:
-      // (CGI)
-      if (IsValidExtension(path_uri, request_path)) {
-        ret = READ_WRITE_CGI;
-        break;
-      }
-
-      // (UPLOAD)
-      if (!config_.GetUploadPass(request_path).empty() &&
-          !config_.GetUploadStore(request_path).empty()) {
-        if (IsValidUploadRequest(request_path)) {
-          std::string filename = std::string("/" + ft::what_time() + ".html");
-          std::string store = config_.GetUploadStore(request_path);
-          if (store[store.size() - 1] == '/')
-            store = store.substr(0, store.size() - 1);
-          path_uri = MakePathUri(store, "/") + filename;
-          std::cout << path_uri << std::endl;
-          response_.AppendHeader("Content-Location", store + filename);
-          ret = WRITE_FILE;
-          break;
-        }
-      }
-
-      throw ft::HttpResponseException("405");
+      ret = HandlePOST(path_uri);
       break;
     case DELETE:
-      remove((path_uri).c_str());
-      ret = WRITE_CLIENT;
+      ret = HandleDELETE(path_uri);
       break;
-    case INVALID:
-      throw ft::HttpResponseException("405");
+    default:
       break;
   }
 
@@ -242,7 +254,6 @@ void Client::Preprocess(void) {
   }
 
   if (ret == READ_FILE) {
-    std::cout << path_uri << std::endl;
     if ((read_fd_ = open(path_uri.c_str(), O_RDONLY)) < 0)
       throw ft::HttpResponseException("403");
     if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
