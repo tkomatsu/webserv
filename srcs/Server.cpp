@@ -1,29 +1,48 @@
 #include "Server.hpp"
 
-int Server::SetSocket() {
-  long fd;
+#include <netdb.h>
 
-  if ((fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    throw std::runtime_error("socket error\n");
+#include <stdexcept>
 
-  memset((char *)&addr_, 0, sizeof(addr_));
-  addr_.sin_family = AF_INET;
-  addr_.sin_addr.s_addr = inet_addr(host_ip_.c_str());
-  addr_.sin_port = htons(port_);
+int Server::OpenListenSocket() {
+  struct addrinfo hints, *listp, *p;
+  int listenfd, optval = 1;
 
-  if (fcntl(fd, F_SETFL, O_NONBLOCK) != 0)
-    throw std::runtime_error("fcntl error\n");
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_socktype = SOCK_STREAM;
+  hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+  hints.ai_flags |= AI_NUMERICSERV;
 
-  int on = 1;
-  if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) == -1)
-    throw std::runtime_error("setsockopt error\n");
+  char port[20];
+  sprintf(port, "%d", port_);
+  int rn = getaddrinfo(NULL, port, &hints, &listp);
+  if (rn != 0)
+    throw std::runtime_error("getaddrinfo: " + std::string(gai_strerror(rn)));
 
-  if (bind(fd, (struct sockaddr *)&addr_, sizeof(addr_)) == -1)
-    throw std::runtime_error("bind error\n");
+  for (p = listp; p; p = p->ai_next) {
+    if ((listenfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) < 0)
+      continue;
 
-  if (listen(fd, 512) == -1) throw std::runtime_error("listen error\n");
+    if (fcntl(listenfd, F_SETFL, O_NONBLOCK) != 0)
+      throw std::runtime_error("fcntl: " + std::string(strerror(errno)));
+    if (setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &optval,
+                   sizeof(optval)) < 0)
+      throw std::runtime_error("setsockopt: " + std::string(strerror(errno)));
 
-  return fd;
+    if (bind(listenfd, p->ai_addr, p->ai_addrlen) == 0) break;
+    if (close(listenfd) < 0)
+      throw std::runtime_error("close: " + std::string(strerror(errno)));
+  }
+
+  freeaddrinfo(listp);
+  if (!p) return -1;
+
+  if (listen(listenfd, 1024) < 0) {
+    if (close(listenfd) < 0)
+      throw std::runtime_error("close: " + std::string(strerror(errno)));
+    return -1;
+  }
+  return listenfd;
 }
 
 const config::Config &Server::GetConfig() const { return config_; }
