@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <regex>
+#include <string>
 
 #include "Client.hpp"
 #include "Server.hpp"
@@ -10,27 +11,83 @@ class ClientTest : public testing::Test {
  protected:
   virtual void SetUp() {}
   virtual void TearDown() {}
-
-  /* void CheckGenFd(int fd1, int fd2) {
-   EXPECT_NE(fd1, fd2);
- } */
 };
 
-// accept error回避したいけど…
-TEST_F(ClientTest, SetSocket) {
-  config::Main main_context;
-  config::Server server_context(main_context);
-  server_context.port = 4200;
-  server_context.host = "127.0.0.1";
-  config::Config config(server_context);
+TEST_F(ClientTest, IsValidExtension) {
+  config::Parser parser("../../conf/basic.conf");
+  std::vector<config::Config> configs = parser.GetConfigs();
 
-  Server server(config);
+  Server server(configs[0]);  // basic.conf's first server(listening 4200)
   Client client(server.GetConfig());
-  int tmp_fd = server.OpenListenSocket();
 
-  try {
-    int res = client.SetSocket(tmp_fd);
-  } catch (std::runtime_error const& err) {
-    EXPECT_EQ(err.what(), std::string("accept error\n"));
-  }
+  EXPECT_TRUE(client.IsValidExtension("./docs/abc.py", "/abc.py"));
+  EXPECT_TRUE(client.IsValidExtension("./docs/abc.php", "/abc.php"));
+  EXPECT_TRUE(client.IsValidExtension("./docs/z.perl.php.cgi.py",
+                                      "/z.perl.php.cgi.py"));
+  EXPECT_TRUE(client.IsValidExtension("./docs/abc.py", "/abc.py/"));
+  EXPECT_TRUE(client.IsValidExtension("./docs/abc.php", "/abc.php/"));
+  EXPECT_TRUE(client.IsValidExtension("./docs/z.perl.php.cgi.py",
+                                      "/z.perl.php.cgi.py/"));
+  EXPECT_FALSE(client.IsValidExtension("./docs/abc.cgi", "/abc.cgi/"));
+  EXPECT_FALSE(client.IsValidExtension("./docs/abc.cgi", "/abc.cgi"));
+  EXPECT_FALSE(client.IsValidExtension("./docs/", "/"));
+  EXPECT_FALSE(client.IsValidExtension("./docs/upload", "/upload"));
+  EXPECT_FALSE(client.IsValidExtension("./docs/upload", "/upload/"));
+}
+
+TEST_F(ClientTest, GetIndexFileIfExist) {
+  config::Parser parser("../../conf/basic.conf");
+  std::vector<config::Config> configs = parser.GetConfigs();
+
+  Server server(configs[0]);
+  Client client(server.GetConfig());
+
+  EXPECT_EQ(client.GetIndexFileIfExist("../../docs/", "/cgi"), "");
+  EXPECT_EQ(client.GetIndexFileIfExist("../../docs/", "/cgi/"), "");
+  EXPECT_EQ(client.GetIndexFileIfExist("../../docs/html/", "/"), "index.html");
+  system("mv ../../docs/html/index.html ../../docs/html/index.htm");
+  EXPECT_EQ(client.GetIndexFileIfExist("../../docs/html/", "/"), "index.htm");
+  system("mv ../../docs/html/index.htm ../../docs/html/index.html");
+}
+
+TEST_F(ClientTest, IsValidUploadRequest) {
+  config::Parser parser("../../conf/basic.conf");
+  std::vector<config::Config> configs = parser.GetConfigs();
+
+  Server server(configs[1]);  // basic.conf's second server(listening 4201)
+  Client client(server.GetConfig());
+
+  chdir("../../");
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload/"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload/"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload/new.html"));
+  EXPECT_TRUE(client.IsValidUploadRequest("/upload/new.html/"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge/upload"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge/upload/"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge/upload/new.html"));
+  EXPECT_FALSE(client.IsValidUploadRequest("/hoge/upload/new.html"));
+}
+
+TEST_F(ClientTest, MakePathUri) {
+  config::Parser parser("../../conf/basic.conf");
+  std::vector<config::Config> configs = parser.GetConfigs();
+
+  Server server(configs[1]);  // basic.conf's second server(listening 4201)
+  Client client(server.GetConfig());
+
+  // std::string MakePathUri(std::string alias_path, std::string request_uri,
+  // std::string location_path);
+  // alias_path + (request_uri - location_path)
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
+            "./docs/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
+            "./docs/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/"),
+            "./docs/i/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
+            "./docs/top.gif");
 }

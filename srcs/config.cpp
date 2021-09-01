@@ -157,6 +157,11 @@ int Config::GetClientMaxBodySize(const std::string& uri) const {
   return location->client_max_body_size;
 }
 
+std::string Config::GetPath(const std::string& uri) const {
+  const struct Location* location = MatchLocation(uri);
+  return location->path;
+}
+
 std::string Config::GetAlias(const std::string& uri) const {
   const struct Location* location = MatchLocation(uri);
   return location->alias;
@@ -177,7 +182,7 @@ std::set<std::string> Config::GetExtensions(const std::string& uri) const {
   return location->extensions;
 }
 
-std::set<std::string> Config::GetIndexes(const std::string& uri) const {
+std::vector<std::string> Config::GetIndexes(const std::string& uri) const {
   const struct Location* location = MatchLocation(uri);
   return location->indexes;
 }
@@ -409,15 +414,16 @@ void Parser::AddIndex(enum Context context, const std::string& name,
   if (params.empty())
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
 
-  for (std::vector<std::string>::const_iterator itr = params.begin();
-       itr != params.end(); ++itr) {
+  for (std::vector<std::string>::const_reverse_iterator itr = params.rbegin();
+       itr != params.rend(); ++itr) {
     if (itr->empty()) throw ParameterError(BuildError(name, "cannot be empty"));
     if (context == MAIN)
-      main_.indexes.insert(*itr);
+      main_.indexes.insert(main_.indexes.begin(), *itr);
     else if (context == SERVER)
-      servers_.back().indexes.insert(*itr);
+      servers_.back().indexes.insert(servers_.back().indexes.begin(), *itr);
     else if (context == LOCATION)
-      servers_.back().locations.back().indexes.insert(*itr);
+      servers_.back().locations.back().indexes.insert(
+          servers_.back().locations.back().indexes.begin(), *itr);
   }
 }
 
@@ -554,7 +560,7 @@ void Parser::Print() const {
     PrintKeyValue("client_max_body_size", server.client_max_body_size);
     PrintKeyValue("host", server.host);
     PrintKeyValue("server_name", server.server_name);
-    PrintKeyValue("index", SetToString(server.indexes));
+    PrintKeyValue("index", VectorToString(server.indexes));
     PrintKeyValue("error_page", MapToString(server.error_pages));
     PrintKeyValue("redirect", PairToString(server.redirect));
     PrintKeyValue("upload_pass", server.upload_pass);
@@ -571,7 +577,7 @@ void Parser::Print() const {
       PrintKeyValue("autoindex", location.autoindex, true);
       PrintKeyValue("client_max_body_size", location.client_max_body_size,
                     true);
-      PrintKeyValue("index", SetToString(location.indexes), true);
+      PrintKeyValue("index", VectorToString(location.indexes), true);
       PrintKeyValue("alias", location.alias, true);
       PrintKeyValue("error_page", MapToString(location.error_pages), true);
       PrintKeyValue("allowed_methods", SetToString(location.allowed_methods),
