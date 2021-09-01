@@ -1,14 +1,15 @@
+## build
 ```
 $ make
 $ ./webserv
 ```
 
-別プロセスにて…
-
+## unit test
 ```
-$ curl localhost:4200
-$ curl localhost:4201
-$ curl localhost:4202
-$ curl localhost:4200 localhost:4200 -v
-$ curl localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202 localhost:4200 localhost:4201 localhost:4202
+$ make unittest
+```
+
+## http test
+```
+$ make httptest
 ```

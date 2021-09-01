@@ -42,7 +42,9 @@ class Response : public HttpMessage {
   void EraseBody(ssize_t length);
   void Clear();
   void ErrorResponse(int status);
-  void AutoIndexResponse(const std::string& path);
+  void AutoIndexResponse(const std::string& path, const std::string& index_of);
+  void DeleteResponse(void);
+  void RedirectResponse(int code, std::string location);
 
   class StatusException : public std::domain_error {
    public:
@@ -59,7 +61,7 @@ class Response : public HttpMessage {
   std::string ErrorHtml(int status);
   std::string ErrorStatusLine(int status);
 
-  std::string AutoIndexHtml(const std::string& path);
+  std::string AutoIndexHtml(const std::string& path, const std::string& index_of);
 };
 
 #endif /* RESPONSE_HPP */

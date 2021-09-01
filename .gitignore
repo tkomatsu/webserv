@@ -5,6 +5,7 @@
 
 *.o
 test/build
+test/http/_*
 objs
 
 webserv
