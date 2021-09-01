@@ -132,7 +132,7 @@ std::string Config::GetServerName() const { return server_.server_name; }
 
 const struct Location* Config::MatchLocation(const std::string& uri) const {
   if (server_.locations.empty())
-    throw std::runtime_error("no location specified");
+    throw ft::ConfigException("no location specified");
   const struct Location* longest_prefix = NULL;
   std::vector<const struct Location>::const_iterator itr;
   for (itr = server_.locations.begin(); itr != server_.locations.end(); ++itr) {
@@ -143,9 +143,7 @@ const struct Location* Config::MatchLocation(const std::string& uri) const {
         longest_prefix = &*itr;
     }
   }
-  if (longest_prefix == NULL)
-    // throw Client::HttpResponseException("no matching location found");
-    throw ft::HttpResponseException("404");
+  if (longest_prefix == NULL) throw ft::HttpResponseException("404");
   return longest_prefix;
 }
 

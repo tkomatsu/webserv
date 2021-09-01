@@ -37,9 +37,21 @@ std::string AutoIndexNow(time_t time);
 int strcasecmp(const std::string &a, const std::string &b);
 std::string what_time(void);
 
+struct CaseInsensitiveCompare
+    : public std::binary_function<std::string, std::string, bool> {
+  bool operator()(const std::string &a, const std::string &b) const {
+    return strcasecmp(a, b) < 0;
+  }
+};
+
 class HttpResponseException : public std::runtime_error {
  public:
   HttpResponseException(const std::string &what) : std::runtime_error(what) {}
+};
+
+class ConfigException : public std::runtime_error {
+ public:
+  ConfigException(const std::string &what) : std::runtime_error(what) {}
 };
 
 }  // namespace ft

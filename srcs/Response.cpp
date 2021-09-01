@@ -91,8 +91,8 @@ std::string Response::Str() const {
   s << "HTTP/" << http_version_ << " " << status_code_ << " " << status_message_
     << "\r\n";
 
-  for (std::map<std::string, std::string>::const_iterator i = headers_.begin();
-       i != headers_.end(); ++i) {
+  for (http_header::const_iterator i = headers_.begin(); i != headers_.end();
+       ++i) {
     s << i->first << ": " << i->second << "\r\n";
   }
   s << "\r\n" << body_;

@@ -229,26 +229,22 @@ int WebServ::ExecClientEvent(socket_iter it) {
 
 void WebServ::Activate(void) {
   int hit = 0;
+  int n;
 
   while (true) {
-    int n = HasUsableIO();
-
-    if (n > 0) {
-      for (std::map<int, Socket *>::iterator it = sockets_.begin();
-           n && it != sockets_.end(); ++it) {
-        try {
-          if (dynamic_cast<Server *>(it->second)) {
-            if (AcceptSession(it) == 1) --n;
-          } else {
-            if ((hit = ExecClientEvent(it)) > 0) n -= hit;
-          }
-        } catch (ft::HttpResponseException &e) {
-          Client *client = dynamic_cast<Client *>(it->second);
-          client->HandleException(e.what());
+    if ((n = HasUsableIO()) <= 0) throw std::runtime_error("select error\n");
+    for (std::map<int, Socket *>::iterator it = sockets_.begin();
+         n && it != sockets_.end(); ++it) {
+      try {
+        if (dynamic_cast<Server *>(it->second)) {
+          if (AcceptSession(it) == 1) --n;
+        } else {
+          if ((hit = ExecClientEvent(it)) > 0) n -= hit;
         }
+      } catch (ft::HttpResponseException &e) {
+        Client *client = dynamic_cast<Client *>(it->second);
+        client->HandleException(e.what());
       }
-    } else {
-      throw std::runtime_error("select error\n");
     }
   }
 }

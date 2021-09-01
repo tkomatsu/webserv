@@ -19,7 +19,8 @@ class HttpMessage {
   };
 
  protected:
-  typedef std::map<std::string, std::string> http_header;
+  typedef std::map<std::string, std::string, ft::CaseInsensitiveCompare>
+      http_header;
 
   enum ParseStatus status_;
   std::string delim_;
