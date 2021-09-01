@@ -30,12 +30,6 @@ int Client::SetSocket(int _fd) {
   return fd;
 }
 
-void Client::SetContentLocation(std::string content_location) {
-  content_location_ = content_location;
-}
-
-std::string Client::GetContentLocation(void) { return content_location_; }
-
 void Client::SetEventStatus(enum SocketStatus status) {
   socket_status_ = status;
 }
@@ -195,9 +189,10 @@ enum SocketStatus Client::GetNextOfReadClient(std::string *path_uri) {
           *path_uri =
               MakePathUri(alias, config_.GetUploadStore(request_path), "/") +
               "/" + filename;
-          SetContentLocation(
+          response_.AppendHeader(
+              "Content-Location",
               MakePathUri("/", config_.GetUploadStore(request_path), "/") +
-              filename);
+                  filename);
           ret = WRITE_FILE;
           break;
         }
@@ -226,8 +221,8 @@ void Client::Preprocess(void) {
   std::string request_path = request_.GetURI();
   std::pair<int, std::string> redirect;
 
-  try { // this is the first time config getter is used
-  redirect= config_.GetRedirect(request_path);
+  try {  // this is the first time config getter is used
+    redirect = config_.GetRedirect(request_path);
   } catch (const std::exception &e) {
     throw ft::HttpResponseException("404");
   }
@@ -235,8 +230,8 @@ void Client::Preprocess(void) {
   if (redirect.first == 0 && redirect.second.empty() &&
       DirectoryRedirect(request_path)) {
     redirect.first = 301;
-    redirect.second =
-        "http://" + config_.GetHost() + ":" + ft::ltoa(config_.GetPort()) + request_path + "/";
+    redirect.second = "http://" + config_.GetHost() + ":" +
+                      ft::ltoa(config_.GetPort()) + request_path + "/";
   }
 
   // no redirect
@@ -350,8 +345,6 @@ void Client::WriteStaticFile() {
     close(write_fd_);
     response_.SetStatusCode(201);
     response_.AppendHeader("Content-Type", "text/html");
-    response_.AppendHeader("Content-Location", GetContentLocation());
-
     response_.AppendHeader("Content-Length", "0");
 
     SetEventStatus(WRITE_CLIENT);
@@ -431,7 +424,7 @@ void Client::GenProcessForCGI(const std::string &path_uri) {
   if ((pid = fork()) < 0)
     throw ft::HttpResponseException("500");
   else if (pid == 0) {
-    CGI cgi_vals = CGI(request_, port_, host_ip_, config_);
+    CGI cgi_vals = CGI(request_, port_, host_ip_, config_, path_uri);
     ExecCGI(pipe_write, pipe_read, cgi_vals, path_uri);
   }
 
@@ -478,9 +471,12 @@ std::string Client::MakePathUri(std::string alias_path,
 
   // step2: res = alias + delta
   std::vector<std::string> res_vector;
-  for (size_t i = 0; i < alias_splited.size(); ++i)
+  for (size_t i = 0; i < alias_splited.size(); ++i) {
     res_vector.push_back(alias_splited[i]);
-  for (size_t i = 0; i < delta.size(); ++i) res_vector.push_back(delta[i]);
+  }
+  for (size_t i = 0; i < delta.size(); ++i) {
+    res_vector.push_back(delta[i]);
+  }
 
   // step3: make res
   std::string res;

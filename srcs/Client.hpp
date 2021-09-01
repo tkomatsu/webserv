@@ -18,6 +18,7 @@ class Client : public Socket {
   FRIEND_TEST(ClientTest, IsValidExtension);
   FRIEND_TEST(ClientTest, GetIndexFileIfExist);
   FRIEND_TEST(ClientTest, IsValidUploadRequest);
+  FRIEND_TEST(ClientTest, MakePathUri);
 #endif
 
  public:
@@ -46,8 +47,6 @@ class Client : public Socket {
  private:
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
   void SetEventStatus(enum SocketStatus status);
-  void SetContentLocation(std::string content_location);
-  std::string GetContentLocation(void);
   void Preprocess(void);
   void GenProcessForCGI(const std::string &path_uri);
   void SetPipe(int *pipe_write, int *pipe_read);
@@ -66,7 +65,6 @@ class Client : public Socket {
   // member variables
   Request request_;
   Response response_;
-  std::string content_location_;
   size_t sended_;  // num of chars sended to client
   int write_fd_;
   int read_fd_;
