@@ -1,13 +1,16 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <vector>
+#include <dirent.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include "CGI.hpp"
 #include "ISocket.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
 #include "config.hpp"
+#include "utility.hpp"
 
 #ifdef GOOGLE_TEST
 #include <gtest/gtest.h>

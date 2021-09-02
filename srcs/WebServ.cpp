@@ -1,15 +1,5 @@
 #include "WebServ.hpp"
 
-#include <unistd.h>
-
-#include <cstring>
-#include <iostream>
-#include <stdexcept>
-
-#include "Client.hpp"
-#include "Server.hpp"
-#include "config.hpp"
-
 const std::string WebServ::default_path_ = "./conf/default.conf";
 
 WebServ::WebServ(const std::string &path) {

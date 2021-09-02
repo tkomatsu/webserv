@@ -1,12 +1,10 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-#include <map>
-#include <string>
-
+#include "Client.hpp"
 #include "ISocket.hpp"
-
-class Client;
+#include "Server.hpp"
+#include "config.hpp"
 
 class WebServ {
  public:

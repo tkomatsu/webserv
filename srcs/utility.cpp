@@ -1,14 +1,4 @@
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
-
-#include <ctime>
-#include <sstream>
-#include <vector>
-
-namespace ft {
+#include "utility.hpp"
 
 namespace {
 
@@ -28,6 +18,8 @@ int count(std::string s, char c) {
 }
 
 }  // namespace
+
+namespace ft {
 
 char **split(std::string s, char c) {
   char **p;

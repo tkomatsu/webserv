@@ -1,7 +1,5 @@
 #include "Response.hpp"
 
-#include <sstream>
-
 Response::Status::Status() {
   code[100] = "Continue";
   code[101] = "Swithing Protocol";
@@ -158,7 +156,8 @@ std::string Response::ErrorStatusLine(int status) {
   return (s.str());
 }
 
-void Response::AutoIndexResponse(const std::string& path, const std::string& index_of) {
+void Response::AutoIndexResponse(const std::string& path,
+                                 const std::string& index_of) {
   Clear();
   SetStatusCode(200);
   AppendHeader("Content-Type", "text/html");
@@ -185,7 +184,8 @@ void Response::RedirectResponse(int code, std::string location) {
   AppendHeader("Location", location);
 }
 
-std::string Response::AutoIndexHtml(const std::string& dir_path, const std::string& index_of) {
+std::string Response::AutoIndexHtml(const std::string& dir_path,
+                                    const std::string& index_of) {
   DIR* dirp = opendir(dir_path.c_str());
   if (dirp == NULL) return "";
   struct dirent* dp;
