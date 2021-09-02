@@ -45,7 +45,6 @@ class Client : public Socket {
   void HandleException(const char *err_msg);
 
  private:
-  void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
   void Preprocess(void);
   void GenProcessForCGI(const std::string &path_uri);
   void SetPipe(int *pipe_write, int *pipe_read);

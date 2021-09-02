@@ -350,7 +350,7 @@ void Client::WriteStaticFile() {
       throw ft::HttpResponseException("500");
   }
 
-  EraseRequestBody(ret);
+  request_.EraseBody(ret);
   if (request_.GetBody().empty()) {
     close(write_fd_);
     response_.SetStatusCode(201);
@@ -392,7 +392,7 @@ void Client::WriteCGIin() {
     int ret = 0;
     if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
       throw ft::HttpResponseException("500");
-    EraseRequestBody(ret);
+    request_.EraseBody(ret);
   }
   if (request_.GetBody().empty()) {
     close(write_fd_);
