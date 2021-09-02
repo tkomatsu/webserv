@@ -10,7 +10,7 @@
 #include "Server.hpp"
 #include "config.hpp"
 
-const std::string WebServ::default_path_ = "./conf/basic.conf";
+const std::string WebServ::default_path_ = "./conf/default.conf";
 
 WebServ::WebServ(const std::string &path) {
   timeout_ = (struct timeval){1, 0};
