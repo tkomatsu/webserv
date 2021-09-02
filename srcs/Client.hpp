@@ -59,13 +59,15 @@ class Client : public Socket {
   std::string GetIndexFileIfExist(std::string path_uri,
                                   std::string request_path);
   enum SocketStatus GetNextOfReadClient(std::string &path_uri);
-  std::string MakePathUri(std::string request_uri,
-                          std::string location_path);
+  std::string MakePathUri(std::string request_uri, std::string location_path);
 
   // method branching
   enum SocketStatus HandleGET(std::string &path_uri);
   enum SocketStatus HandlePOST(std::string &path_uri);
   enum SocketStatus HandleDELETE(std::string &path_uri);
+
+  // logging
+  std::string LogMessage() const;
 
   // member variables
   Request request_;

@@ -290,7 +290,6 @@ int Client::RecvRequest(int client_fd) {
   try {
     request_.AppendRawData(buf);
     if (request_.GetStatus() == HttpMessage::DONE) {
-      std::cout << "\nrecv from " << host_ip_ << ":" << port_ << std::endl;
       Preprocess();
     }
     if (request_.GetStatus() == HttpMessage::DONE && !IsValidRequest()) {
@@ -318,7 +317,7 @@ int Client::SendResponse(int client_fd) {
 
   sended_ += ret;
   if (sended_ >= response_.Str().size()) {
-    std::cout << "send to   " + host_ip_ << ":" << port_ << std::endl;
+    std::cout << LogMessage() << std::endl;
     response_.Clear();
     request_.Clear();
     sended_ = 0;
@@ -519,4 +518,21 @@ std::string Client::MakePathUri(std::string request_path,
   }
 
   return res;
+}
+
+std::string Client::LogMessage() const {
+  std::string method_array[4] = {"GET", "POST", "DELETE", "INVALID"};
+  std::stringstream ss;
+  ss << host_ip_;  // << ":" << port_;
+  ss << " - [" << response_.GetHeader("Date") << "] ";
+  ss << "\"" << method_array[request_.GetMethod()] << " ";
+  ss << request_.GetURI() << " ";
+  ss << "HTTP/" << request_.GetVersion() << "\" ";
+  ss << response_.GetStatusCode() << " ";
+  try {
+    ss << response_.GetHeader("Content-Length");
+    ss << " \"" << request_.GetHeader("User-Agent") << "\"";
+  } catch (std::exception &e) {
+  }
+  return ss.str();
 }
