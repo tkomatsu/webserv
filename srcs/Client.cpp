@@ -31,10 +31,6 @@ int Client::ConnectClientSocket(int _fd) {
   return fd;
 }
 
-void Client::SetEventStatus(enum SocketStatus status) {
-  socket_status_ = status;
-}
-
 bool Client::IsValidExtension(std::string path_uri, std::string request_path) {
   size_t i = path_uri.length() - 1;
 
@@ -248,10 +244,10 @@ void Client::Preprocess(void) {
   // no redirect
   if (redirect.first == 0 && redirect.second.empty()) {
     ret = GetNextOfReadClient(path_uri);
-    SetEventStatus(ret);
+    socket_status_ = ret;
   } else {
     ret = WRITE_CLIENT;
-    SetEventStatus(ret);
+    socket_status_ = ret;
   }
 
   if (ret == READ_FILE) {
@@ -321,7 +317,7 @@ int Client::SendResponse(int client_fd) {
     response_.Clear();
     request_.Clear();
     sended_ = 0;
-    SetEventStatus(READ_CLIENT);
+    socket_status_ = READ_CLIENT;
   }
   return 1;  // continue send
 }
@@ -338,7 +334,7 @@ int Client::ReadStaticFile() {
     close(read_fd_);
     response_.AppendHeader("Content-Length",
                            ft::ltoa(response_.GetBody().size()));
-    SetEventStatus(WRITE_CLIENT);
+    socket_status_ = WRITE_CLIENT;
   } else {
     response_.AppendBody(buf);
   }
@@ -361,7 +357,7 @@ void Client::WriteStaticFile() {
     response_.AppendHeader("Content-Type", "text/html");
     response_.AppendHeader("Content-Length", "0");
 
-    SetEventStatus(WRITE_CLIENT);
+    socket_status_ = WRITE_CLIENT;
   }
 }
 
@@ -384,7 +380,7 @@ int Client::ReadCGIout() {
     response_.SetStatusCode(200);
     response_.AppendHeader("Content-Length",
                            ft::ltoa(response_.GetBody().length()));
-    SetEventStatus(WRITE_CLIENT);
+    socket_status_ = WRITE_CLIENT;
   }
   return ret;
 }
@@ -400,7 +396,7 @@ void Client::WriteCGIin() {
   }
   if (request_.GetBody().empty()) {
     close(write_fd_);
-    SetEventStatus(READ_CGI);
+    socket_status_ = READ_CGI;
   }
 }
 
@@ -470,7 +466,7 @@ void Client::HandleException(const char *err_msg) {
         response_.SetStatusCode(status_code);
         if ((read_fd_ = open(i->second.c_str(), O_RDONLY)) < 0) break;
         if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1) break;
-        SetEventStatus(READ_FILE);
+        socket_status_ = READ_FILE;
         return;
       }
     }
@@ -478,7 +474,7 @@ void Client::HandleException(const char *err_msg) {
     std::cerr << "config: " << e.what() << std::endl;
   }
   response_.ErrorResponse(status_code);
-  SetEventStatus(WRITE_CLIENT);
+  socket_status_ = WRITE_CLIENT;
 }
 
 std::string Client::MakePathUri(std::string request_path,

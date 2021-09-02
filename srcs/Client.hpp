@@ -46,7 +46,6 @@ class Client : public Socket {
 
  private:
   void EraseRequestBody(ssize_t length) { request_.EraseBody(length); };
-  void SetEventStatus(enum SocketStatus status);
   void Preprocess(void);
   void GenProcessForCGI(const std::string &path_uri);
   void SetPipe(int *pipe_write, int *pipe_read);
