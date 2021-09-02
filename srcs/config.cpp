@@ -217,7 +217,7 @@ std::vector<Config> Parser::GetConfigs() {
 void Parser::Load() {
   std::ifstream file(filename_);
   if (!file.is_open()) {
-    throw std::runtime_error("file could not be opened");
+    throw std::runtime_error("config: file could not be opened");
   }
 
   Directives mapping;

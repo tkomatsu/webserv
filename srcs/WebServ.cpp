@@ -22,7 +22,8 @@ void WebServ::Activate(void) {
   int n;
 
   while (true) {
-    if ((n = HasUsableIO()) <= 0) throw std::runtime_error("select error\n");
+    if ((n = HasUsableIO()) <= 0)
+      throw std::runtime_error("select: " + std::string(strerror(errno)));
     for (std::map<int, ISocket *>::iterator it = sockets_.begin();
          n && it != sockets_.end(); ++it) {
       try {
@@ -127,7 +128,8 @@ void WebServ::ReadClient(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    if (ret < 0) throw std::runtime_error(strerror(errno));
+    if (ret < 0)
+      throw std::runtime_error("recv: " + std::string(strerror(errno)));
   }
 }
 
@@ -140,7 +142,7 @@ void WebServ::ReadFile(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    throw std::runtime_error(strerror(errno));
+    throw std::runtime_error("read: " + std::string(strerror(errno)));
   }
 }
 
@@ -153,7 +155,7 @@ void WebServ::ReadCGI(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    throw std::runtime_error(strerror(errno));
+    throw std::runtime_error("read: " + std::string(strerror(errno)));
   }
 }
 
@@ -165,7 +167,7 @@ void WebServ::WriteClient(socket_iter it) {
   if ((ret = client->SendResponse(client_fd)) < 0) {
     close(client_fd);
     sockets_.erase(it);
-    throw std::runtime_error(strerror(errno));
+    throw std::runtime_error("send: " + std::string(strerror(errno)));
   }
 }
 
