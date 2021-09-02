@@ -20,6 +20,9 @@ class Server : public Socket {
   const config::Config& GetConfig() const;
 
  private:
+  Server(const Server&);
+  Server& operator=(const Server&);
+
   config::Config config_;
 };
 

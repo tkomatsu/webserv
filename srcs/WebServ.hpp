@@ -10,6 +10,9 @@ class Client;
 
 class WebServ {
  public:
+  WebServ(const WebServ&);
+  WebServ& operator=(const WebServ&);
+
   typedef std::map<int, Socket*>::iterator socket_iter;
 
  public:
