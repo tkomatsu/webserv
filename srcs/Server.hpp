@@ -20,6 +20,7 @@ class Server : public ISocket {
   const config::Config& GetConfig() const;
 
  private:
+  /* prohibit copy constructor and assignment operator */
   Server(const Server&);
   Server& operator=(const Server&);
 

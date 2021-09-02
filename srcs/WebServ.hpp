@@ -10,12 +10,8 @@ class Client;
 
 class WebServ {
  public:
-  WebServ(const WebServ&);
-  WebServ& operator=(const WebServ&);
-
   typedef std::map<int, ISocket*>::iterator socket_iter;
 
- public:
   WebServ(const std::string& path);
   ~WebServ();
 
@@ -24,6 +20,10 @@ class WebServ {
   static const std::string default_path_;
 
  private:
+  /* prohibit copy constructor and assignment operator */
+  WebServ(const WebServ&);
+  WebServ& operator=(const WebServ&);
+
   int HasUsableIO();
 
   int AcceptSession(socket_iter it);

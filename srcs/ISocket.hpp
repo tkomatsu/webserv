@@ -20,7 +20,8 @@ class ISocket {
 
   enum SocketStatus socket_status_;
 
- private: /* prohibit */
+ private:
+  /* prohibit copy constructor and assignment operator */
   ISocket(const ISocket&);
   ISocket& operator=(const ISocket&);
 };

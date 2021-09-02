@@ -45,6 +45,7 @@ class Client : public ISocket {
   void HandleException(const char *err_msg);
 
  private:
+  /* prohibit copy constructor and assignment operator */
   Client(const Client &client);
   Client &operator=(const Client &client);
 

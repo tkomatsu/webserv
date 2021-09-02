@@ -21,14 +21,6 @@ class Response : public HttpMessage {
   };
   static const Status kResponseStatus;
 
- private:
-  int status_code_;
-  std::string status_message_;
-
-  Response(const Response& other);
-  Response& operator=(const Response& rhs);
-
- public:
   Response();
   ~Response();
 
@@ -52,6 +44,13 @@ class Response : public HttpMessage {
   };
 
  private:
+  int status_code_;
+  std::string status_message_;
+
+  /* prohibit copy constructor and assignment operator */
+  Response(const Response& other);
+  Response& operator=(const Response& rhs);
+
   void SetStatusMessage(const std::string& reason);
   virtual void ParseMessage();
   virtual void ParseStartline();
@@ -61,7 +60,8 @@ class Response : public HttpMessage {
   std::string ErrorHtml(int status);
   std::string ErrorStatusLine(int status);
 
-  std::string AutoIndexHtml(const std::string& path, const std::string& index_of);
+  std::string AutoIndexHtml(const std::string& path,
+                            const std::string& index_of);
 };
 
 #endif /* RESPONSE_HPP */

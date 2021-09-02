@@ -22,6 +22,7 @@ class CGI {
   char **GetEnvs() const { return envs_; };
 
  private:
+  /* prohibit copy constructor and assignment operator */
   CGI(const CGI &);
   CGI &operator=(const CGI &);
 

@@ -115,6 +115,7 @@ class Parser {
   void Print() const;
 
  private:
+  /* prohibit copy constructor and assignment operator */
   Parser(const Parser& other);
   Parser& operator=(const Parser& other);
 
@@ -222,6 +223,7 @@ class LineBuilder {
   bool GetNext(LineComponent& line);
 
  private:
+  /* prohibit copy constructor and assignment operator */
   LineBuilder(const LineBuilder& other);
   LineBuilder& operator=(const LineBuilder& other);
 
