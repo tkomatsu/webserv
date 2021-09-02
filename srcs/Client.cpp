@@ -25,9 +25,10 @@ int Client::ConnectClientSocket(int _fd) {
   port_ = ntohs(addr_.sin_port);
   host_ip_ = ft::inet_ntoa(addr_.sin_addr);
 
-  if (fd == -1) throw std::runtime_error("accept error\n");
+  if (fd == -1)
+    throw std::runtime_error("accept: " + std::string(strerror(errno)));
   if (fcntl(fd, F_SETFL, O_NONBLOCK) != 0)
-    throw std::runtime_error("fcntl error\n");
+    throw std::runtime_error("fcntl: " + std::string(strerror(errno)));
   return fd;
 }
 
