@@ -1,7 +1,10 @@
 #ifndef CGI_HPP
 #define CGI_HPP
 
+#include <string.h>
+
 #include <map>
+#include <vector>
 
 #include "Request.hpp"
 #include "config.hpp"
@@ -19,6 +22,9 @@ class CGI {
   char **GetEnvs() const { return envs_; };
 
  private:
+  CGI(const CGI &);
+  CGI &operator=(const CGI &);
+
   void SetArgs();
   void SetEnvs();
   void CalcEnvs();

@@ -247,7 +247,7 @@ void Client::GenProcessForCGI(const std::string &path_uri) {
   if ((pid = fork()) < 0)
     throw ft::HttpResponseException("500");
   else if (pid == 0) {
-    CGI cgi_vals = CGI(request_, port_, host_ip_, config_, path_uri);
+    CGI cgi_vals(request_, port_, host_ip_, config_, path_uri);
     ExecCGI(pipe_write, pipe_read, cgi_vals, path_uri);
   }
 
