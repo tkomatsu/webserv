@@ -13,7 +13,7 @@
 #include <gtest/gtest.h>
 #endif
 
-class Client : public Socket {
+class Client : public ISocket {
 #ifdef GOOGLE_TEST
   FRIEND_TEST(ClientTest, IsValidExtension);
   FRIEND_TEST(ClientTest, GetIndexFileIfExist);

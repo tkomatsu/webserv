@@ -13,7 +13,7 @@ class WebServ {
   WebServ(const WebServ&);
   WebServ& operator=(const WebServ&);
 
-  typedef std::map<int, Socket*>::iterator socket_iter;
+  typedef std::map<int, ISocket*>::iterator socket_iter;
 
  public:
   WebServ(const std::string& path);
@@ -43,7 +43,7 @@ class WebServ {
   fd_set rfd_set_, wfd_set_;
   struct timeval timeout_;
 
-  std::map<int, Socket*> sockets_;
+  std::map<int, ISocket*> sockets_;
 
   std::map<int, std::string> cgi_outputs_;
 };

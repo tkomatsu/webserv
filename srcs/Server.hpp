@@ -11,10 +11,10 @@
 #include "ISocket.hpp"
 #include "config.hpp"
 
-class Server : public Socket {
+class Server : public ISocket {
  public:
-  Server(const config::Config& config)
-      : Socket(config.GetPort(), config.GetHost()), config_(config){};
+  Server(const config::Config& config);
+  ~Server();
 
   int OpenListenSocket();
   const config::Config& GetConfig() const;

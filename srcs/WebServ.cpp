@@ -20,7 +20,7 @@ WebServ::WebServ(const std::string &path) {
 
 WebServ::~WebServ() {
   // delete all pointers
-  for (std::map<int, Socket *>::iterator it = sockets_.begin();
+  for (std::map<int, ISocket *>::iterator it = sockets_.begin();
        it != sockets_.end(); ++it) {
     delete it->second;
   }
@@ -33,7 +33,7 @@ void WebServ::Activate(void) {
 
   while (true) {
     if ((n = HasUsableIO()) <= 0) throw std::runtime_error("select error\n");
-    for (std::map<int, Socket *>::iterator it = sockets_.begin();
+    for (std::map<int, ISocket *>::iterator it = sockets_.begin();
          n && it != sockets_.end(); ++it) {
       try {
         if (dynamic_cast<Server *>(it->second)) {
@@ -57,7 +57,7 @@ int WebServ::HasUsableIO() {
     FD_ZERO(&wfd_set_);
     max_fd_ = 0;
 
-    for (std::map<int, Socket *>::iterator it = sockets_.begin();
+    for (std::map<int, ISocket *>::iterator it = sockets_.begin();
          it != sockets_.end(); ++it) {
       // set listening sockets_
       if (dynamic_cast<Server *>(it->second)) {
