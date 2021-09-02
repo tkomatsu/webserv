@@ -37,9 +37,9 @@ class Client : public Socket {
   void WriteCGIin();
 
   // Getter
-  int GetStatus() const { return socket_status_; };
-  int GetWriteFd() const { return write_fd_; };
-  int GetReadFd() const { return read_fd_; };
+  int GetStatus() const;
+  int GetWriteFd() const;
+  int GetReadFd() const;
 
   // Exception handling
   void HandleException(const char *err_msg);
@@ -50,7 +50,7 @@ class Client : public Socket {
   void SetPipe(int *pipe_write, int *pipe_read);
   void ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi,
                const std::string &path_uri);
-  bool IsValidRequest();
+
   bool IsValidExtension(std::string path_uri, std::string request_path);
   bool IsValidUploadRequest(const std::string &request_path);
   bool DirectoryRedirect(std::string request_path);
