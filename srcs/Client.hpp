@@ -26,7 +26,7 @@ class Client : public Socket {
   Client(const config::Config &config);
 
   // Socket actions
-  int SetSocket(int _fd);
+  int ConnectClientSocket(int _fd);
 
   // I/O actions
   int RecvRequest(int client_fd);

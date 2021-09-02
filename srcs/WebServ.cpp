@@ -49,7 +49,7 @@ int WebServ::AcceptSession(socket_iter it) {
     Server *server = dynamic_cast<Server *>(it->second);
     Client *client = new Client(server->GetConfig());
 
-    int client_fd = client->SetSocket(server_fd);
+    int client_fd = client->ConnectClientSocket(server_fd);
 
     if (client_fd > max_fd_) max_fd_ = client_fd;
     sockets_[client_fd] = client;

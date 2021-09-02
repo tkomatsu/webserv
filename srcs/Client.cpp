@@ -18,7 +18,7 @@ Client::Client(const config::Config &config) : config_(config) {
   sended_ = 0;
 }
 
-int Client::SetSocket(int _fd) {
+int Client::ConnectClientSocket(int _fd) {
   socklen_t len = sizeof(addr_);
   int fd = accept(_fd, (struct sockaddr *)&addr_, &len);
 
