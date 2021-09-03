@@ -29,9 +29,6 @@ class HttpMessage {
   http_header headers_;
   std::string body_;
 
-  HttpMessage(const HttpMessage&);
-  HttpMessage& operator=(const HttpMessage&);
-
   virtual void ParseMessage();
   virtual void ParseStartline();
   virtual void ParseHeader();
@@ -71,11 +68,15 @@ class HttpMessage {
     ParseStartlineException(const std::string& what)
         : std::runtime_error(what) {}
   };
-
   class HeaderKeyException : public std::invalid_argument {
    public:
     HeaderKeyException(const std::string& what) : std::invalid_argument(what) {}
   };
+
+ private:
+  /* prohibit copy constructor and assignment operator */
+  HttpMessage(const HttpMessage&);
+  HttpMessage& operator=(const HttpMessage&);
 };
 
 #endif /* HTTPMESSAGE_HPP */

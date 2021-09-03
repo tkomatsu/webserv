@@ -14,10 +14,10 @@ class ClientTest : public testing::Test {
 };
 
 TEST_F(ClientTest, IsValidExtension) {
-  config::Parser parser("../../conf/basic.conf");
+  config::Parser parser("../../conf/default.conf");
   std::vector<config::Config> configs = parser.GetConfigs();
 
-  Server server(configs[0]);  // basic.conf's first server(listening 4200)
+  Server server(configs[0]);  // default.conf's first server(listening 4200)
   Client client(server.GetConfig());
 
   EXPECT_TRUE(client.IsValidExtension("./docs/abc.py", "/abc.py"));
@@ -36,7 +36,7 @@ TEST_F(ClientTest, IsValidExtension) {
 }
 
 TEST_F(ClientTest, GetIndexFileIfExist) {
-  config::Parser parser("../../conf/basic.conf");
+  config::Parser parser("../../conf/default.conf");
   std::vector<config::Config> configs = parser.GetConfigs();
 
   Server server(configs[0]);
@@ -51,10 +51,10 @@ TEST_F(ClientTest, GetIndexFileIfExist) {
 }
 
 TEST_F(ClientTest, IsValidUploadRequest) {
-  config::Parser parser("../../conf/basic.conf");
+  config::Parser parser("../../conf/default.conf");
   std::vector<config::Config> configs = parser.GetConfigs();
 
-  Server server(configs[1]);  // basic.conf's second server(listening 4201)
+  Server server(configs[1]);  // default.conf's second server(listening 4201)
   Client client(server.GetConfig());
 
   chdir("../../");
@@ -73,21 +73,17 @@ TEST_F(ClientTest, IsValidUploadRequest) {
 }
 
 TEST_F(ClientTest, MakePathUri) {
-  config::Parser parser("../../conf/basic.conf");
+  config::Parser parser("../../conf/default.conf");
   std::vector<config::Config> configs = parser.GetConfigs();
 
-  Server server(configs[1]);  // basic.conf's second server(listening 4201)
+  Server server(configs[1]);  // default.conf's second server(listening 4201)
   Client client(server.GetConfig());
 
   // std::string MakePathUri(std::string alias_path, std::string request_uri,
   // std::string location_path);
   // alias_path + (request_uri - location_path)
-  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
-            "./docs/top.gif");
-  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
-            "./docs/top.gif");
-  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/"),
-            "./docs/i/top.gif");
-  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"),
-            "./docs/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"), "./docs/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"), "./docs/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/"), "./docs/i/top.gif");
+  EXPECT_EQ(client.MakePathUri("/i/top.gif", "/i/"), "./docs/top.gif");
 }

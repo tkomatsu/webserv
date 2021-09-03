@@ -1,18 +1,15 @@
 #ifndef WEBSERV_HPP
 #define WEBSERV_HPP
 
-#include <map>
-#include <string>
-
+#include "Client.hpp"
 #include "ISocket.hpp"
-
-class Client;
+#include "Server.hpp"
+#include "config.hpp"
 
 class WebServ {
  public:
-  typedef std::map<int, Socket*>::iterator socket_iter;
+  typedef std::map<int, ISocket*>::iterator socket_iter;
 
- public:
   WebServ(const std::string& path);
   ~WebServ();
 
@@ -21,6 +18,10 @@ class WebServ {
   static const std::string default_path_;
 
  private:
+  /* prohibit copy constructor and assignment operator */
+  WebServ(const WebServ&);
+  WebServ& operator=(const WebServ&);
+
   int HasUsableIO();
 
   int AcceptSession(socket_iter it);
@@ -40,7 +41,7 @@ class WebServ {
   fd_set rfd_set_, wfd_set_;
   struct timeval timeout_;
 
-  std::map<int, Socket*> sockets_;
+  std::map<int, ISocket*> sockets_;
 
   std::map<int, std::string> cgi_outputs_;
 };

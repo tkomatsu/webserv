@@ -1,8 +1,9 @@
 #include "Server.hpp"
 
-#include <netdb.h>
+Server::Server(const config::Config& config)
+    : ISocket(config.GetPort(), config.GetHost()), config_(config){};
 
-#include <stdexcept>
+Server::~Server(){};
 
 int Server::OpenListenSocket() {
   struct addrinfo hints, *listp, *p;
@@ -45,4 +46,4 @@ int Server::OpenListenSocket() {
   return listenfd;
 }
 
-const config::Config &Server::GetConfig() const { return config_; }
+const config::Config& Server::GetConfig() const { return config_; }

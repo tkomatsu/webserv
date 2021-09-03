@@ -5,9 +5,6 @@
 
 class Request : public HttpMessage {
  private:
-  Request(const Request& other);
-  Request& operator=(const Request& rhs);
-
   enum Method method_;
   std::string uri_;
 
@@ -30,6 +27,10 @@ class Request : public HttpMessage {
   };
 
  private:
+  /* prohibit copy constructor and assignment operator */
+  Request(const Request& other);
+  Request& operator=(const Request& rhs);
+
   virtual void ParseMessage();
   virtual void ParseStartline();
   virtual void ParseHeader();

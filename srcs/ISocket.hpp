@@ -1,5 +1,5 @@
-#ifndef SOCKET_HPP
-#define SOCKET_HPP
+#ifndef ISOCKET_HPP
+#define ISOCKET_HPP
 
 #include <netinet/in.h>
 
@@ -7,11 +7,11 @@
 
 #include "utility.hpp"
 
-class Socket {
+class ISocket {
  public:
-  Socket(){};
-  Socket(int port, std::string host_ip) : port_(port), host_ip_(host_ip){};
-  virtual ~Socket(){};
+  ISocket(){};
+  ISocket(int port, std::string host_ip) : port_(port), host_ip_(host_ip){};
+  virtual ~ISocket(){};
 
  protected:
   struct sockaddr_in addr_;
@@ -20,9 +20,10 @@ class Socket {
 
   enum SocketStatus socket_status_;
 
- private: /* prohibit */
-  Socket(const Socket&);
-  Socket& operator=(const Socket&);
+ private:
+  /* prohibit copy constructor and assignment operator */
+  ISocket(const ISocket&);
+  ISocket& operator=(const ISocket&);
 };
 
 #endif

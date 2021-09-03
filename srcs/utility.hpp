@@ -2,9 +2,11 @@
 #define UTILITY_HPP
 
 #include <netinet/in.h>
+#include <sys/time.h>
 
 #include <cstdlib>
 #include <ctime>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>

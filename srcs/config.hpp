@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <map>
@@ -12,7 +13,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <iomanip>
 
 #include "utility.hpp"
 
@@ -102,11 +102,8 @@ struct LineComponent;
 
 class Parser {
  private:
-  typedef void (Parser::*AddDirective)(
-    enum Context,
-    const std::string& name,
-    const std::vector<std::string>& params
-  );
+  typedef void (Parser::*AddDirective)(enum Context, const std::string& name,
+                                       const std::vector<std::string>& params);
 
   typedef std::map<std::string, AddDirective> Directives;
 
@@ -118,6 +115,10 @@ class Parser {
   void Print() const;
 
  private:
+  /* prohibit copy constructor and assignment operator */
+  Parser(const Parser& other);
+  Parser& operator=(const Parser& other);
+
   bool print_config_;
   std::string filename_;
   struct Main main_;
@@ -192,12 +193,12 @@ class Parser {
   class ContextError : public std::runtime_error {
    public:
     ContextError() : std::runtime_error("config: context error") {}
-    ContextError(const std::string& what) : std::runtime_error(what) {};
+    ContextError(const std::string& what) : std::runtime_error(what){};
   };
   class ParameterError : public std::runtime_error {
    public:
     ParameterError() : std::runtime_error("config: parameter error") {}
-    ParameterError(const std::string& what) : std::runtime_error(what) {};
+    ParameterError(const std::string& what) : std::runtime_error(what){};
   };
 };
 
@@ -222,6 +223,10 @@ class LineBuilder {
   bool GetNext(LineComponent& line);
 
  private:
+  /* prohibit copy constructor and assignment operator */
+  LineBuilder(const LineBuilder& other);
+  LineBuilder& operator=(const LineBuilder& other);
+
   std::ifstream& file_;
   std::string current_;
 
