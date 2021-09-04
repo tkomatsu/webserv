@@ -8,11 +8,14 @@ Client::Client(const config::Config &config) : config_(config) {
 }
 
 int Client::ConnectClientSocket(int _fd) {
-  socklen_t len = sizeof(addr_);
-  int fd = accept(_fd, (struct sockaddr *)&addr_, &len);
+  struct sockaddr_storage clientaddr;
+  socklen_t len = sizeof(clientaddr);
+  int fd = accept(_fd, (SA *)&clientaddr, &len);
 
-  port_ = ntohs(addr_.sin_port);
-  host_ip_ = ft::inet_ntoa(addr_.sin_addr);
+  char hostname[buf_max_], port[buf_max_];
+  getnameinfo((SA *)&clientaddr, len, hostname, buf_max_, port, buf_max_, 0);
+  port_ = atoi(port);
+  host_ip_ = std::string(hostname);
 
   if (fd == -1)
     throw std::runtime_error("accept: " + std::string(strerror(errno)));
