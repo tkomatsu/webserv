@@ -43,7 +43,7 @@ void CGI::SetArgs() {
   //     splited += query_string
   // args_ = ft::split(splited, '+');
 
-  args_ = ft::split("./docs/perl.cgi+mcgee+mine", '+');
+  args_ = ft::split("./docs/cgi-bin/perl.cgi+mcgee+mine", '+');
 }
 
 void CGI::SetEnvs() {
