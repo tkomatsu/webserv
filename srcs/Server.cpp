@@ -36,12 +36,12 @@ int Server::OpenListenSocket() {
   }
 
   freeaddrinfo(listp);
-  if (!p) return -1;
+  if (!p) throw std::runtime_error("could not bind");
 
   if (listen(listenfd, 1024) < 0) {
     if (close(listenfd) < 0)
       throw std::runtime_error("close: " + std::string(strerror(errno)));
-    return -1;
+    throw std::runtime_error("listen: " + std::string(strerror(errno)));
   }
   return listenfd;
 }

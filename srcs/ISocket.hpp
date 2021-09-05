@@ -1,11 +1,16 @@
 #ifndef ISOCKET_HPP
 #define ISOCKET_HPP
 
+#include <netdb.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include <string>
 
 #include "utility.hpp"
+
+typedef struct sockaddr SA;
 
 class ISocket {
  public:
@@ -26,4 +31,4 @@ class ISocket {
   ISocket& operator=(const ISocket&);
 };
 
-#endif
+#endif /* ISOCKET_HPP */
