@@ -43,7 +43,7 @@ TEST_F(ClientTest, GetIndexFileIfExist) {
   Client client(server.GetConfig());
 
   EXPECT_EQ(client.GetIndexFileIfExist("../../docs/", "/cgi"), "");
-  EXPECT_EQ(client.GetIndexFileIfExist("../../docs/", "/cgi/"), "");
+  EXPECT_EQ(client.GetIndexFileIfExist("../../docs/", "/cgi/"), "index.php");
   EXPECT_EQ(client.GetIndexFileIfExist("../../docs/html/", "/"), "index.html");
   system("mv ../../docs/html/index.html ../../docs/html/index.htm");
   EXPECT_EQ(client.GetIndexFileIfExist("../../docs/html/", "/"), "index.htm");

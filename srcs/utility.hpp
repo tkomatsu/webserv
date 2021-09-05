@@ -3,6 +3,8 @@
 
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <cstdlib>
 #include <ctime>
@@ -38,6 +40,7 @@ std::pair<std::string, std::string> div(std::string s, char delim);
 std::string AutoIndexNow(time_t time);
 int strcasecmp(const std::string &a, const std::string &b);
 std::string what_time(void);
+char **vector_to_array(std::vector<std::string> v);
 
 struct CaseInsensitiveCompare
     : public std::binary_function<std::string, std::string, bool> {

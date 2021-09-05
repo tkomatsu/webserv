@@ -2,6 +2,7 @@
 #define CGI_HPP
 
 #include <string.h>
+#include <unistd.h>
 
 #include <map>
 #include <vector>
@@ -12,16 +13,19 @@
 class CGI {
  public:
   CGI(const Request &request, int client_port, std::string client_host,
-      const config::Config &config, const std::string &path_translated);
+      const config::Config &config, const std::string &path_translated,
+      const std::string &path_info);
   ~CGI();
 
-  static const int num_envs_;
   static const std::string methods_[4];
 
-  char **GetArgs() const { return args_; };
-  char **GetEnvs() const { return envs_; };
+  void Exec();
+  // char **GetArgs() const { return args_; };
+  // char **GetEnvs() const { return envs_; };
 
  private:
+  enum Language { PHP, PYTHON, INVALID };
+
   /* prohibit copy constructor and assignment operator */
   CGI(const CGI &);
   CGI &operator=(const CGI &);
@@ -37,7 +41,10 @@ class CGI {
   int client_port_;
   std::string client_host_;
   std::string path_translated_;
+  std::string path_info_;
   const config::Config &config_;
+
+  enum Language lang;
 
   std::map<std::string, std::string> envs_map_;
 };
