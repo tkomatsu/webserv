@@ -167,7 +167,6 @@ void Client::HandleException(const char *err_msg) {
       }
     }
   } catch (ft::ConfigException &e) {
-    std::cerr << "config: " << e.what() << std::endl;
   }
   response_.ErrorResponse(status_code);
   socket_status_ = WRITE_CLIENT;
