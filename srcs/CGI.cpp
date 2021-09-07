@@ -42,7 +42,7 @@ void CGI::SetArgs() {
     args_vector.push_back("php-cgi");
   } else if (extension == ".py") {
     lang = PYTHON;
-    args_vector.push_back("python");
+    args_vector.push_back("python3");
   } else {
     lang = INVALID;
     exit(EXIT_FAILURE);
@@ -153,7 +153,7 @@ void CGI::CalcEnvs() {
 
 void CGI::Exec(void) {
   std::string path(getenv("PATH"));
-  std::string executable[INVALID] = {"php-cgi", "python"};
+  std::string executable[INVALID] = {"php-cgi", "python3"};
   std::vector<std::string> path_splited = ft::vsplit(path, ':');
 
   for (std::vector<std::string>::const_iterator it = path_splited.begin();
