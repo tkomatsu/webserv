@@ -91,7 +91,8 @@ std::string AutoIndexNow(time_t time) {
   return std::string(buf);
 }
 
-int strcasecmp(const std::string &a, const std::string &b) {
+bool CaseInsensitiveCompare::operator()(const std::string &a,
+                                        const std::string &b) const {
   const unsigned char *p1 = (const unsigned char *)a.c_str();
   const unsigned char *p2 = (const unsigned char *)b.c_str();
 
@@ -99,7 +100,7 @@ int strcasecmp(const std::string &a, const std::string &b) {
   if (p1 == p2) return 0;
   while ((result = tolower(*p1) - tolower(*p2++)) == 0)
     if (*p1++ == '\0') break;
-  return result;
+  return (result < 0);
 }
 
 char **vector_to_array(std::vector<std::string> v) {
