@@ -491,7 +491,7 @@ enum SocketStatus Client::HandlePOST(std::string &path_uri) {
   if (!config_.GetUploadPass(request_path).empty() &&
       !config_.GetUploadStore(request_path).empty()) {
     if (IsValidUploadRequest(request_path)) {
-      std::string filename = std::string("/" + ft::what_time() + ".html");
+      std::string filename = std::string("/" + ft::what_time());
       std::string store = config_.GetUploadStore(request_path);
       if (store[store.size() - 1] == '/')
         store = store.substr(0, store.size() - 1);
