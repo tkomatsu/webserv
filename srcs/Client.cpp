@@ -10,10 +10,11 @@ Client::Client(const config::Config &config) : config_(config) {
 int Client::ConnectClientSocket(int _fd) {
   struct sockaddr_storage clientaddr;
   socklen_t len = sizeof(clientaddr);
-  int fd = accept(_fd, (SA *)&clientaddr, &len);
+  int fd = accept(_fd, reinterpret_cast<SA *>(&clientaddr), &len);
 
   char hostname[buf_max_], port[buf_max_];
-  getnameinfo((SA *)&clientaddr, len, hostname, buf_max_, port, buf_max_, 0);
+  getnameinfo(reinterpret_cast<SA *>(&clientaddr), len, hostname, buf_max_,
+              port, buf_max_, 0);
   port_ = atoi(port);
   host_ip_ = std::string(hostname);
 

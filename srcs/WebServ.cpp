@@ -5,7 +5,8 @@
 const std::string WebServ::default_path_ = "./conf/default.conf";
 
 WebServ::WebServ(const std::string &path) {
-  timeout_ = (struct timeval){1, 0};
+  timeout_.tv_sec = 1;
+  timeout_.tv_usec = 0;
 
   ParseConfig(path);
 }

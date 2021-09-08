@@ -2,9 +2,9 @@
 #define UTILITY_HPP
 
 #include <netinet/in.h>
-#include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include <cstdlib>
 #include <ctime>
@@ -38,15 +38,12 @@ std::string trim(std::string s, std::string delim = " \t\v");
 std::vector<std::string> vsplit(std::string s, char delim);
 std::pair<std::string, std::string> div(std::string s, char delim);
 std::string AutoIndexNow(time_t time);
-int strcasecmp(const std::string &a, const std::string &b);
 std::string what_time(void);
 char **vector_to_array(std::vector<std::string> v);
 
 struct CaseInsensitiveCompare
     : public std::binary_function<std::string, std::string, bool> {
-  bool operator()(const std::string &a, const std::string &b) const {
-    return strcasecmp(a, b) < 0;
-  }
+  bool operator()(const std::string &a, const std::string &b) const;
 };
 
 class HttpResponseException : public std::runtime_error {
