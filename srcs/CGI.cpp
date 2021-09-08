@@ -30,6 +30,18 @@ CGI::~CGI() {
   free(envs_);
 }
 
+void CGI::Exec(void) {
+  std::string path(getenv("PATH"));
+  std::string executable[INVALID] = {"php-cgi", "python3"};
+  std::vector<std::string> path_splited = ft::vsplit(path, ':');
+
+  for (std::vector<std::string>::const_iterator it = path_splited.begin();
+       it != path_splited.end(); ++it) {
+    execve((*it + "/" + executable[lang]).c_str(), args_, envs_);
+  }
+  exit(EXIT_FAILURE);
+}
+
 void CGI::SetArgs() {
   std::vector<std::string> args_vector;
 
@@ -149,16 +161,4 @@ void CGI::CalcEnvs() {
   envs_map_["SERVER_PORT"] = ft::ltoa(config_.GetPort());
   envs_map_["SERVER_PROTOCOL"] = "HTTP/1.1";
   envs_map_["SERVER_SOFTWARE"] = "Webserv/0.4.2";
-}
-
-void CGI::Exec(void) {
-  std::string path(getenv("PATH"));
-  std::string executable[INVALID] = {"php-cgi", "python3"};
-  std::vector<std::string> path_splited = ft::vsplit(path, ':');
-
-  for (std::vector<std::string>::const_iterator it = path_splited.begin();
-       it != path_splited.end(); ++it) {
-    execve((*it + "/" + executable[lang]).c_str(), args_, envs_);
-  }
-  exit(EXIT_FAILURE);
 }

@@ -20,8 +20,6 @@ class CGI {
   static const std::string methods_[4];
 
   void Exec();
-  // char **GetArgs() const { return args_; };
-  // char **GetEnvs() const { return envs_; };
 
  private:
   enum Language { PHP, PYTHON, INVALID };
