@@ -266,26 +266,17 @@ void Client::SetPipe(int *pipe_write, int *pipe_read) {
 }
 
 void Client::ExecCGI(int *pipe_write, int *pipe_read, CGI &cgi) {
+  int ret1_dup2 = 0, ret2_dup2 = 0;
 
-  if (dup2(pipe_write[0], STDIN_FILENO) == -1) {
-    close(pipe_write[0]);
-    close(pipe_write[1]);
-    close(pipe_read[0]);
-    close(pipe_read[1]);
-    throw ft::HttpResponseException("500");
-  }
-  if (dup2(pipe_read[1], STDOUT_FILENO) == -1) {
-    close(pipe_write[0]);
-    close(pipe_write[1]);
-    close(pipe_read[0]);
-    close(pipe_read[1]);
-    throw ft::HttpResponseException("500");
-  }
+  ret1_dup2 = dup2(pipe_write[0], STDIN_FILENO);
+  ret2_dup2 = dup2(pipe_read[1], STDOUT_FILENO);
 
   close(pipe_write[0]);
   close(pipe_write[1]);
   close(pipe_read[0]);
   close(pipe_read[1]);
+
+  if (ret1_dup2 == -1 || ret2_dup2 == -1) exit(EXIT_FAILURE);
 
   cgi.Exec();
 }
