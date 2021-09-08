@@ -9,7 +9,7 @@ class LineBuilderTest : public testing::Test {
 };
 
 TEST(LineBuilderTest, TestEmpty) {
-  std::ifstream file("../../conf/tests/empty.conf");
+  std::ifstream file("../conf/empty.conf");
   config::LineBuilder builder(file);
   config::LineComponent line;
 
@@ -20,7 +20,7 @@ TEST(LineBuilderTest, TestEmpty) {
 }
 
 TEST(LineBuilderTest, TestWhitespace) {
-  std::ifstream file("../../conf/tests/whitespaces.conf");
+  std::ifstream file("../conf/whitespaces.conf");
   config::LineBuilder builder(file);
   config::LineComponent line;
 
@@ -31,7 +31,7 @@ TEST(LineBuilderTest, TestWhitespace) {
 }
 
 TEST(LineBuilderTest, TestComments) {
-  std::ifstream file("../../conf/tests/comments.conf");
+  std::ifstream file("../conf/comments.conf");
   config::LineBuilder builder(file);
   config::LineComponent line;
 
@@ -105,7 +105,7 @@ TEST(LineBuilderTest, TestComments) {
 }
 
 TEST(LineBuilderTest, TestIndents) {
-  std::ifstream file("../../conf/tests/indents.conf");
+  std::ifstream file("../conf/indents.conf");
   config::LineBuilder builder(file);
   config::LineComponent line;
 
