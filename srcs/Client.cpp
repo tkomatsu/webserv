@@ -34,17 +34,16 @@ int Client::RecvRequest(int client_fd) {
   try {
     request_.AppendRawData(buf);
     if (request_.GetStatus() == HttpMessage::DONE) {
+      if ((config_.GetClientMaxBodySize(request_.GetURI()) != 0 &&
+           (size_t)config_.GetClientMaxBodySize(request_.GetURI()) <
+               request_.GetBody().size())) {
+        throw ft::HttpResponseException("413");
+      }
       Preprocess();
     }
   } catch (const Request::RequestFatalException &e) {
     std::cout << "RequestFatalException: " << e.what() << std::endl;
     throw ft::HttpResponseException("400");
-  }
-  if (request_.GetStatus() == HttpMessage::DONE &&
-      (config_.GetClientMaxBodySize(request_.GetURI()) != 0 &&
-       (size_t)config_.GetClientMaxBodySize(request_.GetURI()) <
-           request_.GetBody().size())) {
-    throw ft::HttpResponseException("413");
   }
   return 1;
 }
