@@ -55,8 +55,7 @@ class Client : public ISocket {
   void Preprocess(void);
   void GenProcessForCGI(const std::string &path_uri);
   void SetPipe(int *pipe_write, int *pipe_read);
-  void ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi,
-               const std::string &path_uri);
+  void ExecCGI(int *pipe_write, int *pipe_read, CGI &cgi);
 
   bool IsValidExtension(std::string path_uri, std::string request_path);
   bool IsValidUploadRequest(const std::string &request_path);
@@ -78,6 +77,7 @@ class Client : public ISocket {
   Request request_;
   Response response_;
   size_t sended_;  // num of chars sended to client
+  std::string path_info;
   int write_fd_;
   int read_fd_;
   const config::Config config_;

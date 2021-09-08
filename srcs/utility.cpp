@@ -102,4 +102,12 @@ int strcasecmp(const std::string &a, const std::string &b) {
   return result;
 }
 
+char **vector_to_array(std::vector<std::string> v) {
+  char **p;
+
+  p = (char **)calloc(sizeof(char *), (v.size() + 1));
+  for (size_t i = 0; i < v.size(); i++) p[i] = strdup(v[i].c_str());
+  return p;
+}
+
 }  // namespace ft

@@ -234,11 +234,15 @@ void Client::GenProcessForCGI(const std::string &path_uri) {
 
   SetPipe(pipe_write, pipe_read);
 
-  if ((pid = fork()) < 0)
+  if ((pid = fork()) < 0) {
+    close(pipe_write[0]);
+    close(pipe_write[1]);
+    close(pipe_read[0]);
+    close(pipe_read[1]);
     throw ft::HttpResponseException("500");
-  else if (pid == 0) {
-    CGI cgi_vals(request_, port_, host_ip_, config_, path_uri);
-    ExecCGI(pipe_write, pipe_read, cgi_vals, path_uri);
+  } else if (pid == 0) {
+    CGI cgi_vals(request_, port_, host_ip_, config_, path_uri, path_info);
+    ExecCGI(pipe_write, pipe_read, cgi_vals);
   }
 
   write_fd_ = pipe_write[1];
@@ -254,26 +258,27 @@ void Client::GenProcessForCGI(const std::string &path_uri) {
 
 void Client::SetPipe(int *pipe_write, int *pipe_read) {
   if (pipe(pipe_write) == -1) throw ft::HttpResponseException("500");
-  if (pipe(pipe_read) == -1) throw ft::HttpResponseException("500");
+  if (pipe(pipe_read) == -1) {
+    close(pipe_write[0]);
+    close(pipe_write[1]);
+    throw ft::HttpResponseException("500");
+  }
 }
 
-void Client::ExecCGI(int *pipe_write, int *pipe_read, const CGI &cgi,
-                     const std::string &path_uri) {
-  char **args = cgi.GetArgs();
-  char **envs = cgi.GetEnvs();
+void Client::ExecCGI(int *pipe_write, int *pipe_read, CGI &cgi) {
+  int ret1_dup2 = 0, ret2_dup2 = 0;
 
-  if (dup2(pipe_write[0], STDIN_FILENO) == -1)
-    throw ft::HttpResponseException("500");
-  if (dup2(pipe_read[1], STDOUT_FILENO) == -1)
-    throw ft::HttpResponseException("500");
+  ret1_dup2 = dup2(pipe_write[0], STDIN_FILENO);
+  ret2_dup2 = dup2(pipe_read[1], STDOUT_FILENO);
 
   close(pipe_write[0]);
   close(pipe_write[1]);
   close(pipe_read[0]);
   close(pipe_read[1]);
 
-  execve(path_uri.c_str(), args, envs);
-  exit(EXIT_FAILURE);
+  if (ret1_dup2 == -1 || ret2_dup2 == -1) exit(EXIT_FAILURE);
+
+  cgi.Exec();
 }
 
 bool Client::IsValidExtension(std::string path_uri, std::string request_path) {
@@ -330,6 +335,9 @@ bool Client::DirectoryRedirect(std::string request_path) {
 
   struct stat buffer;
   if (stat((path_uri).c_str(), &buffer) == -1) {
+    throw ft::HttpResponseException("404");
+  }
+  if (S_ISREG(buffer.st_mode) && request_path[request_path.size() - 1] == '/') {
     throw ft::HttpResponseException("404");
   }
 
@@ -433,7 +441,8 @@ enum SocketStatus Client::HandleGET(std::string &path_uri) {
   std::string request_path = request_.GetURI();
 
   // (CGI)
-  if (IsValidExtension(path_uri, request_path)) {
+  if (IsValidExtension(path_uri, request_path) && S_ISREG(buffer.st_mode)) {
+    path_info = request_path;
     return READ_WRITE_CGI;
   }
 
@@ -449,6 +458,7 @@ enum SocketStatus Client::HandleGET(std::string &path_uri) {
 
       // (CGI)
       if (IsValidExtension(path_uri, request_path)) {
+        path_info = request_path + index_filename;
         return READ_WRITE_CGI;
       }
 
@@ -472,7 +482,8 @@ enum SocketStatus Client::HandlePOST(std::string &path_uri) {
   std::string request_path = request_.GetURI();
 
   // (CGI)
-  if (IsValidExtension(path_uri, request_path)) {
+  if (IsValidExtension(path_uri, request_path) && S_ISREG(buffer.st_mode)) {
+    path_info = request_path;
     return READ_WRITE_CGI;
   }
 

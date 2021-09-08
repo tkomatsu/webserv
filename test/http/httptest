@@ -12,6 +12,18 @@ server = Server()
 server.run("default.conf")######
 ##############################
 
+case = Case("get index", "GET", "http://localhost:80/index.html")
+case.status_code(200)
+case.body_has("めざせいっかげつ")
+case.header_has("Content-Length")
+
+
+case = Case("file with / is 404", "GET", "http://localhost:80/index.html/")
+case.status_code(404)
+case.body_has("404 Not Found")
+case.header_has("Content-Length")
+
+
 case = Case("nonexist folder", "GET", "http://localhost:80/abc")
 case.status_code(404)
 case.body_has("404 Not Found")
@@ -70,10 +82,10 @@ case.header_has("Content-Length")
 case.header_has("Location")
 
 
-case = Case("cgi", "POST", "http://localhost:80/cgi/perl.py", body="key1=val1&key2=val2")
+case = Case("cgi", "POST", "http://localhost:80/cgi/test.py", body="key1=val1&key2=val2")
 case.status_code(200)
 case.header_has("Content-Length")
-case.body_is("<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n<title>CGI TEST</title>\n</head>\n<body>\n<h1>CGI TEST</h1>\n<pre>\n.*")
+case.body_is(".*<TITLE>CGI script output</TITLE>.*")
 
 
 subprocess.run(("touch", "./docs/html/cant_read"))

@@ -1,15 +1,15 @@
 #include "CGI.hpp"
 
-const int CGI::num_envs_ = 19;
-
 const std::string CGI::methods_[4] = {"GET", "POST", "DELETE", "INVALID"};
 
 CGI::CGI(const Request &request, int client_port, std::string client_host,
-         const config::Config &config, const std::string &path_translated)
+         const config::Config &config, const std::string &path_translated,
+         const std::string &path_info)
     : request_(request),
       client_port_(client_port),
       client_host_(client_host),
       path_translated_(path_translated),
+      path_info_(path_info),
       config_(config) {
   SetArgs();
   SetEnvs();
@@ -30,20 +30,53 @@ CGI::~CGI() {
   free(envs_);
 }
 
+void CGI::Exec(void) {
+  std::string path(getenv("PATH"));
+  std::string executable[INVALID] = {"php-cgi", "python3"};
+  std::vector<std::string> path_splited = ft::vsplit(path, ':');
+
+  for (std::vector<std::string>::const_iterator it = path_splited.begin();
+       it != path_splited.end(); ++it) {
+    execve((*it + "/" + executable[lang]).c_str(), args_, envs_);
+  }
+  exit(EXIT_FAILURE);
+}
+
 void CGI::SetArgs() {
-  std::vector<std::string> request_uri = ft::vsplit(
-      request_.GetURI(), '?');  // /abc?mcgee=mine => ["/abc", "mcgee=mine"]
-  // alias: ./docs/html/  config.GetAlias(request_uri[0])
-  // location: /  config.GetLocation(request_uri[0])
-  // request: /abc  request_uri[0]
+  std::vector<std::string> args_vector;
 
-  // std::string splited = alias + (request-path - location) + "+"
-  // request.GetQueryString()　(「http://サーバー名/CGIスクリプト名?データ」というURLを要求した場合のデータ部分)
-  // if ('=' not in query_string)
-  //     splited += query_string
-  // args_ = ft::split(splited, '+');
+  size_t i = path_info_.length() - 1;
+  while (i > 0 && path_info_[i] != '.') --i;
+  std::string extension = path_info_.substr(i);
 
-  args_ = ft::split("./docs/cgi-bin/perl.cgi+mcgee+mine", '+');
+  if (extension == ".php") {
+    lang = PHP;
+    args_vector.push_back("php-cgi");
+  } else if (extension == ".py") {
+    lang = PYTHON;
+    args_vector.push_back("python3");
+  } else {
+    lang = INVALID;
+    exit(EXIT_FAILURE);
+  }
+
+  args_vector.push_back(path_translated_);
+
+  std::string query = request_.GetQueryString();
+  if (query.find('=') == std::string::npos) {
+    if (query.find('+') != std::string::npos) {
+      std::vector<std::string> query_vector = ft::vsplit(query, '+');
+
+      for (std::vector<std::string>::const_iterator itr = query_vector.begin();
+           itr != query_vector.end(); ++itr) {
+        args_vector.push_back(*itr);
+      }
+    } else {
+      args_vector.push_back(query);
+    }
+  }
+
+  args_ = ft::vector_to_array(args_vector);
 }
 
 void CGI::SetEnvs() {
@@ -51,7 +84,7 @@ void CGI::SetEnvs() {
 
   std::string tmp;
   int i = 0;
-  envs_ = (char **)malloc(sizeof(char *) * CGI::num_envs_);
+  envs_ = (char **)malloc(sizeof(char *) * (envs_map_.size() + 1));
 
   tmp = "AUTH_TYPE=" + envs_map_["AUTH_TYPE"];
   envs_[i++] = strdup(tmp.c_str());
@@ -110,23 +143,8 @@ void CGI::CalcEnvs() {
   }
 
   envs_map_["GATEWAY_INTERFACE"] = "CGI/1.1";
-
-  envs_map_["PATH_INFO"] = "";
-  //    [設定]
-  //      root /var/www/html
-  //    [置いてあるファイル]
-  //      /var/www/html/dir1/index.php
-
-  //    http://127.0.0.1/dir1/index.php
-  //    にアクセスしたら、PATH_INFOは
-  //    /dir1/index.php  (== SCRIPT_NAME)
-  //    PATH_TRANSLATEDは
-  //    /var/www/html/dir1/index.php
-
-  // ∴　envs_map_["PATH_INFO"] = ft::vsplit(request_.GetURI(), '?')[0];
-
+  envs_map_["PATH_INFO"] = path_info_;
   envs_map_["PATH_TRANSLATED"] = path_translated_;
-
   envs_map_["QUERY_STRING"] = request_.GetQueryString();
   envs_map_["REMOTE_ADDR"] = client_host_;
   envs_map_["REMOTE_PORT"] = ft::ltoa(client_port_);
