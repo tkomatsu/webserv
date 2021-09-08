@@ -8,11 +8,14 @@ Client::Client(const config::Config &config) : config_(config) {
 }
 
 int Client::ConnectClientSocket(int _fd) {
-  socklen_t len = sizeof(addr_);
-  int fd = accept(_fd, (struct sockaddr *)&addr_, &len);
+  struct sockaddr_storage clientaddr;
+  socklen_t len = sizeof(clientaddr);
+  int fd = accept(_fd, (SA *)&clientaddr, &len);
 
-  port_ = ntohs(addr_.sin_port);
-  host_ip_ = ft::inet_ntoa(addr_.sin_addr);
+  char hostname[buf_max_], port[buf_max_];
+  getnameinfo((SA *)&clientaddr, len, hostname, buf_max_, port, buf_max_, 0);
+  port_ = atoi(port);
+  host_ip_ = std::string(hostname);
 
   if (fd == -1)
     throw std::runtime_error("accept: " + std::string(strerror(errno)));
@@ -25,10 +28,8 @@ int Client::RecvRequest(int client_fd) {
   int ret;
   char buf[buf_max_] = {0};
 
-  ret = ::recv(client_fd, buf, buf_max_ - 1, 0);
-
-  if (ret == -1) return ret;  // recv error
-  if (ret == 0) return ret;   // closed by client
+  ret = recv(client_fd, buf, buf_max_ - 1, 0);
+  if (ret <= 0) return ret;
 
   try {
     request_.AppendRawData(buf);
@@ -52,8 +53,8 @@ int Client::SendResponse(int client_fd) {
   int ret;
 
   size_t len = std::min((size_t)buf_max_, response_.Str().size() - sended_);
-  ret = ::send(client_fd, &((response_.Str().c_str())[sended_]), len, 0);
-  if (ret == -1) return ret;  // send error
+  ret = send(client_fd, &((response_.Str().c_str())[sended_]), len, 0);
+  if (ret < 0) return ret;  // send error
 
   sended_ += ret;
   if (sended_ >= response_.Str().size()) {
@@ -73,7 +74,7 @@ int Client::ReadStaticFile() {
   ret = read(read_fd_, buf, buf_max_ - 1);
   if (ret == -1) {
     close(read_fd_);
-    return ret;
+    throw ft::HttpResponseException("500");
   } else if (ret == 0) {
     close(read_fd_);
     response_.AppendHeader("Content-Length",
@@ -114,7 +115,7 @@ int Client::ReadCGIout() {
   ret = read(read_fd_, buf, buf_max_ - 1);
   if (ret < 0) {
     close(read_fd_);
-    return ret;
+    throw ft::HttpResponseException("500");
   }
   response_.AppendRawData(buf);
   if (ret == 0) {
@@ -166,7 +167,6 @@ void Client::HandleException(const char *err_msg) {
       }
     }
   } catch (ft::ConfigException &e) {
-    std::cerr << "config: " << e.what() << std::endl;
   }
   response_.ErrorResponse(status_code);
   socket_status_ = WRITE_CLIENT;

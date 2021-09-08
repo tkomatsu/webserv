@@ -1,5 +1,7 @@
 #include "WebServ.hpp"
 
+#include "utility.hpp"
+
 const std::string WebServ::default_path_ = "./conf/default.conf";
 
 WebServ::WebServ(const std::string &path) {
@@ -128,35 +130,21 @@ void WebServ::ReadClient(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
-    if (ret < 0)
-      throw std::runtime_error("recv: " + std::string(strerror(errno)));
   }
 }
 
 void WebServ::ReadFile(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  int ret;
 
-  if ((ret = client->ReadStaticFile()) < 0) {
-    close(client_fd);
-    delete it->second;
-    sockets_.erase(it);
-    throw std::runtime_error("read: " + std::string(strerror(errno)));
-  }
+  client->ReadStaticFile();
 }
 
 void WebServ::ReadCGI(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
-  int ret;
 
-  if ((ret = client->ReadCGIout()) < 0) {
-    close(client_fd);
-    delete it->second;
-    sockets_.erase(it);
-    throw std::runtime_error("read: " + std::string(strerror(errno)));
-  }
+  client->ReadCGIout();
 }
 
 void WebServ::WriteClient(socket_iter it) {
@@ -166,8 +154,8 @@ void WebServ::WriteClient(socket_iter it) {
 
   if ((ret = client->SendResponse(client_fd)) < 0) {
     close(client_fd);
+    delete it->second;
     sockets_.erase(it);
-    throw std::runtime_error("send: " + std::string(strerror(errno)));
   }
 }
 
