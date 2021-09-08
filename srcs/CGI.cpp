@@ -84,7 +84,9 @@ void CGI::SetEnvs() {
 
   std::string tmp;
   int i = 0;
-  envs_ = (char **)malloc(sizeof(char *) * (envs_map_.size() + 1));
+  envs_ = reinterpret_cast<char **>(
+      malloc(sizeof(char *) * (envs_map_.size() + 1)));
+  if (!envs_) exit(EXIT_FAILURE);
 
   tmp = "AUTH_TYPE=" + envs_map_["AUTH_TYPE"];
   envs_[i++] = strdup(tmp.c_str());

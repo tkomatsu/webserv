@@ -25,7 +25,8 @@ char **split(std::string s, char c) {
   char **p;
   int i = 0, j = 0, cnt;
 
-  if (!(p = (char **)malloc(sizeof(char *) * (count(s, c) + 1)))) return (NULL);
+  p = reinterpret_cast<char **>(malloc(sizeof(char *) * (count(s, c) + 1)));
+  if (p == NULL) return (NULL);
   while (s[j]) {
     while (s[j] == c) j++;
     cnt = j;
@@ -40,7 +41,7 @@ std::string inet_ntoa(struct in_addr in) {
   char buffer[18];
   std::string ret;
 
-  unsigned char *bytes = (unsigned char *)&in;
+  unsigned char *bytes = reinterpret_cast<unsigned char *>(&in);
   sprintf(buffer, "%d.%d.%d.%d", bytes[0], bytes[1], bytes[2], bytes[3]);
   ret = buffer;
   return ret;
@@ -93,8 +94,10 @@ std::string AutoIndexNow(time_t time) {
 
 bool CaseInsensitiveCompare::operator()(const std::string &a,
                                         const std::string &b) const {
-  const unsigned char *p1 = (const unsigned char *)a.c_str();
-  const unsigned char *p2 = (const unsigned char *)b.c_str();
+  char *a_char = const_cast<char *>(a.c_str());
+  char *b_char = const_cast<char *>(b.c_str());
+  const unsigned char *p1 = reinterpret_cast<const unsigned char *>(a_char);
+  const unsigned char *p2 = reinterpret_cast<const unsigned char *>(b_char);
 
   int result;
   if (p1 == p2) return 0;
@@ -106,7 +109,7 @@ bool CaseInsensitiveCompare::operator()(const std::string &a,
 char **vector_to_array(std::vector<std::string> v) {
   char **p;
 
-  p = (char **)calloc(sizeof(char *), (v.size() + 1));
+  p = reinterpret_cast<char **>(calloc(sizeof(char *), (v.size() + 1)));
   for (size_t i = 0; i < v.size(); i++) p[i] = strdup(v[i].c_str());
   return p;
 }
