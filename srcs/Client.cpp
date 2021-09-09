@@ -172,49 +172,25 @@ void Client::HandleException(const char *err_msg) {
 }
 
 void Client::Preprocess(void) {
-  if (socket_status_ != READ_CLIENT) return;
-
-  enum SocketStatus ret;
   std::string path_uri;
-
   std::string request_path = request_.GetURI();
   std::pair<int, std::string> redirect;
 
-  try {  // this is the first time config getter is used
-    redirect = config_.GetRedirect(request_path);
-  } catch (const std::exception &e) {
-    throw ft::HttpResponseException("404");
-  }
+  socket_status_ = GetNextOfReadClient(path_uri, redirect);
 
-  if (redirect.first == 0 && redirect.second.empty() &&
-      DirectoryRedirect(request_path)) {
-    redirect.first = 301;
-    redirect.second = "http://" + config_.GetHost() + ":" +
-                      ft::ltoa(config_.GetPort()) + request_path + "/";
-  }
-
-  // no redirect
-  if (redirect.first == 0 && redirect.second.empty()) {
-    ret = GetNextOfReadClient(path_uri);
-    socket_status_ = ret;
-  } else {
-    ret = WRITE_CLIENT;
-    socket_status_ = ret;
-  }
-
-  if (ret == READ_FILE) {
+  if (socket_status_ == READ_FILE) {
     if ((read_fd_ = open(path_uri.c_str(), O_RDONLY)) < 0)
       throw ft::HttpResponseException("403");
     if (fcntl(read_fd_, F_SETFL, O_NONBLOCK) == -1)
       throw ft::HttpResponseException("500");
-  } else if (ret == WRITE_FILE) {
+  } else if (socket_status_ == WRITE_FILE) {
     if ((write_fd_ = open(path_uri.c_str(), O_RDWR | O_CREAT, 0644)) < 0)
       throw ft::HttpResponseException("403");
     if (fcntl(write_fd_, F_SETFL, O_NONBLOCK) < 0)
       throw ft::HttpResponseException("500");
-  } else if (ret == READ_WRITE_CGI) {
+  } else if (socket_status_ == READ_WRITE_CGI) {
     GenProcessForCGI(path_uri);
-  } else if (ret == WRITE_CLIENT) {
+  } else if (socket_status_ == WRITE_CLIENT) {
     if (!(redirect.first == 0 && redirect.second.empty())) {  // redirect
       response_.RedirectResponse(redirect.first, redirect.second);
     } else if (request_.GetMethod() == DELETE) {  // DELETE
@@ -333,9 +309,8 @@ bool Client::DirectoryRedirect(std::string request_path) {
   std::string path_uri = MakePathUri(request_path, location_path);
 
   struct stat buffer;
-  if (stat((path_uri).c_str(), &buffer) == -1) {
-    throw ft::HttpResponseException("404");
-  }
+  stat((path_uri).c_str(), &buffer);
+
   if (S_ISREG(buffer.st_mode) && request_path[request_path.size() - 1] == '/') {
     throw ft::HttpResponseException("404");
   }
@@ -362,18 +337,38 @@ std::string Client::GetIndexFileIfExist(std::string path_uri,
   return "";
 }
 
-enum SocketStatus Client::GetNextOfReadClient(std::string &path_uri) {
-  enum SocketStatus ret = WRITE_CLIENT;
+enum SocketStatus Client::GetNextOfReadClient(
+    std::string &path_uri, std::pair<int, std::string> &redirect) {
 
   std::string request_path = request_.GetURI();
   std::string location_path = config_.GetPath(request_path);
-
-  path_uri = MakePathUri(request_path, location_path);
   enum Method method = request_.GetMethod();
 
-  if (config_.GetAllowedMethods(request_path).count(method) == 0) {
-    throw ft::HttpResponseException("405");
+  try {  // checking HTTP method is allowed and location directive exists
+    if (config_.GetAllowedMethods(request_path).count(request_.GetMethod()) ==
+        0) {
+      throw ft::HttpResponseException("405");
+    }
+  } catch (const std::exception &e) {
+    if (strcmp(e.what(), "405") == 0)
+      throw ft::HttpResponseException("405");
+    throw ft::HttpResponseException("404");
   }
+
+  redirect = config_.GetRedirect(request_path);
+  if (redirect.first == 0 && redirect.second.empty() &&
+      DirectoryRedirect(request_path)) {
+    redirect.first = 301;
+    redirect.second = "http://" + config_.GetHost() + ":" +
+                      ft::ltoa(config_.GetPort()) + request_path + "/";
+  }
+  if (redirect.first != 0 || redirect.second.empty() == false)
+    return WRITE_CLIENT;
+
+
+  enum SocketStatus ret = WRITE_CLIENT;
+
+  path_uri = MakePathUri(request_path, location_path);
 
   switch (method) {
     case GET:
@@ -481,18 +476,7 @@ enum SocketStatus Client::HandleGET(std::string &path_uri) {
 }
 
 enum SocketStatus Client::HandlePOST(std::string &path_uri) {
-  struct stat buffer;
-  if (stat((path_uri).c_str(), &buffer) == -1) {
-    throw ft::HttpResponseException("404");
-  }
-
   std::string request_path = request_.GetURI();
-
-  // (CGI)
-  if (IsValidExtension(path_uri, request_path) && S_ISREG(buffer.st_mode)) {
-    path_info = request_path;
-    return READ_WRITE_CGI;
-  }
 
   // (UPLOAD)
   if (!config_.GetUploadPass(request_path).empty() &&
@@ -506,6 +490,17 @@ enum SocketStatus Client::HandlePOST(std::string &path_uri) {
       response_.AppendHeader("Content-Location", store + filename);
       return WRITE_FILE;
     }
+  }
+
+  struct stat buffer;
+  if (stat((path_uri).c_str(), &buffer) == -1) {
+    throw ft::HttpResponseException("404");
+  }
+
+  // (CGI)
+  if (IsValidExtension(path_uri, request_path) && S_ISREG(buffer.st_mode)) {
+    path_info = request_path;
+    return READ_WRITE_CGI;
   }
 
   throw ft::HttpResponseException("405");
