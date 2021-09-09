@@ -439,6 +439,14 @@ enum SocketStatus Client::HandleGET(std::string &path_uri) {
 
   std::string request_path = request_.GetURI();
 
+  // (UPLOAD) by GET is 405
+  if (!config_.GetUploadPass(request_path).empty() &&
+      !config_.GetUploadStore(request_path).empty()) {
+    if (IsValidUploadRequest(request_path)) {
+      throw ft::HttpResponseException("405");
+    }
+  }
+
   // (CGI)
   if (IsValidExtension(path_uri, request_path) && S_ISREG(buffer.st_mode)) {
     path_info = request_path;
@@ -507,6 +515,16 @@ enum SocketStatus Client::HandleDELETE(std::string &path_uri) {
   struct stat buffer;
   if (stat((path_uri).c_str(), &buffer) == -1) {
     throw ft::HttpResponseException("404");
+  }
+
+  std::string request_path = request_.GetURI();
+
+  // (UPLOAD) by GET is 405
+  if (!config_.GetUploadPass(request_path).empty() &&
+      !config_.GetUploadStore(request_path).empty()) {
+    if (IsValidUploadRequest(request_path)) {
+      throw ft::HttpResponseException("405");
+    }
   }
 
   remove((path_uri).c_str());
