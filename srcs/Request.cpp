@@ -81,7 +81,8 @@ void Request::ParseBody() {
       std::string::size_type len =
           strtoul(GetHeader("Content-Length").c_str(), NULL, 10);
       if (raw_.size() == len) {
-        body_ += raw_;
+        std::vector<unsigned char> v(raw_.begin(), raw_.end());
+        body_.insert(body_.end(), v.begin(), v.end());
         raw_ = "";
         status_ = DONE;
       }
@@ -97,7 +98,8 @@ void Request::ParseBody() {
         std::string::size_type len = strtoul(raw_.c_str(), NULL, 16);
         std::string data = raw_.substr(raw_.find("\r\n") + 2);
         if (data.size() >= len) {
-          body_ += data.substr(0, len);
+          std::string tmp = data.substr(0, len);
+          body_.insert(body_.end(), tmp.begin(), tmp.end());
           raw_ = raw_.substr(raw_.find("\r\n") + 2 + len + 2);
         }
         if (len == 0) status_ = DONE;

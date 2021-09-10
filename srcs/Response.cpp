@@ -93,7 +93,10 @@ std::string Response::Str() const {
        ++i) {
     s << i->first << ": " << i->second << "\r\n";
   }
-  s << "\r\n" << body_;
+  s << "\r\n";
+  for (std::vector<unsigned char>::const_iterator i = body_.begin();
+       i != body_.end(); i++)
+    s << *i;
   return s.str();
 }
 

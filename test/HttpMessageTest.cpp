@@ -13,7 +13,8 @@ class HttpMessageTest : public testing::Test {
   }
 
   void ExpectBody(HttpMessage& message, const std::string& body) {
-    EXPECT_EQ(body, message.GetBody());
+    std::vector<unsigned char> body_bytes(body.begin(), body.end());
+    EXPECT_EQ(body_bytes, message.GetBody());
   }
 };
 

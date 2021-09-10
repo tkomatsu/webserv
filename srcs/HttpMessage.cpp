@@ -24,7 +24,10 @@ void HttpMessage::AppendHeader(
   AppendHeader(pair.first, pair.second);
 }
 
-void HttpMessage::AppendBody(const std::string& str) { body_ += str; }
+void HttpMessage::AppendBody(const std::string& str) {
+  std::vector<unsigned char> v(str.begin(), str.end());
+  body_.insert(body_.end(), v.begin(), v.end());
+}
 
 void HttpMessage::AppendRawData(const std::string& str) {
   raw_ += str;
@@ -50,7 +53,7 @@ const std::string& HttpMessage::GetHeader(const std::string& key) const {
   return headers_.find(key)->second;
 }
 
-const std::string& HttpMessage::GetBody() const { return body_; }
+const std::vector<unsigned char>& HttpMessage::GetBody() const { return body_; }
 
 std::string HttpMessage::Now(time_t time) const {
   char buf[80];

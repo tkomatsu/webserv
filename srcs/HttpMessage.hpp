@@ -6,6 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "utility.hpp"
 
@@ -27,7 +28,7 @@ class HttpMessage {
   std::string raw_;
   std::string http_version_;
   http_header headers_;
-  std::string body_;
+  std::vector<unsigned char> body_;
 
   virtual void ParseMessage();
   virtual void ParseStartline();
@@ -49,7 +50,7 @@ class HttpMessage {
   const std::string& GetVersion() const;
   const http_header& GetAllHeader() const;
   const std::string& GetHeader(const std::string& key) const;
-  const std::string& GetBody() const;
+  const std::vector<unsigned char>& GetBody() const;
 
   std::string Now(time_t time = std::time(NULL)) const;
   void Clear();
