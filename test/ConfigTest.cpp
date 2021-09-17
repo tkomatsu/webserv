@@ -333,9 +333,3 @@ TEST(ConfigTest, TestIndexes) {
   EXPECT_EQ(indexes[8], "C");
   EXPECT_EQ(indexes[9], "D");
 }
-
-TEST(ConfigTest, TestLoad) {
-  config::Parser parser("../conf/basic.conf");
-  std::vector<config::Config> configs = parser.GetConfigs();
-  std::vector<std::string> indexes = configs.front().GetIndexes("/");
-}
