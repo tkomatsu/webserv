@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <cstring>
+#include <vector>
+
 #include "HttpMessage.hpp"
 
 class HttpMessageTest : public testing::Test {
@@ -12,7 +15,7 @@ class HttpMessageTest : public testing::Test {
     EXPECT_EQ(value, message.GetHeader(name));
   }
 
-  void ExpectBody(HttpMessage& message, const std::string& body) {
+  void ExpectBody(HttpMessage& message, std::vector<unsigned char>& body) {
     std::vector<unsigned char> body_bytes(body.begin(), body.end());
     EXPECT_EQ(body_bytes, message.GetBody());
   }
@@ -34,13 +37,21 @@ TEST_F(HttpMessageTest, Hedear) {
 
 TEST_F(HttpMessageTest, Body) {
   HttpMessage message;
-  std::string first = "hello, world\n";
-  std::string second = "this is test\n";
-  std::string third = "end of message\n";
-  message.AppendBody(first);
-  message.AppendBody(second);
-  message.AppendBody(third);
-  ExpectBody(message, first + second + third);
+  const char* first = "hello, world\n";
+  const char* second = "this is test\n";
+  const char* third = "end of message\n";
+  std::vector<unsigned char> first_bytes(first, first + strlen(first));
+  std::vector<unsigned char> second_bytes(second, second + strlen(second));
+  std::vector<unsigned char> third_bytes(third, third + strlen(third));
+  message.AppendBody(first_bytes);
+  message.AppendBody(second_bytes);
+  message.AppendBody(third_bytes);
+
+  std::vector<unsigned char> answer;
+  answer.insert(answer.end(), first, first + strlen(first));
+  answer.insert(answer.end(), second, second + strlen(second));
+  answer.insert(answer.end(), third, third + strlen(third));
+  ExpectBody(message, answer);
 }
 
 TEST_F(HttpMessageTest, Date) {
