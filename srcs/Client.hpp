@@ -62,7 +62,8 @@ class Client : public ISocket {
   bool DirectoryRedirect(std::string request_path);
   std::string GetIndexFileIfExist(std::string path_uri,
                                   std::string request_path);
-  enum SocketStatus GetNextOfReadClient(std::string &path_uri);
+  enum SocketStatus GetNextOfReadClient(std::string &path_uri,
+                                        std::pair<int, std::string> &redirect);
   std::string MakePathUri(std::string request_uri, std::string location_path);
 
   // method branching

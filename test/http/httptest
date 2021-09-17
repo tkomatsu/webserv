@@ -9,7 +9,7 @@ import os
 server = Server()
 
 ##############################
-server.run("default.conf")######
+server.run("default.conf")####
 ##############################
 
 case = Case("get index", "GET", "http://localhost:80/index.html")
@@ -63,16 +63,16 @@ case.header_has("Content-Length")
 case.header_has("Content-Location")
 
 
-case = Case("redirect get upload folder (autoindex)", "GET", "http://localhost:8080/upload")
+case = Case("redirect get upload folder", "GET", "http://localhost:8080/upload")
 case.status_code(301)
 case.body_has("")
 case.header_has("Content-Length")
 case.header("Location", "http://127.0.0.1:8080/upload/")
 
 
-case = Case("get upload folder (autoindex)", "GET", "http://localhost:8080/upload/")
-case.status_code(200)
-case.body_has("Index of")
+case = Case("get upload folder (405)", "GET", "http://localhost:8080/upload/")
+case.status_code(405)
+case.body_has("405")
 case.header_has("Content-Length")
 
 

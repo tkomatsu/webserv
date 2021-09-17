@@ -210,7 +210,8 @@ std::string Response::AutoIndexHtml(const std::string& dir_path,
   tmp += "<html>\n<head><title>Index of ";
   tmp += index_of;
   tmp += "</title></head>\n<body bgcolor=\"white\">\n<h1>Index of ";
-  tmp += index_of + "</h1><hr><pre><a href=\"../\">../</a>\n";
+  tmp += index_of + "</h1><hr><pre>";
+  if (index_of != "/") tmp += "<a href =\"../\">../</a>\n";
 
   for (std::vector<fileinfo>::iterator it = index.begin(); it != index.end();
        ++it) {
@@ -218,7 +219,9 @@ std::string Response::AutoIndexHtml(const std::string& dir_path,
 
     if (info.dirent_->d_name[0] == '.') continue;
 
-    tmp += "<a href=\"" + std::string(info.dirent_->d_name) + "/\">";
+    tmp += "<a href=\"" + std::string(info.dirent_->d_name);
+    if (S_ISDIR(info.stat_.st_mode)) tmp += "/";
+    tmp += "\">";
     if (std::string(info.dirent_->d_name).length() >= 50)
       tmp += std::string(info.dirent_->d_name).substr(0, 47) + "..>";
     else {
