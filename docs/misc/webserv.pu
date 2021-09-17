@@ -55,14 +55,14 @@ class Client {
 class HttpMessage {
   # status : enum ParseStatus
   # delim : string
-  # raw : string
+  # raw : vector<unsigned char>
   # http_version : string
   # headers : map<string, string>
-  # body : string
-  + AppendRawData(const string&) : void
+  # body : vector<unsigned char>
+  + AppendRawData(const char*, size_t) : void
   + AppendHeader(const string&, const string&) : void
   + AppendHeader(const pair<string, string>&) : void
-  + AppendBody(const string&) : void
+  + AppendBody(vector<unsigned char>) : void
   + RemoveHeader(const string&)
   + SetVersion(const string&) : void
   + GetVersion() const : const string&
