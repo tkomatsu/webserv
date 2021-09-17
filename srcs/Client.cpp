@@ -1,5 +1,7 @@
 #include "Client.hpp"
 
+#include <vector>
+
 const int Client::buf_max_ = 8192;
 
 Client::Client(const config::Config &config) : config_(config) {
@@ -33,7 +35,7 @@ int Client::RecvRequest(int client_fd) {
   if (ret <= 0) return ret;
 
   try {
-    request_.AppendRawData(buf);
+    request_.AppendRawData(buf, ret);
     if (request_.GetStatus() == HttpMessage::DONE) {
       Preprocess();
     }
@@ -82,7 +84,8 @@ int Client::ReadStaticFile() {
                            ft::ltoa(response_.GetBody().size()));
     socket_status_ = WRITE_CLIENT;
   } else {
-    response_.AppendBody(buf);
+    std::vector<unsigned char> v(buf, buf + ret);
+    response_.AppendBody(v);
   }
   return ret;
 }
@@ -123,7 +126,7 @@ int Client::ReadCGIout() {
     close(read_fd_);
     throw ft::HttpResponseException("500");
   }
-  response_.AppendRawData(buf);
+  response_.AppendRawData(buf, ret);
   if (ret == 0) {
     response_.EndCGI();
     waitpid(-1, NULL, 0);

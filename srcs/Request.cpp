@@ -1,5 +1,9 @@
 #include "Request.hpp"
 
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
 Request::Request() : method_(INVALID) {}
 
 Request::~Request() {}
@@ -44,30 +48,35 @@ void Request::Clear() {
 }
 
 void Request::ParseStartline() {
-  if (raw_.find("\r\n") == std::string::npos)
-    throw ParseStartlineException("Incomplete startline");
-  if (status_ == STARTLINE) {
-    std::string startline = raw_.substr(0, raw_.find("\r\n"));
-    std::vector<std::string> startline_splitted = ft::vsplit(startline, ' ');
-    if (startline_splitted.size() != 3)
-      throw RequestFatalException("Invalid startline");
-    std::string method = startline_splitted[0];
-    if (method == "GET") {
-      method_ = GET;
-    } else if (method == "POST") {
-      method_ = POST;
-    } else if (method == "DELETE") {
-      method_ = DELETE;
-    } else {
-      throw RequestFatalException("Invalid method");
-    }
-    uri_ = startline_splitted[1];
-    if (startline_splitted[2].find("HTTP/") == std::string::npos)
-      throw RequestFatalException("Invalid HTTP version");
-    http_version_ = startline_splitted[2].substr(5);
-    raw_ = raw_.substr(raw_.find("\r\n") + 2);
-    status_ = HEADER;
+  if (status_ != STARTLINE) return;
+
+  std::vector<unsigned char>::iterator it;
+  if ((it = std::search(raw_.begin(), raw_.end(), delim_.begin(),
+                        delim_.end())) == raw_.end())
+    throw ParseHeaderException("No delimiter");
+
+  std::string startline;
+  std::copy(raw_.begin(), it, std::back_inserter(startline));
+
+  std::vector<std::string> startline_splitted = ft::vsplit(startline, ' ');
+  if (startline_splitted.size() != 3)
+    throw RequestFatalException("Invalid startline");
+  std::string method = startline_splitted[0];
+  if (method == "GET") {
+    method_ = GET;
+  } else if (method == "POST") {
+    method_ = POST;
+  } else if (method == "DELETE") {
+    method_ = DELETE;
+  } else {
+    throw RequestFatalException("Invalid method");
   }
+  uri_ = startline_splitted[1];
+  if (startline_splitted[2].find("HTTP/") == std::string::npos)
+    throw RequestFatalException("Invalid HTTP version");
+  http_version_ = startline_splitted[2].substr(5);
+  raw_ = std::vector<unsigned char>(it + delim_.size(), raw_.end());
+  status_ = HEADER;
 }
 
 void Request::ParseHeader() { HttpMessage::ParseHeader(); }
@@ -81,9 +90,8 @@ void Request::ParseBody() {
       std::string::size_type len =
           strtoul(GetHeader("Content-Length").c_str(), NULL, 10);
       if (raw_.size() == len) {
-        std::vector<unsigned char> v(raw_.begin(), raw_.end());
-        body_.insert(body_.end(), v.begin(), v.end());
-        raw_ = "";
+        body_.insert(body_.end(), raw_.begin(), raw_.end());
+        raw_.clear();
         status_ = DONE;
       }
       return;
@@ -94,13 +102,19 @@ void Request::ParseBody() {
       std::string encode = GetHeader("Transfer-Encoding");
       if (encode != "chunked")
         throw RequestFatalException("Invalid Transfer-Encoding");
-      while (raw_.find("\r\n") != std::string::npos) {
-        std::string::size_type len = strtoul(raw_.c_str(), NULL, 16);
-        std::string data = raw_.substr(raw_.find("\r\n") + 2);
+      std::vector<unsigned char>::iterator it;
+      while ((it = std::search(raw_.begin(), raw_.end(), delim_.begin(),
+                               delim_.end())) != raw_.end()) {
+        std::string chunk_size;
+        std::copy(raw_.begin(), it, std::back_inserter(chunk_size));
+        std::string::size_type len = strtoul(chunk_size.c_str(), NULL, 16);
+
+        std::vector<unsigned char> data(it + delim_.size(), raw_.end());
         if (data.size() >= len) {
-          std::string tmp = data.substr(0, len);
+          std::vector<unsigned char> tmp;  // = data.substr(0, len);
+          std::copy(data.begin(), data.begin() + len, std::back_inserter(tmp));
           body_.insert(body_.end(), tmp.begin(), tmp.end());
-          raw_ = raw_.substr(raw_.find("\r\n") + 2 + len + 2);
+          raw_ = std::vector<unsigned char>(it + delim_.size(), raw_.end());
         }
         if (len == 0) status_ = DONE;
       }

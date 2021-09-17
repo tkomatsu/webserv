@@ -89,7 +89,7 @@ std::string Response::Str() const {
   s << "HTTP/" << http_version_ << " " << status_code_ << " " << status_message_
     << "\r\n";
 
-  for (http_header::const_iterator i = headers_.begin(); i != headers_.end();
+  for (http_headers::const_iterator i = headers_.begin(); i != headers_.end();
        ++i) {
     s << i->first << ": " << i->second << "\r\n";
   }
@@ -129,14 +129,16 @@ void Response::ParseHeader() { HttpMessage::ParseHeader(); }
 void Response::ParseBody() {
   if (status_ == BODY) {
     AppendBody(raw_);
-    raw_ = "";
+    raw_.clear();
   }
 }
 
 void Response::ErrorResponse(int status) {
   Clear();
   SetStatusCode(status);
-  AppendBody(ErrorHtml(status));
+  std::string error_html = ErrorHtml(status);
+  std::vector<unsigned char> body(error_html.begin(), error_html.end());
+  AppendBody(body);
   AppendHeader("Content-Type", "text/html");
   AppendHeader("Connection", "keep-alive");
   AppendHeader("Content-Length", ft::ltoa(body_.size()));
@@ -167,8 +169,10 @@ void Response::AutoIndexResponse(const std::string& path,
   std::string body = AutoIndexHtml(path, index_of);
   if (body.empty())
     ErrorResponse(404);
-  else
-    AppendBody(body);
+  else {
+    std::vector<unsigned char> v(body.begin(), body.end());
+    AppendBody(v);
+  }
   AppendHeader("Content-Length", ft::ltoa(body_.size()));
 }
 
