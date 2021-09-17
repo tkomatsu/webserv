@@ -4,13 +4,7 @@ Request::Request() : method_(INVALID) {}
 
 Request::~Request() {}
 
-enum Method Request::GetMethod() const {
-  if (method_ == INVALID) {
-    /* この前にパースの時点で例外が吐かれるので、理論上はここに来ることはない */
-    throw RequestFatalException("Method is not defined");
-  }
-  return method_;
-}
+enum Method Request::GetMethod() const { return method_; }
 
 const std::string Request::GetURI() const {
   if (uri_.empty()) {
@@ -58,6 +52,7 @@ void Request::ParseStartline() {
   if (startline_splitted.size() != 3)
     throw RequestFatalException("Invalid startline");
   std::string method = startline_splitted[0];
+  uri_ = startline_splitted[1];
   if (method == "GET") {
     method_ = GET;
   } else if (method == "POST") {
@@ -67,7 +62,6 @@ void Request::ParseStartline() {
   } else {
     throw RequestFatalException("Invalid method");
   }
-  uri_ = startline_splitted[1];
   if (startline_splitted[2].find("HTTP/") == std::string::npos)
     throw RequestFatalException("Invalid HTTP version");
   http_version_ = startline_splitted[2].substr(5);
