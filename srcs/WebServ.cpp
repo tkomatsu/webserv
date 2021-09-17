@@ -215,6 +215,17 @@ int WebServ::ExecClientEvent(socket_iter it) {
   return hit;
 }
 
+bool WebServ::IsHostPortUsed(const std::string &host, int port) {
+  std::map<int, ISocket *>::const_iterator itr;
+  for (itr = sockets_.begin(); itr != sockets_.end(); ++itr) {
+    Server *server = dynamic_cast<Server *>(itr->second);
+    if (server && server->GetConfig().GetHost() == host &&
+        server->GetConfig().GetPort() == port)
+      return true;
+  }
+  return false;
+}
+
 void WebServ::ParseConfig(const std::string &path) {
   config::Parser parser(path);
 
@@ -223,6 +234,13 @@ void WebServ::ParseConfig(const std::string &path) {
 
   std::vector<config::Config>::const_iterator itr;
   for (itr = configs.begin(); itr != configs.end(); ++itr) {
+    if (IsHostPortUsed(itr->GetHost(), itr->GetPort())) {
+      std::cerr << "conflicting server name \"" << itr->GetServerName()
+                << "\" on " << itr->GetHost() << ":" << itr->GetPort()
+                << ", ignored" << std::endl;
+      continue;
+    }
+
     Server *server = new Server(*itr);
     int fd = server->OpenListenSocket();
     sockets_[fd] = server;

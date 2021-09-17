@@ -36,6 +36,7 @@ class WebServ {
   int ExecClientEvent(socket_iter it);
 
   void ParseConfig(const std::string& path);
+  bool IsHostPortUsed(const std::string& host, int port);
 
   int max_fd_;
   fd_set rfd_set_, wfd_set_;
