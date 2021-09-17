@@ -339,7 +339,6 @@ std::string Client::GetIndexFileIfExist(std::string path_uri,
 
 enum SocketStatus Client::GetNextOfReadClient(
     std::string &path_uri, std::pair<int, std::string> &redirect) {
-
   std::string request_path = request_.GetURI();
   std::string location_path = config_.GetPath(request_path);
   enum Method method = request_.GetMethod();
@@ -349,9 +348,7 @@ enum SocketStatus Client::GetNextOfReadClient(
         0) {
       throw ft::HttpResponseException("405");
     }
-  } catch (const std::exception &e) {
-    if (strcmp(e.what(), "405") == 0)
-      throw ft::HttpResponseException("405");
+  } catch (const ft::ConfigException &e) {
     throw ft::HttpResponseException("404");
   }
 
@@ -364,7 +361,6 @@ enum SocketStatus Client::GetNextOfReadClient(
   }
   if (redirect.first != 0 || redirect.second.empty() == false)
     return WRITE_CLIENT;
-
 
   enum SocketStatus ret = WRITE_CLIENT;
 
