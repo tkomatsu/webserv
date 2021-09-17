@@ -1,7 +1,5 @@
 #include "Client.hpp"
 
-#include <vector>
-
 const int Client::buf_max_ = 8192;
 
 Client::Client(const config::Config &config) : config_(config) {

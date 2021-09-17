@@ -1,9 +1,5 @@
 #include "Request.hpp"
 
-#include <algorithm>
-#include <iostream>
-#include <vector>
-
 Request::Request() : method_(INVALID) {}
 
 Request::~Request() {}

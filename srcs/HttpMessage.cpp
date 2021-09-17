@@ -1,8 +1,5 @@
 #include "HttpMessage.hpp"
 
-#include <algorithm>
-#include <iostream>
-
 HttpMessage::HttpMessage() : status_(STARTLINE), delim_("\r\n") {}
 
 HttpMessage::~HttpMessage() {}
