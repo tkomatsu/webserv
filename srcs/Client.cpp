@@ -33,7 +33,7 @@ int Client::RecvRequest(int client_fd) {
   if (ret <= 0) return ret;
 
   try {
-    request_.AppendRawData(buf);
+    request_.AppendRawData(buf, ret);
     if (request_.GetStatus() == HttpMessage::DONE) {
       Preprocess();
     }
@@ -82,7 +82,8 @@ int Client::ReadStaticFile() {
                            ft::ltoa(response_.GetBody().size()));
     socket_status_ = WRITE_CLIENT;
   } else {
-    response_.AppendBody(buf);
+    std::vector<unsigned char> v(buf, buf + ret);
+    response_.AppendBody(v);
   }
   return ret;
 }
@@ -92,8 +93,13 @@ void Client::WriteStaticFile() {
 
   size_t len = std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
   if (request_.GetMethod() == POST) {
-    if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
-      throw ft::HttpResponseException("500");
+    unsigned char *buf = reinterpret_cast<unsigned char *>(malloc(len));
+    for (size_t i = 0; i < len; i++) {
+      buf[i] = request_.GetBody()[i];
+    }
+    ret = write(write_fd_, buf, len);
+    free(buf);
+    if (ret < 0) throw ft::HttpResponseException("500");
   }
 
   request_.EraseBody(ret);
@@ -118,14 +124,14 @@ int Client::ReadCGIout() {
     close(read_fd_);
     throw ft::HttpResponseException("500");
   }
-  response_.AppendRawData(buf);
+  response_.AppendRawData(buf, ret);
   if (ret == 0) {
     response_.EndCGI();
     waitpid(-1, NULL, 0);
     close(read_fd_);
     response_.SetStatusCode(200);
     response_.AppendHeader("Content-Length",
-                           ft::ltoa(response_.GetBody().length()));
+                           ft::ltoa(response_.GetBody().size()));
     socket_status_ = WRITE_CLIENT;
   }
   return ret;
@@ -136,8 +142,13 @@ void Client::WriteCGIin() {
     size_t len =
         std::min((ssize_t)request_.GetBody().size(), (ssize_t)buf_max_);
     int ret = 0;
-    if ((ret = write(write_fd_, request_.GetBody().c_str(), len)) < 0)
-      throw ft::HttpResponseException("500");
+    unsigned char *buf = reinterpret_cast<unsigned char *>(malloc(len));
+    for (size_t i = 0; i < len; i++) {
+      buf[i] = request_.GetBody()[i];
+    }
+    ret = write(write_fd_, buf, len);
+    free(buf);
+    if (ret < 0) throw ft::HttpResponseException("500");
     request_.EraseBody(ret);
   }
   if (request_.GetBody().empty()) {

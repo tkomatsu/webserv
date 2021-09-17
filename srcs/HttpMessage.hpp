@@ -1,11 +1,14 @@
 #ifndef HTTPMESSAGE_HPP
 #define HTTPMESSAGE_HPP
 
+#include <algorithm>
 #include <ctime>
 #include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "utility.hpp"
 
@@ -18,43 +21,29 @@ class HttpMessage {
     DONE,
   };
 
- protected:
   typedef std::map<std::string, std::string, ft::CaseInsensitiveCompare>
-      http_header;
+      http_headers;
 
-  enum ParseStatus status_;
-  std::string delim_;
-  std::string raw_;
-  std::string http_version_;
-  http_header headers_;
-  std::string body_;
-
-  virtual void ParseMessage();
-  virtual void ParseStartline();
-  virtual void ParseHeader();
-  virtual void ParseBody();
-
- public:
   HttpMessage();
   ~HttpMessage();
 
-  void AppendRawData(const std::string& raw);
+  void AppendRawData(const char* data, size_t size);
 
   void SetVersion(const std::string& version);
   void AppendHeader(const std::string& key, const std::string& value);
   void AppendHeader(const std::pair<std::string, std::string>& pair);
-  void AppendBody(const std::string&);
+  void AppendBody(std::vector<unsigned char>& data);
   void RemoveHeader(const std::string& key);
 
   const std::string& GetVersion() const;
-  const http_header& GetAllHeader() const;
+  const http_headers& GetAllHeader() const;
   const std::string& GetHeader(const std::string& key) const;
-  const std::string& GetBody() const;
+  const std::vector<unsigned char>& GetBody() const;
 
   std::string Now(time_t time = std::time(NULL)) const;
   void Clear();
 
-  // Parse exception
+  /* Parse exception */
   class ParseBodyException : public std::runtime_error {
    public:
     ParseBodyException(const std::string& what) : std::runtime_error(what) {}
@@ -72,6 +61,19 @@ class HttpMessage {
    public:
     HeaderKeyException(const std::string& what) : std::invalid_argument(what) {}
   };
+
+ protected:
+  enum ParseStatus status_;
+  std::string delim_;
+  std::vector<unsigned char> raw_;
+  std::string http_version_;
+  http_headers headers_;
+  std::vector<unsigned char> body_;
+
+  virtual void ParseMessage();
+  virtual void ParseStartline();
+  virtual void ParseHeader();
+  virtual void ParseBody();
 
  private:
   /* prohibit copy constructor and assignment operator */
