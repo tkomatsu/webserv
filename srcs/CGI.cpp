@@ -87,8 +87,7 @@ void CGI::SetEnvs() {
   envs_ = reinterpret_cast<char **>(
       malloc(sizeof(char *) * (envs_map_.size() + 1)));
   if (!envs_) exit(EXIT_FAILURE);
-  for (std::map<std::string, std::string>::iterator it = envs_map_.begin();
-       it != envs_map_.end(); it++) {
+  for (envs_map::iterator it = envs_map_.begin(); it != envs_map_.end(); it++) {
     tmp = it->first + "=" + it->second;
     envs_[i++] = strdup(tmp.c_str());
   }
