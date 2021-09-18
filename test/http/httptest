@@ -14,7 +14,7 @@ server.run("default.conf")####
 
 case = Case("get index", "GET", "http://localhost:80/index.html")
 case.status_code(200)
-case.body_has("めざせいっかげつ")
+case.body_has("42 Tokyoは学費完全無料、24時間利用可能な施設、問題解決型学習など革新的な取り組みでエンジニアを育成する機関です。")
 case.header_has("Content-Length")
 
 
@@ -39,7 +39,7 @@ case.header_has("Content-Length")
 payload = {"key1": "val1", "key2": "val2"} # リクエストヘッダ
 case = Case("extra request header", "GET", "http://localhost:80", headers=payload)
 case.status_code(200)
-case.body_has("めざせいっかげつ")
+case.body_has("42 Tokyoは学費完全無料、24時間利用可能な施設、問題解決型学習など革新的な取り組みでエンジニアを育成する機関です。")
 case.header_has("Content-Length")
 
 

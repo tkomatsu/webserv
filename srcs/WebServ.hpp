@@ -26,12 +26,12 @@ class WebServ {
 
   int AcceptSession(socket_iter it);
 
-  void ReadClient(socket_iter it);
+  int ReadClient(socket_iter it);
   void ReadFile(socket_iter it);
   void ReadCGI(socket_iter it);
   void WriteCGI(socket_iter it);
   void WriteFile(socket_iter it);
-  void WriteClient(socket_iter it);
+  int WriteClient(socket_iter it);
 
   int ExecClientEvent(socket_iter it);
 

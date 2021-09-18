@@ -34,6 +34,8 @@ void WebServ::Activate(void) {
           if (AcceptSession(it) == 0) --n;
         } else {
           if ((hit = ExecClientEvent(it)) > 0) n -= hit;
+          if (hit == -1)  // means delete and erase happened in map
+            break;
         }
       } catch (ft::HttpResponseException &e) {
         Client *client = dynamic_cast<Client *>(it->second);
@@ -122,7 +124,7 @@ int WebServ::AcceptSession(socket_iter it) {
   return -1;
 }
 
-void WebServ::ReadClient(socket_iter it) {
+int WebServ::ReadClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret;
@@ -131,7 +133,9 @@ void WebServ::ReadClient(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
+    return 1;  // deleted is true
   }
+  return 0;
 }
 
 void WebServ::ReadFile(socket_iter it) {
@@ -148,7 +152,7 @@ void WebServ::ReadCGI(socket_iter it) {
   client->ReadCGIout();
 }
 
-void WebServ::WriteClient(socket_iter it) {
+int WebServ::WriteClient(socket_iter it) {
   int client_fd = it->first;
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
   int ret;
@@ -157,7 +161,9 @@ void WebServ::WriteClient(socket_iter it) {
     close(client_fd);
     delete it->second;
     sockets_.erase(it);
+    return 1;  // deleted is true
   }
+  return 0;
 }
 
 void WebServ::WriteFile(socket_iter it) {
@@ -178,7 +184,8 @@ int WebServ::ExecClientEvent(socket_iter it) {
   Client *client = dynamic_cast<Client *>(sockets_[client_fd]);
 
   if (client->GetStatus() == READ_CLIENT && FD_ISSET(client_fd, &rfd_set_)) {
-    ReadClient(it);
+    int deleted = ReadClient(it);
+    if (deleted) return -1;
     ++hit;
   }
 
@@ -208,7 +215,8 @@ int WebServ::ExecClientEvent(socket_iter it) {
   }
 
   if (client->GetStatus() == WRITE_CLIENT && FD_ISSET(client_fd, &wfd_set_)) {
-    WriteClient(it);
+    int deleted = WriteClient(it);
+    if (deleted) return -1;
     ++hit;
   }
 
