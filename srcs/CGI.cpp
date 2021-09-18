@@ -124,6 +124,8 @@ void CGI::SetEnvs() {
   envs_[i++] = strdup(tmp.c_str());
   tmp = "SERVER_SOFTWARE=" + envs_map_["SERVER_SOFTWARE"];
   envs_[i++] = strdup(tmp.c_str());
+  tmp = "REDIRECT_STATUS=" + envs_map_["REDIRECT_STATUS"];
+  envs_[i++] = strdup(tmp.c_str());
 
   envs_[i] = NULL;
 }
@@ -163,4 +165,5 @@ void CGI::CalcEnvs() {
   envs_map_["SERVER_PORT"] = ft::ltoa(config_.GetPort());
   envs_map_["SERVER_PROTOCOL"] = "HTTP/1.1";
   envs_map_["SERVER_SOFTWARE"] = "Webserv/0.4.2";
+  envs_map_["REDIRECT_STATUS"] = "200";
 }

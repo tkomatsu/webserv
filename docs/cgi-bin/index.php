@@ -1,6 +1,4 @@
-#!/usr/bin/php
-
 <?php
-// Show all information, defaults to INFO_ALL
+print "Content-type: text/html\n\n";
 phpinfo();
 ?>
