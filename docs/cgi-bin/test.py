@@ -1,7 +1,6 @@
 import os
 
-print("Content-Type: text/html")
-print()
+print("Content-Type: text/html\r\n\r\n")
 
 print("<TITLE>CGI script output</TITLE>")
 print("<H1>This is my first CGI script</H1>")
