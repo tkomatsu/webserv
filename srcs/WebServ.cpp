@@ -13,33 +13,42 @@ WebServ::WebServ(const std::string &path) {
 
 WebServ::~WebServ() {
   // delete all pointers
-  for (std::map<int, ISocket *>::iterator it = sockets_.begin();
-       it != sockets_.end(); ++it) {
+  for (socket_iter it = sockets_.begin(); it != sockets_.end(); ++it) {
     delete it->second;
   }
   sockets_.clear();
 }
 
 void WebServ::Activate(void) {
-  int hit = 0;
   int n;
 
   while (true) {
     if ((n = HasUsableIO()) <= 0)
       throw std::runtime_error("select: " + std::string(strerror(errno)));
-    for (std::map<int, ISocket *>::iterator it = sockets_.begin();
-         n && it != sockets_.end(); ++it) {
+
+    for (socket_iter it = sockets_.begin(); n && it != sockets_.end();) {
       try {
         if (dynamic_cast<Server *>(it->second)) {
           if (AcceptSession(it) == 0) --n;
+          ++it;
         } else {
-          if ((hit = ExecClientEvent(it)) > 0) n -= hit;
-          if (hit == -1)  // means delete and erase happened in map
-            break;
+          int hit = ExecClientEvent(it);
+          if (hit == -1) {
+            socket_iter deleted = it++;
+            close(deleted->first);
+            delete deleted->second;
+            sockets_.erase(deleted);
+            --n;
+          } else {
+            n -= hit;
+            ++it;
+          }
         }
       } catch (ft::HttpResponseException &e) {
         Client *client = dynamic_cast<Client *>(it->second);
         client->HandleException(e.what());
+        --n;
+        ++it;
       }
     }
   }
@@ -53,9 +62,7 @@ int WebServ::HasUsableIO() {
     FD_ZERO(&wfd_set_);
     max_fd_ = 0;
 
-    for (std::map<int, ISocket *>::iterator it = sockets_.begin();
-         it != sockets_.end(); ++it) {
-      // set listening sockets_
+    for (socket_iter it = sockets_.begin(); it != sockets_.end(); ++it) {
       if (dynamic_cast<Server *>(it->second)) {
         int serevr_fd = it->first;
 
@@ -130,9 +137,9 @@ int WebServ::ReadClient(socket_iter it) {
   int ret;
 
   if ((ret = client->RecvRequest(client_fd)) <= 0) {
-    close(client_fd);
-    delete it->second;
-    sockets_.erase(it);
+    // close(client_fd);
+    // delete it->second;
+    // sockets_.erase(it);
     return 1;  // deleted is true
   }
   return 0;
@@ -158,9 +165,9 @@ int WebServ::WriteClient(socket_iter it) {
   int ret;
 
   if ((ret = client->SendResponse(client_fd)) < 0) {
-    close(client_fd);
-    delete it->second;
-    sockets_.erase(it);
+    // close(client_fd);
+    // delete it->second;
+    // sockets_.erase(it);
     return 1;  // deleted is true
   }
   return 0;
