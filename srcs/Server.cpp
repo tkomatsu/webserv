@@ -16,7 +16,7 @@ int Server::OpenListenSocket() {
 
   char port[20];
   sprintf(port, "%d", port_);
-  int rn = getaddrinfo(NULL, port, &hints, &listp);
+  int rn = getaddrinfo(host_ip_.c_str(), port, &hints, &listp);
   if (rn != 0)
     throw std::runtime_error("getaddrinfo: " + std::string(gai_strerror(rn)));
 
