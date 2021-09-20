@@ -78,8 +78,7 @@ bool IsExtension(const std::string& s) { return s == ".php" || s == ".py"; }
 
 bool IsHost(const std::string& s) {
   if (s.empty()) return false;
-  if (strcmp(s.c_str(), "localhost") == 0 || strcmp(s.c_str(), "*") == 0)
-    return true;
+  if (s == "localhost" || s == "*") return true;
   std::vector<std::string> octets = ft::vsplit(s, '.');
   if (octets.size() != 4) return false;
   for (std::vector<std::string>::const_iterator itr = octets.begin();
