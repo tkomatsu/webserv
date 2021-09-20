@@ -76,6 +76,16 @@ bool IsInteger(const std::string& s) {
 
 bool IsExtension(const std::string& s) { return s == ".php" || s == ".py"; }
 
+bool IsOctet(const std::string& s) {
+  char *endptr;
+  errno = 0;
+  long n = std::strtol(s.c_str(), &endptr, 10);
+  if (errno || endptr)
+    return false;
+  if (n < 0 || n > 255) return false;
+  return true;
+}
+
 bool IsHost(const std::string& s) {
   if (s.empty()) return false;
   if (s == "localhost" || s == "*") return true;
@@ -83,9 +93,7 @@ bool IsHost(const std::string& s) {
   if (octets.size() != 4) return false;
   for (std::vector<std::string>::const_iterator itr = octets.begin();
        itr != octets.end(); ++itr) {
-    if (!IsInteger(*itr)) return false;
-    int octet = std::atoi(itr->c_str());
-    if (octet < 0 || octet > 255) return false;
+    if (!IsOctet(*itr)) return false;
   }
   return true;
 }
