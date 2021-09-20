@@ -53,7 +53,7 @@ case = Case("post redirect", "POST", "http://localhost:8080/upload", body="this 
 case.status_code(301)
 case.body_has("")
 case.header_has("Content-Length")
-case.header("Location", "http://127.0.0.1:8080/upload/")
+case.header("Location", "http://0.0.0.0:8080/upload/")
 
 
 case = Case("post upload", "POST", "http://localhost:8080/upload/", body="this is body.")
@@ -67,7 +67,7 @@ case = Case("redirect get upload folder", "GET", "http://localhost:8080/upload")
 case.status_code(301)
 case.body_has("")
 case.header_has("Content-Length")
-case.header("Location", "http://127.0.0.1:8080/upload/")
+case.header("Location", "http://0.0.0.0:8080/upload/")
 
 
 case = Case("get upload folder (405)", "GET", "http://localhost:8080/upload/")
