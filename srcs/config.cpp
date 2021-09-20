@@ -80,7 +80,7 @@ bool IsOctet(const std::string& s) {
   char* endptr;
   errno = 0;
   long n = std::strtol(s.c_str(), &endptr, 10);
-  if (errno || endptr) return false;
+  if (errno || *endptr != '\0') return false;
   if (n < 0 || n > 255) return false;
   return true;
 }
@@ -102,7 +102,7 @@ bool IsPort(const std::string& s) {
   char* endptr;
   errno = 0;
   long n = std::strtol(s.c_str(), &endptr, 10);
-  if (errno || endptr) return false;
+  if (errno || *endptr != '\0') return false;
   if (n < 0 || n > 65535) return false;
   return true;
 }
