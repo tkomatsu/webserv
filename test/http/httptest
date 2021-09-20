@@ -49,11 +49,12 @@ case.body_is(".*html.*")
 case.header_has("Content-Length")
 
 
-case = Case("post redirect", "POST", "http://localhost:8080/upload", body="this is body.")
+payload = {"Host": "localhost"} # リクエストヘッダ
+case = Case("post redirect", "POST", "http://localhost:8080/upload", body="this is body.", headers=payload)
 case.status_code(301)
 case.body_has("")
 case.header_has("Content-Length")
-case.header("Location", "http://127.0.0.1:8080/upload/")
+case.header("Location", "http://localhost:8080/upload/")
 
 
 case = Case("post upload", "POST", "http://localhost:8080/upload/", body="this is body.")
@@ -63,11 +64,11 @@ case.header_has("Content-Length")
 case.header_has("Content-Location")
 
 
-case = Case("redirect get upload folder", "GET", "http://localhost:8080/upload")
+case = Case("redirect get upload folder", "GET", "http://localhost:8080/upload", headers=payload)
 case.status_code(301)
 case.body_has("")
 case.header_has("Content-Length")
-case.header("Location", "http://127.0.0.1:8080/upload/")
+case.header("Location", "http://localhost:8080/upload/")
 
 
 case = Case("get upload folder (405)", "GET", "http://localhost:8080/upload/")
@@ -76,7 +77,7 @@ case.body_has("405")
 case.header_has("Content-Length")
 
 
-case = Case("redirect 301", "GET", "http://localhost:80/kapouet/")
+case = Case("redirect 301", "GET", "http://localhost:80/kapouet/", headers=payload)
 case.status_code(301)
 case.header_has("Content-Length")
 case.header_has("Location")
@@ -106,25 +107,25 @@ server.stop() # basic.conf
 server.run("redirect.conf")######
 #################################
 
-case = Case("redirect 301 :5555/a", "GET", "http://localhost:5555/a")
+case = Case("redirect 301 :5555/a", "GET", "http://localhost:5555/a", headers=payload)
 case.status_code(301)
 case.header_has("Content-Length")
 case.header_has("Location")
 
 
-case = Case("redirect 302 :5555/b", "GET", "http://localhost:5555/b")
+case = Case("redirect 302 :5555/b", "GET", "http://localhost:5555/b", headers=payload)
 case.status_code(302)
 case.header_has("Content-Length")
 case.header_has("Location")
 
 
-case = Case("redirect 303 :5555/c", "GET", "http://localhost:5555/c")
+case = Case("redirect 303 :5555/c", "GET", "http://localhost:5555/c", headers=payload)
 case.status_code(303)
 case.header_has("Content-Length")
 case.header_has("Location")
 
 
-case = Case("redirect 307 :5555/d", "GET", "http://localhost:5555/d")
+case = Case("redirect 307 :5555/d", "GET", "http://localhost:5555/d", headers=payload)
 case.status_code(307)
 case.header_has("Content-Length")
 case.header_has("Location")
