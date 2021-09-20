@@ -124,8 +124,6 @@ void CGI::SetEnvs() {
   envs_[i++] = strdup(tmp.c_str());
   tmp = "SERVER_SOFTWARE=" + envs_map_["SERVER_SOFTWARE"];
   envs_[i++] = strdup(tmp.c_str());
-  tmp = "REDIRECT_STATUS=" + envs_map_["REDIRECT_STATUS"];
-  envs_[i++] = strdup(tmp.c_str());
 
   envs_[i] = NULL;
 }
