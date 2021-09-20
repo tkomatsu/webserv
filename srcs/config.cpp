@@ -81,7 +81,9 @@ bool IsInteger(const std::string& s) {
 bool IsExtension(const std::string& s) { return s == ".php" || s == ".py"; }
 
 bool IsHost(const std::string& s) {
-  if (s == "localhost" || s == "*") return true;
+  if (s.empty()) return false;
+  if (strcmp(s.c_str(), "localhost") == 0 || strcmp(s.c_str(), "*") == 0)
+    return true;
   std::vector<std::string> octets = ft::vsplit(s, '.');
   if (octets.size() != 4) return false;
   for (std::vector<std::string>::const_iterator itr = octets.begin();
@@ -94,6 +96,8 @@ bool IsHost(const std::string& s) {
 }
 
 bool IsPort(const std::string& s) {
+  if (s.empty()) return false;
+  if (!IsInteger(s)) return false;
   int num = std::atoi(s.c_str());
   if (num < 0 || num > 65535) return false;
   return true;
@@ -497,8 +501,7 @@ void Parser::AddListen(enum Context context, const std::string& name,
       } else {
         servers_.back().host = host;
       }
-    }
-    else if (IsPort(splitted.front())) {
+    } else if (IsPort(splitted.front())) {
       std::string port = splitted.front();
       servers_.back().port = std::atoi(port.c_str());
     } else {
