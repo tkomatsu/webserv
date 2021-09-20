@@ -76,6 +76,37 @@ bool IsInteger(const std::string& s) {
 
 bool IsExtension(const std::string& s) { return s == ".php" || s == ".py"; }
 
+bool IsOctet(const std::string& s) {
+  char* endptr;
+  errno = 0;
+  long n = std::strtol(s.c_str(), &endptr, 10);
+  if (errno || *endptr != '\0') return false;
+  if (n < 0 || n > 255) return false;
+  return true;
+}
+
+bool IsHost(const std::string& s) {
+  if (s.empty()) return false;
+  if (s == "localhost" || s == "*") return true;
+  std::vector<std::string> octets = ft::vsplit(s, '.');
+  if (octets.size() != 4) return false;
+  for (std::vector<std::string>::const_iterator itr = octets.begin();
+       itr != octets.end(); ++itr) {
+    if (!IsOctet(*itr)) return false;
+  }
+  return true;
+}
+
+bool IsPort(const std::string& s) {
+  if (s.empty()) return false;
+  char* endptr;
+  errno = 0;
+  long n = std::strtol(s.c_str(), &endptr, 10);
+  if (errno || *endptr != '\0') return false;
+  if (n < 0 || n > 65535) return false;
+  return true;
+}
+
 }  // namespace
 
 namespace config {
@@ -90,7 +121,7 @@ Server::Server(const struct Main& main) {
   autoindex = main.autoindex;
   port = 80;
   client_max_body_size = main.client_max_body_size;
-  host = "127.0.0.1";
+  host = "0.0.0.0";
   server_name = "";
   error_pages = main.error_pages;
 }
@@ -441,11 +472,46 @@ void Parser::AddListen(enum Context context, const std::string& name,
                        const std::vector<std::string>& params) {
   if (context != SERVER)
     throw ContextError(BuildError(name, "is not allowed here"));
-  if (params.empty())
+  if (params.size() != 1)
     throw ParameterError(BuildError(name, "with wrong number of parameters"));
+  std::vector<std::string> splitted = ft::vsplit(params.front(), ':');
+  if (splitted.size() != 1 && splitted.size() != 2)
+    throw ParameterError(BuildError(name, "with invalid parameter"));
 
-  servers_.back().host = "127.0.0.1";
-  servers_.back().port = std::atoi(params.front().c_str());
+  if (splitted.size() == 2) {
+    if (!IsHost(splitted.front()))
+      throw ParameterError(BuildError(name, "with invalid parameter"));
+    std::string host = splitted.front();
+    if (host == "localhost") {
+      servers_.back().host = "127.0.0.1";
+    } else if (host == "*") {
+      servers_.back().host = "0.0.0.0";
+    } else {
+      servers_.back().host = host;
+    }
+    if (!IsPort(splitted.back()))
+      throw ParameterError(BuildError(name, "with invalid parameter"));
+    std::string port = splitted.back();
+    servers_.back().port = std::atoi(port.c_str());
+  }
+
+  if (splitted.size() == 1) {
+    if (IsHost(splitted.front())) {
+      std::string host = splitted.front();
+      if (host == "localhost") {
+        servers_.back().host = "127.0.0.1";
+      } else if (host == "*") {
+        servers_.back().host = "0.0.0.0";
+      } else {
+        servers_.back().host = host;
+      }
+    } else if (IsPort(splitted.front())) {
+      std::string port = splitted.front();
+      servers_.back().port = std::atoi(port.c_str());
+    } else {
+      throw ParameterError(BuildError(name, "with invalid parameter"));
+    }
+  }
 }
 
 void Parser::AddServerName(enum Context context, const std::string& name,
