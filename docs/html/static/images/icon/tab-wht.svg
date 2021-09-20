@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Lv1/icon/blank_default</title>
+    <g id="Lv1/icon/blank_default" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M1,5 L1,13 L13,13 L13,14 L0,14 L0,5 L1,5 Z M16,2 L16,11 L3,11 L3,2.999 L3,3 L3,2 L16,2 Z M4,2.999 L4,9.999 L15,10 L15,3 L4,2.999 Z" id="Combined-Shape" fill="#FFFFFF"></path>
+    </g>
+</svg>

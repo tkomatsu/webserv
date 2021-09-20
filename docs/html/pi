@@ -1,0 +1,5 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>円周率 = 3.</title></head><body><p id="pi"></p><script> 
+var f=Math.floor,p=document.getElementById('pi'),a=[],b,c,d=0,e=100000,i=0,j,k,l;function g(){b=0; 
+for(j=i+17;j>i;--j){b=(20*e+b)*j;a[j]=b%(j+j+1);b=f(b/(j+j+1));}for(j=i;j>0;j-=17){a[j]+=b*j;b=0; 
+for(k=j;k>j-17;--k){l=k+k+1;c=f(a[k]/l)*e+f(b/l)*k;b=b%l*k+a[k]%l*e;a[k]=b%l;b=c+f(b/l);}}d=d*e+b; 
+if(i){p.innerHTML+=('00000'+d).slice(-11,-6)+(i%20?'':'<br>\n');d%=10*e}i+=17;setTimeout(g,0);}g();</script></body></html> 

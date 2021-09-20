@@ -163,4 +163,5 @@ void CGI::CalcEnvs() {
   envs_map_["SERVER_PORT"] = ft::ltoa(config_.GetPort());
   envs_map_["SERVER_PROTOCOL"] = "HTTP/1.1";
   envs_map_["SERVER_SOFTWARE"] = "Webserv/0.4.2";
+  envs_map_["REDIRECT_STATUS"] = "200";
 }

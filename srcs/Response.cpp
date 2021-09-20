@@ -118,7 +118,7 @@ void Response::SetStatusMessage(const std::string& msg) {
 }
 
 void Response::ParseMessage() {
-  delim_ = "\n";
+  delim_ = "\r\n";
   HttpMessage::ParseMessage();
 }
 

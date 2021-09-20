@@ -4,6 +4,8 @@
 #include "WebServ.hpp"
 
 int main(int argc, char *argv[]) {
+  signal(SIGPIPE, SIG_IGN);
+
   if (!(argc == 1 || argc == 2)) {
     std::cerr << "usage: ./webserv [config_file]" << std::endl;
     return (EXIT_FAILURE);

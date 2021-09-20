@@ -368,7 +368,14 @@ enum SocketStatus Client::GetNextOfReadClient(
   if (redirect.first == 0 && redirect.second.empty() &&
       DirectoryRedirect(request_path)) {
     redirect.first = 301;
-    redirect.second = "http://" + config_.GetHost() + ":" +
+    std::string host_name;
+    try {
+      host_name = request_.GetHeader("Host");
+    } catch (const HttpMessage::HeaderKeyException &e) {
+      host_name = config_.GetHost();
+    }
+
+    redirect.second = "http://" + host_name + ":" +
                       ft::ltoa(config_.GetPort()) + request_path + "/";
   }
   if (redirect.first != 0 || redirect.second.empty() == false)
