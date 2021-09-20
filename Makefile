@@ -24,7 +24,7 @@ VPATH = $(SRC_DIR)
 
 SHELL = /bin/bash
 CXX = clang++
-CXXFLAGS = -Wall -Werror -Wextra -std=c++98 -I $(SRC_DIR) -MMD -MP
+CXXFLAGS = -Wall -Werror -Wextra -std=c++98 -I $(SRC_DIR) -MMD -MP -O2
 DEBUG_FLAGS = -g3
 
 # Source files
