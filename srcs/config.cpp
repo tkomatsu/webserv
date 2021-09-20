@@ -77,11 +77,10 @@ bool IsInteger(const std::string& s) {
 bool IsExtension(const std::string& s) { return s == ".php" || s == ".py"; }
 
 bool IsOctet(const std::string& s) {
-  char *endptr;
+  char* endptr;
   errno = 0;
   long n = std::strtol(s.c_str(), &endptr, 10);
-  if (errno || endptr)
-    return false;
+  if (errno || endptr) return false;
   if (n < 0 || n > 255) return false;
   return true;
 }
@@ -100,9 +99,11 @@ bool IsHost(const std::string& s) {
 
 bool IsPort(const std::string& s) {
   if (s.empty()) return false;
-  if (!IsInteger(s)) return false;
-  int num = std::atoi(s.c_str());
-  if (num < 0 || num > 65535) return false;
+  char* endptr;
+  errno = 0;
+  long n = std::strtol(s.c_str(), &endptr, 10);
+  if (errno || endptr) return false;
+  if (n < 0 || n > 65535) return false;
   return true;
 }
 
