@@ -1,9 +1,5 @@
 #include "config.hpp"
 
-#include <cstdlib>
-
-#include "utility.hpp"
-
 namespace {
 
 std::string::const_iterator skip_leading_whitespace(
