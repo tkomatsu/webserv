@@ -87,44 +87,10 @@ void CGI::SetEnvs() {
   envs_ = reinterpret_cast<char **>(
       malloc(sizeof(char *) * (envs_map_.size() + 1)));
   if (!envs_) exit(EXIT_FAILURE);
-
-  tmp = "AUTH_TYPE=" + envs_map_["AUTH_TYPE"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "CONTENT_LENGTH=" + envs_map_["CONTENT_LENGTH"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "CONTENT_TYPE=" + envs_map_["CONTENT_TYPE"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "GATEWAY_INTERFACE=" + envs_map_["GATEWAY_INTERFACE"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "PATH_INFO=" + envs_map_["PATH_INFO"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "PATH_TRANSLATED=" + envs_map_["PATH_TRANSLATED"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "QUERY_STRING=" + envs_map_["QUERY_STRING"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "REMOTE_ADDR=" + envs_map_["REMOTE_ADDR"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "REMOTE_PORT=" + envs_map_["REMOTE_PORT"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "REMOTE_IDENT=" + envs_map_["REMOTE_IDENT"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "REMOTE_USER=" + envs_map_["REMOTE_USER"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "REQUEST_METHOD=" + envs_map_["REQUEST_METHOD"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "REQUEST_URI=" + envs_map_["REQUEST_URI"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "SCRIPT_NAME=" + envs_map_["SCRIPT_NAME"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "SERVER_NAME=" + envs_map_["SERVER_NAME"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "SERVER_PORT=" + envs_map_["SERVER_PORT"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "SERVER_PROTOCOL=" + envs_map_["SERVER_PROTOCOL"];
-  envs_[i++] = strdup(tmp.c_str());
-  tmp = "SERVER_SOFTWARE=" + envs_map_["SERVER_SOFTWARE"];
-  envs_[i++] = strdup(tmp.c_str());
-
+  for (envs_map::iterator it = envs_map_.begin(); it != envs_map_.end(); it++) {
+    tmp = it->first + "=" + it->second;
+    envs_[i++] = strdup(tmp.c_str());
+  }
   envs_[i] = NULL;
 }
 

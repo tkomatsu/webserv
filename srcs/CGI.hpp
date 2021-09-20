@@ -12,6 +12,8 @@
 
 class CGI {
  public:
+  typedef std::map<std::string, std::string> envs_map;
+
   CGI(const Request &request, int client_port, std::string client_host,
       const config::Config &config, const std::string &path_translated,
       const std::string &path_info);
@@ -44,7 +46,7 @@ class CGI {
 
   enum Language lang;
 
-  std::map<std::string, std::string> envs_map_;
+  envs_map envs_map_;
 };
 
 #endif /* CGI_HPP */
