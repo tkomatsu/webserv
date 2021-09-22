@@ -249,6 +249,9 @@ void WebServ::ParseConfig(const std::string &path) {
 
   std::vector<config::Config>::const_iterator itr;
   for (itr = configs.begin(); itr != configs.end(); ++itr) {
+    if (!itr->HasLocation()) {
+      throw std::runtime_error("Config file error: no location");
+    }
     if (IsHostPortUsed(itr->GetHost(), itr->GetPort())) {
       std::cerr << "conflicting server name \"" << itr->GetServerName()
                 << "\" on " << itr->GetHost() << ":" << itr->GetPort()

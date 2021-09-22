@@ -91,6 +91,7 @@ class Config {
   std::map<int, std::string> GetErrorPages(const std::string& uri) const;
   std::set<enum Method> GetAllowedMethods(const std::string& uri) const;
   std::pair<int, std::string> GetRedirect(const std::string& uri) const;
+  bool HasLocation() const;
 
  private:
   struct Server server_;

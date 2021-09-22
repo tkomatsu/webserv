@@ -227,6 +227,8 @@ std::pair<int, std::string> Config::GetRedirect(const std::string& uri) const {
   return location->redirect;
 }
 
+bool Config::HasLocation() const { return !server_.locations.empty(); }
+
 Parser::Parser(const std::string& filename) : filename_(filename) { Load(); }
 
 Parser::~Parser() {}
