@@ -35,6 +35,8 @@ int Client::RecvRequest(int client_fd) {
   try {
     request_.AppendRawData(buf, ret);
     if (request_.GetStatus() == HttpMessage::DONE) {
+      // this is the first time to call of config getter
+      // so this might throw 404 and that's OK!
       size_t max_body_size = config_.GetClientMaxBodySize(request_.GetURI());
 
       if (max_body_size != 0 && max_body_size < request_.GetBody().size()) {
