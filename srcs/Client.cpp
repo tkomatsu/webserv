@@ -35,9 +35,9 @@ int Client::RecvRequest(int client_fd) {
   try {
     request_.AppendRawData(buf, ret);
     if (request_.GetStatus() == HttpMessage::DONE) {
-      if ((config_.GetClientMaxBodySize(request_.GetURI()) != 0 &&
-           (size_t)config_.GetClientMaxBodySize(request_.GetURI()) <
-               request_.GetBody().size())) {
+      size_t max_body_size = config_.GetClientMaxBodySize(request_.GetURI());
+
+      if (max_body_size != 0 && max_body_size < request_.GetBody().size()) {
         throw ft::HttpResponseException("413");
       }
       Preprocess();
@@ -164,9 +164,13 @@ int Client::GetReadFd() const { return read_fd_; }
 
 void Client::HandleException(const char *err_msg) {
   int status_code = std::atoi(err_msg);
+  std::map<int, std::string> error_pages;
   try {
-    std::map<int, std::string> error_pages =
-        config_.GetErrorPages(request_.GetURI());
+    try {  // when no location match url, 404 will be throwed by this function
+      error_pages = config_.GetErrorPages(request_.GetURI());
+    } catch (const std::exception &e) {
+      error_pages = config_.GetMainAndServerErrorPages();
+    }
     for (std::map<int, std::string>::iterator i = error_pages.begin();
          i != error_pages.end(); ++i) {
       if (status_code == i->first) {
@@ -501,12 +505,12 @@ enum SocketStatus Client::HandlePOST(std::string &path_uri) {
       std::string store = config_.GetUploadStore(request_path);
       if (store[store.size() - 1] == '/')
         store = store.substr(0, store.size() - 1);
+      store = store.empty() ? "/" : store;
       path_uri = MakePathUri(store, "/") + filename;
       response_.AppendHeader("Content-Location", store + filename);
       return WRITE_FILE;
     }
   }
-
   struct stat buffer;
   if (stat((path_uri).c_str(), &buffer) == -1) {
     throw ft::HttpResponseException("404");
