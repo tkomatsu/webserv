@@ -5,7 +5,7 @@ skinparam shadowing false
 
 class Webserv {
   - max_fd : int
-  - sockets : map<int, Socket>
+  - sockets : map<int, ISocket*>
   + Activate(void) : void
   - ParseConfig(const string&) : void
   - HasUsableIO(void) : int
@@ -26,9 +26,9 @@ interface ISocket {
 }
 
 class Server {
-  - config : config::Config
+  - config : map<string, config::Config>
   + SetSocket() : int
-  + GetConfig() : const config::Config
+  + GetConfig() : const map<string, config::Config>
 }
 
 class Client {
@@ -38,7 +38,7 @@ class Client {
   - read_fd : int
   - status : enum ClientStatus
   - sended : size_t
-  - config : const config::Config
+  - config : const map<string, config::Config>
   + SetSocket(int) : int
   + RecvRequest(int) : int
   + ReadStaticFile(int) : int

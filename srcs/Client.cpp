@@ -2,7 +2,8 @@
 
 const int Client::buf_max_ = 8192;
 
-Client::Client(const config::Config &config) : config_(config) {
+Client::Client(const std::map<std::string, config::Config> &config)
+    : config_(config) {
   socket_status_ = READ_CLIENT;
   sended_ = 0;
 }
@@ -35,8 +36,8 @@ int Client::RecvRequest(int client_fd) {
   try {
     request_.AppendRawData(buf, ret);
     if (request_.GetStatus() == HttpMessage::DONE) {
-      if ((config_.GetClientMaxBodySize(request_.GetURI()) != 0 &&
-           (size_t)config_.GetClientMaxBodySize(request_.GetURI()) <
+      if ((GetConfig().GetClientMaxBodySize(request_.GetURI()) != 0 &&
+           (size_t)GetConfig().GetClientMaxBodySize(request_.GetURI()) <
                request_.GetBody().size())) {
         throw ft::HttpResponseException("413");
       }
@@ -166,7 +167,7 @@ void Client::HandleException(const char *err_msg) {
   int status_code = std::atoi(err_msg);
   try {
     std::map<int, std::string> error_pages =
-        config_.GetErrorPages(request_.GetURI());
+        GetConfig().GetErrorPages(request_.GetURI());
     for (std::map<int, std::string>::iterator i = error_pages.begin();
          i != error_pages.end(); ++i) {
       if (status_code == i->first) {
@@ -182,6 +183,10 @@ void Client::HandleException(const char *err_msg) {
   response_.ErrorResponse(status_code);
   socket_status_ = WRITE_CLIENT;
 }
+
+const config::Config &Client::GetConfig() const {
+  return config_.find(request_.GetHeader("Host"))->second;
+};
 
 void Client::Preprocess(void) {
   std::string path_uri;
@@ -207,7 +212,7 @@ void Client::Preprocess(void) {
       response_.RedirectResponse(redirect.first, redirect.second);
     } else if (request_.GetMethod() == DELETE) {  // DELETE
       response_.DeleteResponse();
-    } else if (config_.GetAutoindex(request_path)) {  // autoindex
+    } else if (GetConfig().GetAutoindex(request_path)) {  // autoindex
       response_.AutoIndexResponse(path_uri.c_str(), request_path);
     } else
       throw ft::HttpResponseException("405");
@@ -228,7 +233,7 @@ void Client::GenProcessForCGI(const std::string &path_uri) {
     close(pipe_read[1]);
     throw ft::HttpResponseException("500");
   } else if (pid == 0) {
-    CGI cgi_vals(request_, port_, host_ip_, config_, path_uri, path_info);
+    CGI cgi_vals(request_, port_, host_ip_, GetConfig(), path_uri, path_info);
     ExecCGI(pipe_write, pipe_read, cgi_vals);
   }
 
@@ -275,7 +280,7 @@ bool Client::IsValidExtension(std::string path_uri, std::string request_path) {
   std::string extension = path_uri.substr(i);
 
   std::set<std::string> allowd_extensions;
-  allowd_extensions = config_.GetExtensions(request_path);
+  allowd_extensions = GetConfig().GetExtensions(request_path);
 
   if (allowd_extensions.count(extension) == 1)
     return true;
@@ -284,8 +289,8 @@ bool Client::IsValidExtension(std::string path_uri, std::string request_path) {
 }
 
 bool Client::IsValidUploadRequest(const std::string &request_path) {
-  std::string upload_pass = config_.GetUploadPass(request_path);
-  std::string upload_store = config_.GetUploadStore(request_path);
+  std::string upload_pass = GetConfig().GetUploadPass(request_path);
+  std::string upload_store = GetConfig().GetUploadStore(request_path);
 
   std::vector<std::string> request_splited = ft::vsplit(request_path, '/');
   std::vector<std::string> upload_pass_splited = ft::vsplit(upload_pass, '/');
@@ -317,7 +322,7 @@ bool Client::IsValidUploadRequest(const std::string &request_path) {
 }
 
 bool Client::DirectoryRedirect(std::string request_path) {
-  std::string location_path = config_.GetPath(request_path);
+  std::string location_path = GetConfig().GetPath(request_path);
   std::string path_uri = MakePathUri(request_path, location_path);
 
   struct stat buffer;
@@ -335,7 +340,7 @@ bool Client::DirectoryRedirect(std::string request_path) {
 
 std::string Client::GetIndexFileIfExist(std::string path_uri,
                                         std::string request_path) {
-  std::vector<std::string> conf_indexes = config_.GetIndexes(request_path);
+  std::vector<std::string> conf_indexes = GetConfig().GetIndexes(request_path);
 
   for (size_t i = 0; i < conf_indexes.size(); ++i) {
     struct stat buffer;
@@ -352,19 +357,20 @@ std::string Client::GetIndexFileIfExist(std::string path_uri,
 enum SocketStatus Client::GetNextOfReadClient(
     std::string &path_uri, std::pair<int, std::string> &redirect) {
   std::string request_path = request_.GetURI();
-  std::string location_path = config_.GetPath(request_path);
+  std::string location_path = GetConfig().GetPath(request_path);
   enum Method method = request_.GetMethod();
 
   try {  // checking HTTP method is allowed and location directive exists
-    if (config_.GetAllowedMethods(request_path).count(request_.GetMethod()) ==
-        0) {
+    if (GetConfig()
+            .GetAllowedMethods(request_path)
+            .count(request_.GetMethod()) == 0) {
       throw ft::HttpResponseException("405");
     }
   } catch (const ft::ConfigException &e) {
     throw ft::HttpResponseException("404");
   }
 
-  redirect = config_.GetRedirect(request_path);
+  redirect = GetConfig().GetRedirect(request_path);
   if (redirect.first == 0 && redirect.second.empty() &&
       DirectoryRedirect(request_path)) {
     redirect.first = 301;
@@ -372,11 +378,11 @@ enum SocketStatus Client::GetNextOfReadClient(
     try {
       host_name = request_.GetHeader("Host");
     } catch (const HttpMessage::HeaderKeyException &e) {
-      host_name = config_.GetHost();
+      host_name = GetConfig().GetHost();
     }
 
     redirect.second = "http://" + host_name + ":" +
-                      ft::ltoa(config_.GetPort()) + request_path + "/";
+                      ft::ltoa(GetConfig().GetPort()) + request_path + "/";
   }
   if (redirect.first != 0 || redirect.second.empty() == false)
     return WRITE_CLIENT;
@@ -404,7 +410,7 @@ enum SocketStatus Client::GetNextOfReadClient(
 
 std::string Client::MakePathUri(std::string request_path,
                                 std::string location_path) {
-  std::string alias_path = config_.GetAlias(request_path);
+  std::string alias_path = GetConfig().GetAlias(request_path);
 
   if (alias_path.empty()) {
     throw ft::HttpResponseException("404");
@@ -450,8 +456,8 @@ enum SocketStatus Client::HandleGET(std::string &path_uri) {
   std::string request_path = request_.GetURI();
 
   // (UPLOAD) by GET is 405
-  if (!config_.GetUploadPass(request_path).empty() &&
-      !config_.GetUploadStore(request_path).empty()) {
+  if (!GetConfig().GetUploadPass(request_path).empty() &&
+      !GetConfig().GetUploadStore(request_path).empty()) {
     if (IsValidUploadRequest(request_path)) {
       throw ft::HttpResponseException("405");
     }
@@ -481,7 +487,7 @@ enum SocketStatus Client::HandleGET(std::string &path_uri) {
 
       // (GET INDEX)
       return READ_FILE;
-    } else if (config_.GetAutoindex(request_path) == true) {
+    } else if (GetConfig().GetAutoindex(request_path) == true) {
       // (AUTOINDEX)
       return WRITE_CLIENT;
     }
@@ -494,11 +500,11 @@ enum SocketStatus Client::HandlePOST(std::string &path_uri) {
   std::string request_path = request_.GetURI();
 
   // (UPLOAD)
-  if (!config_.GetUploadPass(request_path).empty() &&
-      !config_.GetUploadStore(request_path).empty()) {
+  if (!GetConfig().GetUploadPass(request_path).empty() &&
+      !GetConfig().GetUploadStore(request_path).empty()) {
     if (IsValidUploadRequest(request_path)) {
       std::string filename = std::string("/" + ft::what_time());
-      std::string store = config_.GetUploadStore(request_path);
+      std::string store = GetConfig().GetUploadStore(request_path);
       if (store[store.size() - 1] == '/')
         store = store.substr(0, store.size() - 1);
       path_uri = MakePathUri(store, "/") + filename;
@@ -530,8 +536,8 @@ enum SocketStatus Client::HandleDELETE(std::string &path_uri) {
   std::string request_path = request_.GetURI();
 
   // (UPLOAD) by GET is 405
-  if (!config_.GetUploadPass(request_path).empty() &&
-      !config_.GetUploadStore(request_path).empty()) {
+  if (!GetConfig().GetUploadPass(request_path).empty() &&
+      !GetConfig().GetUploadStore(request_path).empty()) {
     if (IsValidUploadRequest(request_path)) {
       throw ft::HttpResponseException("405");
     }

@@ -26,7 +26,7 @@ class Client : public ISocket {
 
  public:
   static const int buf_max_;
-  Client(const config::Config &config);
+  Client(const std::map<std::string, config::Config> &config);
 
   // Socket actions
   int ConnectClientSocket(int _fd);
@@ -51,6 +51,8 @@ class Client : public ISocket {
   /* prohibit copy constructor and assignment operator */
   Client(const Client &client);
   Client &operator=(const Client &client);
+
+  const config::Config &GetConfig() const;
 
   void Preprocess(void);
   void GenProcessForCGI(const std::string &path_uri);
@@ -81,7 +83,7 @@ class Client : public ISocket {
   std::string path_info;
   int write_fd_;
   int read_fd_;
-  const config::Config config_;
+  const std::map<std::string, config::Config> config_;
 };
 
 #endif /* CLIENT_HPP */

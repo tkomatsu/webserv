@@ -1,7 +1,9 @@
 #include "Server.hpp"
 
 Server::Server(const config::Config& config)
-    : ISocket(config.GetPort(), config.GetHost()), config_(config){};
+    : ISocket(config.GetPort(), config.GetHost()) {
+  config_.insert(std::make_pair(config.GetServerName(), config));
+};
 
 Server::~Server(){};
 
@@ -46,4 +48,4 @@ int Server::OpenListenSocket() {
   return listenfd;
 }
 
-const config::Config& Server::GetConfig() const { return config_; }
+std::map<std::string, config::Config>& Server::GetConfig() { return config_; }

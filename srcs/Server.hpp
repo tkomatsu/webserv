@@ -14,14 +14,14 @@ class Server : public ISocket {
   ~Server();
 
   int OpenListenSocket();
-  const config::Config& GetConfig() const;
+  std::map<std::string, config::Config>& GetConfig();
 
  private:
   /* prohibit copy constructor and assignment operator */
   Server(const Server&);
   Server& operator=(const Server&);
 
-  config::Config config_;
+  std::map<std::string, config::Config> config_;
 };
 
-#endif
+#endif /* SERVER_HPP */
