@@ -229,6 +229,10 @@ std::pair<int, std::string> Config::GetRedirect(const std::string& uri) const {
 
 bool Config::HasLocation() const { return !server_.locations.empty(); }
 
+std::map<int, std::string> Config::GetMainAndServerErrorPages() const {
+  return server_.error_pages;
+}
+
 Parser::Parser(const std::string& filename) : filename_(filename) { Load(); }
 
 Parser::~Parser() {}
