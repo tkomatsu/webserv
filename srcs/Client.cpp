@@ -192,7 +192,12 @@ void Client::HandleException(const char *err_msg) {
 }
 
 const config::Config &Client::GetConfig() const {
-  return config_.find(request_.GetHeader("Host"))->second;
+  std::map<std::string, config::Config>::const_iterator it =
+      config_.find(request_.GetHeader("Host"));
+  if (it == config_.end()) {
+    return config_.begin()->second;
+  }
+  return it->second;
 };
 
 void Client::Preprocess(void) {
