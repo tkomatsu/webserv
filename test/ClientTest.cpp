@@ -42,7 +42,8 @@ TEST_F(ClientTest, GetIndexFileIfExist) {
   Server server(configs[0]);
   Client client(server.GetConfig());
 
-  EXPECT_EQ(client.GetIndexFileIfExist("../../docs/cgi-bin/", "/cgi/cgi-bin/"), "index.php");
+  EXPECT_EQ(client.GetIndexFileIfExist("../../docs/cgi-bin/", "/cgi/cgi-bin/"),
+            "index.php");
   EXPECT_EQ(client.GetIndexFileIfExist("../../docs/cgi-bin/", "/cgi/cgi-bin"),
             "index.php");
   EXPECT_EQ(client.GetIndexFileIfExist("../../docs/html/", "/"), "index.html");

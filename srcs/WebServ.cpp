@@ -1,5 +1,6 @@
 #include "WebServ.hpp"
 
+#include "ISocket.hpp"
 #include "utility.hpp"
 
 const std::string WebServ::default_path_ = "./conf/default.conf";
@@ -230,15 +231,19 @@ int WebServ::ExecClientEvent(socket_iter it) {
   return hit;
 }
 
-bool WebServ::IsHostPortUsed(const std::string &host, int port) {
+Server *WebServ::FindSocket(const std::string &host, int port) {
   std::map<int, ISocket *>::const_iterator itr;
   for (itr = sockets_.begin(); itr != sockets_.end(); ++itr) {
     Server *server = dynamic_cast<Server *>(itr->second);
-    if (server && server->GetConfig().GetHost() == host &&
-        server->GetConfig().GetPort() == port)
-      return true;
+    if (!server) continue;
+    for (std::map<std::string, config::Config>::const_iterator itr =
+             server->GetConfig().begin();
+         itr != server->GetConfig().end(); ++itr) {
+      if (itr->second.GetHost() == host && itr->second.GetPort() == port)
+        return server;
+    }
   }
-  return false;
+  return NULL;
 }
 
 void WebServ::ParseConfig(const std::string &path) {
@@ -252,15 +257,13 @@ void WebServ::ParseConfig(const std::string &path) {
     if (!itr->HasLocation()) {
       throw std::runtime_error("Config file error: no location");
     }
-    if (IsHostPortUsed(itr->GetHost(), itr->GetPort())) {
-      std::cerr << "conflicting server name \"" << itr->GetServerName()
-                << "\" on " << itr->GetHost() << ":" << itr->GetPort()
-                << ", ignored" << std::endl;
-      continue;
+    Server *s;
+    if (!(s = FindSocket(itr->GetHost(), itr->GetPort()))) {
+      Server *server = new Server(*itr);
+      int fd = server->OpenListenSocket();
+      sockets_[fd] = server;
+    } else {
+      s->AppendConfig(*itr);
     }
-
-    Server *server = new Server(*itr);
-    int fd = server->OpenListenSocket();
-    sockets_[fd] = server;
   }
 }

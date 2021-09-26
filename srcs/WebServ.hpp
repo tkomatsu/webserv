@@ -36,7 +36,7 @@ class WebServ {
   int ExecClientEvent(socket_iter it);
 
   void ParseConfig(const std::string& path);
-  bool IsHostPortUsed(const std::string& host, int port);
+  Server* FindSocket(const std::string& host, int port);
 
   int max_fd_;
   fd_set rfd_set_, wfd_set_;
@@ -47,4 +47,4 @@ class WebServ {
   std::map<int, std::string> cgi_outputs_;
 };
 
-#endif
+#endif /* WEBSERV_HPP */
