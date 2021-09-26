@@ -48,4 +48,16 @@ int Server::OpenListenSocket() {
   return listenfd;
 }
 
-std::map<std::string, config::Config>& Server::GetConfig() { return config_; }
+const std::map<std::string, config::Config>& Server::GetConfig() const {
+  return config_;
+}
+
+void Server::AppendConfig(const config::Config& config) {
+  if (config_.find(config.GetServerName()) != config_.end()) {
+    std::cerr << "conflicting server name \"" << config.GetServerName()
+              << "\" on " << config.GetHost() << ":" << config.GetPort()
+              << ", ignored" << std::endl;
+    return;
+  }
+  config_.insert(std::make_pair(config.GetServerName(), config));
+}

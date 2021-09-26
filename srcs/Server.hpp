@@ -14,7 +14,8 @@ class Server : public ISocket {
   ~Server();
 
   int OpenListenSocket();
-  std::map<std::string, config::Config>& GetConfig();
+  const std::map<std::string, config::Config>& GetConfig() const;
+  void AppendConfig(const config::Config& config);
 
  private:
   /* prohibit copy constructor and assignment operator */

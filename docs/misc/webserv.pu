@@ -28,7 +28,8 @@ interface ISocket {
 class Server {
   - config : map<string, config::Config>
   + SetSocket() : int
-  + GetConfig() : const map<string, config::Config>
+  + GetConfig() : const map<string, config::Config>&
+  + AppendConfig(config::Config&) : void
 }
 
 class Client {

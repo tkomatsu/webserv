@@ -263,15 +263,7 @@ void WebServ::ParseConfig(const std::string &path) {
       int fd = server->OpenListenSocket();
       sockets_[fd] = server;
     } else {
-      // Host, Portが重複する
-      if (s->GetConfig().find(itr->GetServerName()) != s->GetConfig().end()) {
-        // Hostnameが重複する
-        std::cerr << "conflicting server name \"" << itr->GetServerName()
-                  << "\" on " << itr->GetHost() << ":" << itr->GetPort()
-                  << ", ignored" << std::endl;
-        continue;
-      }
-      s->GetConfig().find(itr->GetServerName())->second = *itr;
+      s->AppendConfig(*itr);
     }
   }
 }
