@@ -5,6 +5,8 @@
 ## About The Project
 nginx like web sever made from scratch in c++
 
+![demo](./docs/images/screen_capture.png)
+
 ## Getting Started
 ```sh
 $ git clone https://github.com/tkomatsu/webserv
