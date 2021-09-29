@@ -525,7 +525,8 @@ enum SocketStatus Client::HandlePOST(std::string &path_uri) {
         store = store.substr(0, store.size() - 1);
       store = store.empty() ? "/" : store;
       path_uri = MakePathUri(store, "/") + filename;
-      response_.AppendHeader("Content-Location", store + filename);
+      response_.AppendHeader("Content-Location",
+                             (store == "/" ? "" : store) + filename);
       return WRITE_FILE;
     }
   }
