@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## About The Project
-nginx like web sever made from scratch in c++
+nginx like web server made from scratch in c++
 
 ![demo](./docs/images/screen_capture.png)
 
